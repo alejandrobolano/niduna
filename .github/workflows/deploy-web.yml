@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: vars.DEPLOYMENTS_ENABLED == 'true'
     environment: ${{ github.event_name == 'push' && 'production' || 'development' }}
     runs-on: ubuntu-latest
     steps:

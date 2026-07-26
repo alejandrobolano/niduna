@@ -15,6 +15,8 @@ subdomain is `nudina`, development is available at
 
 Create `development` and `production` environments in the repository. Configure:
 
+- Repository variable `DEPLOYMENTS_ENABLED` with value `true` after all
+  deployment credentials are configured.
 - Secret `CLOUDFLARE_ACCOUNT_ID`.
 - Secret `CLOUDFLARE_API_TOKEN` with permission to deploy Workers.
 - Variable `EXPO_PUBLIC_SUPABASE_URL`.
