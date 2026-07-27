@@ -20,5 +20,6 @@ Relationship labels and permissions are separate. A member may identify as a par
 
 Niduna uses `niduna-dev` for development and `niduna` for production.
 Development is exposed only through `dev.niduna.com`; its `workers.dev` route is
-disabled to keep project namespaces isolated. The `niduna.com` production
-domain is connected only when production is ready.
+disabled to keep project namespaces isolated. Production is exposed only
+through `niduna.com`, with its `workers.dev` route and preview URLs disabled as
+well.

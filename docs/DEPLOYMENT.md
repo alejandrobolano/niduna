@@ -11,8 +11,8 @@ Development uses the `niduna-dev` Worker through the custom domain
 `dev.niduna.com`. Its `workers.dev` route is disabled so it cannot collide with
 or appear under another project's account subdomain.
 
-Production uses the separate `niduna` Worker. It has no public route until the
-production domain is explicitly configured.
+Production uses the separate `niduna` Worker through the custom domain
+`niduna.com`. Its `workers.dev` route and preview URLs are also disabled.
 
 ## GitHub configuration
 
@@ -31,6 +31,6 @@ public client.
 
 ## Domain
 
-Connect `niduna.com` to the `niduna` Worker when the production experience is
-ready. Protect `dev.niduna.com` with Cloudflare Access before using real family
-data.
+The first successful deployment to each environment provisions its declared
+custom domain. Protect `dev.niduna.com` with Cloudflare Access before using real
+family data.

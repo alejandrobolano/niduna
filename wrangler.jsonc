@@ -24,7 +24,12 @@
       "name": "niduna",
       "workers_dev": false,
       "preview_urls": false,
-      "routes": []
+      "routes": [
+        {
+          "pattern": "niduna.com",
+          "custom_domain": true
+        }
+      ]
     }
   }
 }
