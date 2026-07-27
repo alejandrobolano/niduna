@@ -8,14 +8,13 @@
     "scheme": "niduna",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.niduna.app",
       "supportsTablet": true
     },
     "android": {
       "package": "com.niduna.app",
       "adaptiveIcon": {
-        "backgroundColor": "#F7F2E9",
+        "backgroundColor": "#FFF8E8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -31,7 +30,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F7F2E9",
+          "backgroundColor": "#FFF8E8",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

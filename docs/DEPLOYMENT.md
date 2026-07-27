@@ -4,12 +4,15 @@
 
 | Git event | GitHub environment | Cloudflare Worker |
 | --- | --- | --- |
-| Pull request targeting `master` | `development` | `dev` |
+| Pull request targeting `master` | `development` | `niduna-dev` |
 | Push or merge to `master` | `production` | `niduna` |
 
-Both Workers initially use Cloudflare `workers.dev` addresses. If the account
-subdomain is `nudina`, development is available at
-`dev.nudina.workers.dev`. A custom domain is not required during development.
+Development uses the `niduna-dev` Worker through the custom domain
+`dev.niduna.com`. Its `workers.dev` route is disabled so it cannot collide with
+or appear under another project's account subdomain.
+
+Production uses the separate `niduna` Worker through the custom domain
+`niduna.com`. Its `workers.dev` route and preview URLs are also disabled.
 
 ## GitHub configuration
 
@@ -20,12 +23,14 @@ Create `development` and `production` environments in the repository. Configure:
 - Secret `CLOUDFLARE_ACCOUNT_ID`.
 - Secret `CLOUDFLARE_API_TOKEN` with permission to deploy Workers.
 - Variable `EXPO_PUBLIC_SUPABASE_URL`.
-- Secret `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- Variable `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
-The Supabase publishable key is designed for public clients. It is stored as a secret to keep environment management consistent. Never add a Supabase secret key or service-role key to GitHub Actions that builds the public client.
+The Supabase publishable key is designed for public clients. Never add a
+Supabase secret key or service-role key to GitHub Actions that builds the
+public client.
 
 ## Domain
 
-Connect `nudina.com` to the `niduna` Worker when the production experience is
-ready. Keep the development Worker on its `workers.dev` address or protect it
-with Cloudflare Access.
+The first successful deployment to each environment provisions its declared
+custom domain. Protect `dev.niduna.com` with Cloudflare Access before using real
+family data.
