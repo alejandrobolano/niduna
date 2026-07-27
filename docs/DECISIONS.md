@@ -16,8 +16,9 @@ Blood group, Rh factor, gestational age, and sex recorded at birth are optional.
 
 Relationship labels and permissions are separate. A member may identify as a parent, grandparent, relative, or professional caregiver while receiving an administrator, caregiver, or read-only permission set.
 
-## Cloudflare without a domain
+## Cloudflare environments
 
-Development starts at `dev.nudina.workers.dev`, provided that `nudina` is the
-Cloudflare account subdomain. The `nudina.com` custom domain is connected only
-when production is ready.
+Niduna uses `niduna-dev` for development and `niduna` for production.
+Development is exposed only through `dev.niduna.com`; its `workers.dev` route is
+disabled to keep project namespaces isolated. The `niduna.com` production
+domain is connected only when production is ready.

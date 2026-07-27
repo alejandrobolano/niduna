@@ -133,7 +133,7 @@ export function BabyProfileScreen() {
         >
           <View style={styles.hero}>
             <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>NUDINA</Text>
+              <Text style={styles.eyebrow}>NIDUNA</Text>
               <Text style={styles.title}>Perfil del bebé</Text>
               <Text style={styles.subtitle}>
                 Su información importante, clara y cerca de toda la familia.

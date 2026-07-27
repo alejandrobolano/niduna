@@ -4,16 +4,15 @@
 
 | Git event | GitHub environment | Cloudflare Worker |
 | --- | --- | --- |
-| Pull request targeting `master` | `development` | `dev` |
+| Pull request targeting `master` | `development` | `niduna-dev` |
 | Push or merge to `master` | `production` | `niduna` |
 
-The shared Cloudflare account currently uses `viberadio` as its only
-`workers.dev` subdomain, so development is available at
-`dev.viberadio.workers.dev`. Changing that account-wide subdomain would also
-change the addresses of the other Workers in the account.
+Development uses the `niduna-dev` Worker through the custom domain
+`dev.niduna.com`. Its `workers.dev` route is disabled so it cannot collide with
+or appear under another project's account subdomain.
 
-Use `dev.nudina.com` as the branded development address when a custom domain is
-needed. Cloudflare recommends custom domains or routes for production traffic.
+Production uses the separate `niduna` Worker. It has no public route until the
+production domain is explicitly configured.
 
 ## GitHub configuration
 
@@ -32,7 +31,6 @@ public client.
 
 ## Domain
 
-Connect `nudina.com` to the `niduna` Worker when the production experience is
-ready. The development Worker can stay at `dev.viberadio.workers.dev` or use
-`dev.nudina.com`; protect it with Cloudflare Access if it starts containing
-real family data.
+Connect `niduna.com` to the `niduna` Worker when the production experience is
+ready. Protect `dev.niduna.com` with Cloudflare Access before using real family
+data.
