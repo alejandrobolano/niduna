@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -11,14 +10,24 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import {
+  parseBloodType,
+  type BloodTypeSelection,
+} from '@/features/baby-profile/application/parse-blood-type';
 import { validateBabyProfile } from '@/features/baby-profile/application/validate-baby-profile';
 import type {
   BabyLifeStage,
   BabyProfile,
   SexAtBirth,
 } from '@/features/baby-profile/domain/baby-profile';
+import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SegmentedControl } from '@/features/baby-profile/presentation/segmented-control';
+import {
+  SelectField,
+  type SelectOption,
+} from '@/features/baby-profile/presentation/select-field';
+import { dateToIso } from '@/shared/presentation/date';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -33,6 +42,22 @@ const sexOptions = [
   { label: 'Otro', value: 'intersex' },
   { label: 'Sin indicar', value: 'unknown' },
 ] satisfies { label: string; value: SexAtBirth }[];
+
+const bloodTypeOptions = [
+  { label: 'A+', value: 'A+' },
+  { label: 'A−', value: 'A-' },
+  { label: 'B+', value: 'B+' },
+  { label: 'B−', value: 'B-' },
+  { label: 'AB+', value: 'AB+' },
+  { label: 'AB−', value: 'AB-' },
+  { label: 'O+', value: 'O+' },
+  { label: 'O−', value: 'O-' },
+  {
+    label: 'No consta',
+    supportingText: 'Todavía no aparece en la documentación',
+    value: 'unknown',
+  },
+] satisfies SelectOption<BloodTypeSelection>[];
 
 interface SectionHeadingProps {
   accent: string;
@@ -74,29 +99,36 @@ export function BabyProfileScreen() {
   const [weightGrams, setWeightGrams] = useState('');
   const [lengthCentimeters, setLengthCentimeters] = useState('');
   const [headCircumference, setHeadCircumference] = useState('');
-  const [bloodGroup, setBloodGroup] = useState('');
+  const [bloodType, setBloodType] = useState<BloodTypeSelection>();
   const [notes, setNotes] = useState('');
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   const profile = useMemo<BabyProfile>(
-    () => ({
-      lifeStage,
-      name,
-      expectedDueDate: lifeStage === 'expected' ? date : undefined,
-      birthDate: lifeStage === 'born' ? date : undefined,
-      sexAtBirth,
-      gestationalAgeWeeks: parseOptionalNumber(gestationalWeeks),
-      gestationalAgeDays: parseOptionalNumber(gestationalDays),
-      birthMeasurement:
-        lifeStage === 'born'
-          ? {
-              weightGrams: parseOptionalNumber(weightGrams),
-              lengthCentimeters: parseOptionalNumber(lengthCentimeters),
-              headCircumferenceCentimeters: parseOptionalNumber(headCircumference),
-            }
-          : undefined,
-      notes: notes.trim() || undefined,
-    }),
+    () => {
+      const bloodDetails = parseBloodType(bloodType);
+
+      return {
+        lifeStage,
+        name,
+        expectedDueDate: lifeStage === 'expected' ? date : undefined,
+        birthDate: lifeStage === 'born' ? date : undefined,
+        sexAtBirth,
+        ...bloodDetails,
+        gestationalAgeWeeks: parseOptionalNumber(gestationalWeeks),
+        gestationalAgeDays: parseOptionalNumber(gestationalDays),
+        birthMeasurement:
+          lifeStage === 'born'
+            ? {
+                weightGrams: parseOptionalNumber(weightGrams),
+                lengthCentimeters: parseOptionalNumber(lengthCentimeters),
+                headCircumferenceCentimeters: parseOptionalNumber(headCircumference),
+              }
+            : undefined,
+        notes: notes.trim() || undefined,
+      };
+    },
     [
+      bloodType,
       date,
       gestationalDays,
       gestationalWeeks,
@@ -110,14 +142,18 @@ export function BabyProfileScreen() {
     ],
   );
 
-  function handleReview() {
-    const errors = validateBabyProfile(profile);
-    if (errors.length > 0) {
-      Alert.alert('Revisa los datos', errors[0].message);
-      return;
-    }
+  const validationErrors = useMemo(
+    () => (hasReviewed ? validateBabyProfile(profile) : []),
+    [hasReviewed, profile],
+  );
+  const isValid = hasReviewed && validationErrors.length === 0;
 
-    Alert.alert('Todo en orden', 'Los datos del perfil son válidos.');
+  function getError(field: keyof BabyProfile | 'birthMeasurement'): string | undefined {
+    return validationErrors.find((error) => error.field === field)?.message;
+  }
+
+  function handleReview() {
+    setHasReviewed(true);
   }
 
   return (
@@ -165,6 +201,7 @@ export function BabyProfileScreen() {
               onChange={(value) => {
                 setLifeStage(value);
                 setDate('');
+                setHasReviewed(false);
               }}
               options={lifeStageOptions}
               value={lifeStage}
@@ -175,17 +212,17 @@ export function BabyProfileScreen() {
             <SectionHeading accent={colors.aquaSoft} glyph="♡" title="Datos principales" />
             <ProfileField
               autoCapitalize="words"
+              error={getError('name')}
               label="Nombre"
               onChangeText={setName}
               placeholder="Nombre del bebé"
               value={name}
             />
-            <ProfileField
-              autoCapitalize="none"
-              keyboardType="numbers-and-punctuation"
+            <DatePickerField
+              error={getError(lifeStage === 'expected' ? 'expectedDueDate' : 'birthDate')}
               label={lifeStage === 'expected' ? 'Fecha probable de parto' : 'Fecha de nacimiento'}
-              onChangeText={setDate}
-              placeholder="AAAA-MM-DD"
+              maximumDate={lifeStage === 'born' ? dateToIso(new Date()) : undefined}
+              onChange={setDate}
               value={date}
             />
             <View style={styles.fieldGroup}>
@@ -210,6 +247,7 @@ export function BabyProfileScreen() {
             />
             <View style={styles.inlineFields}>
               <ProfileField
+                error={getError('gestationalAgeWeeks')}
                 keyboardType="number-pad"
                 label="Semanas"
                 maxLength={2}
@@ -218,6 +256,7 @@ export function BabyProfileScreen() {
                 value={gestationalWeeks}
               />
               <ProfileField
+                error={getError('gestationalAgeDays')}
                 keyboardType="number-pad"
                 label="Días"
                 maxLength={1}
@@ -240,6 +279,7 @@ export function BabyProfileScreen() {
                 title="Medidas al nacer"
               />
               <ProfileField
+                error={getError('birthMeasurement')}
                 keyboardType="decimal-pad"
                 label="Peso"
                 onChangeText={setWeightGrams}
@@ -275,13 +315,14 @@ export function BabyProfileScreen() {
               optional
               title="Información de salud"
             />
-            <ProfileField
-              autoCapitalize="characters"
+            <SelectField
               hint="No lo deduzcas. Déjalo vacío si no aparece en documentación clínica."
               label="Grupo sanguíneo y Rh"
-              onChangeText={setBloodGroup}
-              placeholder="Ej. A+"
-              value={bloodGroup}
+              onChange={setBloodType}
+              options={bloodTypeOptions}
+              placeholder="Seleccionar si consta"
+              title="Grupo sanguíneo y Rh"
+              value={bloodType}
             />
             <ProfileField
               label="Observaciones"
@@ -312,8 +353,33 @@ export function BabyProfileScreen() {
             onPress={handleReview}
             style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
           >
-            <Text style={styles.primaryButtonText}>Comprobar perfil</Text>
+            <Text style={styles.primaryButtonText}>Revisar perfil</Text>
           </Pressable>
+          {hasReviewed ? (
+            <View
+              accessibilityLiveRegion="polite"
+              style={[
+                styles.reviewNotice,
+                isValid ? styles.reviewNoticeSuccess : styles.reviewNoticeError,
+              ]}
+            >
+              <View style={[styles.reviewMark, isValid && styles.reviewMarkSuccess]}>
+                <Text style={[styles.reviewMarkText, isValid && styles.reviewMarkTextSuccess]}>
+                  {isValid ? '✓' : validationErrors.length}
+                </Text>
+              </View>
+              <View style={styles.reviewCopy}>
+                <Text style={styles.reviewTitle}>
+                  {isValid ? 'Datos básicos completos' : 'Hay datos que necesitan revisión'}
+                </Text>
+                <Text style={styles.reviewText}>
+                  {isValid
+                    ? 'El perfil está preparado para conectarlo al guardado seguro.'
+                    : 'Los campos marcados indican exactamente qué debes corregir.'}
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -413,7 +479,7 @@ const styles = StyleSheet.create({
   fieldGroup: { gap: spacing.sm },
   fieldLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },
   fieldHint: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
-  inlineFields: { flexDirection: 'row', gap: spacing.md },
+  inlineFields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   unit: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
   explainer: {
     backgroundColor: colors.lavenderSoft,
@@ -454,4 +520,33 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { backgroundColor: colors.coralPressed },
   primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  reviewNotice: {
+    alignItems: 'center',
+    backgroundColor: colors.peach,
+    borderRadius: radius.lg,
+    flexDirection: 'row',
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  reviewNoticeSuccess: { backgroundColor: colors.aquaSoft },
+  reviewNoticeError: { borderColor: colors.error, borderWidth: 1 },
+  reviewMark: {
+    alignItems: 'center',
+    backgroundColor: colors.error,
+    borderRadius: radius.pill,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  reviewMarkSuccess: { backgroundColor: colors.primary },
+  reviewMarkText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  reviewMarkTextSuccess: { fontSize: 18 },
+  reviewCopy: { flex: 1 },
+  reviewTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  reviewText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: spacing.xs,
+  },
 });
