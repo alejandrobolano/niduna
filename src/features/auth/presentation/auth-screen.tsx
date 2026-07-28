@@ -208,7 +208,7 @@ export function AuthScreen() {
                 <View style={styles.field}>
                   <Text style={styles.label}>Código de seguridad</Text>
                   <TextInput
-                    accessibilityLabel="Código de seguridad de seis dígitos"
+                    accessibilityLabel="Código de seguridad de ocho dígitos"
                     autoComplete="one-time-code"
                     autoFocus
                     editable={!isSubmitting}
@@ -219,7 +219,7 @@ export function AuthScreen() {
                       setError(undefined);
                     }}
                     onSubmitEditing={() => void verifyCode()}
-                    placeholder="••••••"
+                    placeholder="••••••••"
                     placeholderTextColor={colors.border}
                     style={[styles.codeInput, error && styles.codeInputError]}
                     textContentType="oneTimeCode"
