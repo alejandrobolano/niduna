@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -89,7 +89,11 @@ function parseOptionalNumber(value: string): number | undefined {
   return Number.isFinite(number) ? number : undefined;
 }
 
-export function BabyProfileScreen() {
+interface BabyProfileScreenProps {
+  topContent?: ReactNode;
+}
+
+export function BabyProfileScreen({ topContent }: BabyProfileScreenProps) {
   const [lifeStage, setLifeStage] = useState<BabyLifeStage>('expected');
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
@@ -167,6 +171,7 @@ export function BabyProfileScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {topContent}
           <View style={styles.hero}>
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>NIDUNA</Text>
