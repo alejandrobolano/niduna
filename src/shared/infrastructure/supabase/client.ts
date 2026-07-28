@@ -1,7 +1,8 @@
 import 'expo-sqlite/localStorage/install';
 import 'react-native-url-polyfill/auto';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 import type { Database } from './database.types';
 
@@ -14,9 +15,10 @@ if (!url || !publishableKey) {
 
 export const supabase = createClient<Database>(url, publishableKey, {
   auth: {
-    storage: localStorage,
+    ...(Platform.OS !== 'web' ? { storage: localStorage } : {}),
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    lock: processLock,
   },
 });

@@ -1,11 +1,14 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { AuthProvider } from '@/features/auth/presentation/auth-provider';
+import { supabaseAuthService } from '@/features/auth/infrastructure/supabase-auth-service';
+
 export default function RootLayout() {
   return (
-    <>
+    <AuthProvider service={supabaseAuthService}>
       <Stack screenOptions={{ headerShown: false }} />
       <StatusBar style="dark" />
-    </>
+    </AuthProvider>
   );
 }
