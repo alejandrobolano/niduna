@@ -33,7 +33,7 @@ export function isValidEmail(value: string): boolean {
 }
 
 export function normalizeOtp(value: string): string {
-  return value.replace(/\D/g, '').slice(0, 6);
+  return value.replace(/\D/g, '').slice(0, 8);
 }
 
 export function isValidOtp(value: string): boolean {
