@@ -213,7 +213,7 @@ export function AuthScreen() {
                     autoFocus
                     editable={!isSubmitting}
                     keyboardType="number-pad"
-                    maxLength={6}
+                    maxLength={8}
                     onChangeText={(value) => {
                       setCode(normalizeOtp(value));
                       setError(undefined);
@@ -225,7 +225,7 @@ export function AuthScreen() {
                     textContentType="oneTimeCode"
                     value={code}
                   />
-                  <Text style={styles.codeHint}>{code.length} de 6 números</Text>
+                  <Text style={styles.codeHint}>{code.length} de 8 números</Text>
                 </View>
                 <Pressable
                   accessibilityRole="button"
