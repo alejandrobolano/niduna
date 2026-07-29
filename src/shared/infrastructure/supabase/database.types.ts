@@ -164,7 +164,27 @@ export type Database = {
       >;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      save_baby_profile: {
+        Args: {
+          target_baby_id: string | null;
+          target_birth_date: string | null;
+          target_blood_group: BloodGroup | null;
+          target_expected_due_date: string | null;
+          target_gestational_days: number | null;
+          target_gestational_weeks: number | null;
+          target_head_circumference_millimeters: number | null;
+          target_length_millimeters: number | null;
+          target_life_stage: BabyLifeStage;
+          target_name: string;
+          target_notes: string | null;
+          target_rhesus_factor: RhesusFactor | null;
+          target_sex_at_birth: SexAtBirth | null;
+          target_weight_grams: number | null;
+        };
+        Returns: string;
+      };
+    };
     Enums: {
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;

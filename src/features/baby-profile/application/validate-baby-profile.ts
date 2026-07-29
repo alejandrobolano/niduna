@@ -21,6 +21,11 @@ export function validateBabyProfile(profile: BabyProfile): BabyProfileValidation
 
   if (!profile.name.trim()) {
     errors.push({ field: 'name', message: 'Indica el nombre del bebé.' });
+  } else if (profile.name.trim().length > 100) {
+    errors.push({
+      field: 'name',
+      message: 'El nombre no puede superar 100 caracteres.',
+    });
   }
 
   if (profile.lifeStage === 'expected' && !isIsoDate(profile.expectedDueDate)) {
@@ -60,6 +65,35 @@ export function validateBabyProfile(profile: BabyProfile): BabyProfileValidation
     (measurement.weightGrams < 300 || measurement.weightGrams > 7000)
   ) {
     errors.push({ field: 'birthMeasurement', message: 'Revisa el peso registrado.' });
+  }
+
+  if (
+    measurement?.lengthCentimeters !== undefined &&
+    (measurement.lengthCentimeters < 20 ||
+      measurement.lengthCentimeters > 150)
+  ) {
+    errors.push({
+      field: 'birthMeasurement',
+      message: 'Revisa la longitud registrada.',
+    });
+  }
+
+  if (
+    measurement?.headCircumferenceCentimeters !== undefined &&
+    (measurement.headCircumferenceCentimeters < 15 ||
+      measurement.headCircumferenceCentimeters > 80)
+  ) {
+    errors.push({
+      field: 'birthMeasurement',
+      message: 'Revisa el perímetro cefálico registrado.',
+    });
+  }
+
+  if (profile.notes && profile.notes.length > 4000) {
+    errors.push({
+      field: 'notes',
+      message: 'Las observaciones no pueden superar 4000 caracteres.',
+    });
   }
 
   return errors;

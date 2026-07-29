@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseBloodType } from '../src/features/baby-profile/application/parse-blood-type';
+import {
+  formatBloodType,
+  parseBloodType,
+} from '../src/features/baby-profile/application/parse-blood-type';
 
 describe('parseBloodType', () => {
   it('keeps an omitted clinical value absent', () => {
@@ -19,5 +22,13 @@ describe('parseBloodType', () => {
       bloodGroup: 'unknown',
       rhesusFactor: 'unknown',
     });
+  });
+
+  it('formats a stored blood group and Rh factor for the selector', () => {
+    expect(formatBloodType('O', 'negative')).toBe('O-');
+  });
+
+  it('keeps an omitted stored blood type unselected', () => {
+    expect(formatBloodType(undefined, undefined)).toBeUndefined();
   });
 });

@@ -45,3 +45,37 @@ export function parseBloodType(value: BloodTypeSelection | undefined): {
     rhesusFactor: value.endsWith('+') ? 'positive' : 'negative',
   };
 }
+
+const selectionByBloodType: Record<
+  `${Exclude<BloodGroup, 'unknown'>}:${Exclude<RhesusFactor, 'unknown'>}`,
+  Exclude<BloodTypeSelection, 'unknown'>
+> = {
+  'A:positive': 'A+',
+  'A:negative': 'A-',
+  'B:positive': 'B+',
+  'B:negative': 'B-',
+  'AB:positive': 'AB+',
+  'AB:negative': 'AB-',
+  'O:positive': 'O+',
+  'O:negative': 'O-',
+};
+
+export function formatBloodType(
+  bloodGroup: BloodGroup | undefined,
+  rhesusFactor: RhesusFactor | undefined,
+): BloodTypeSelection | undefined {
+  if (!bloodGroup && !rhesusFactor) {
+    return undefined;
+  }
+
+  if (
+    !bloodGroup ||
+    !rhesusFactor ||
+    bloodGroup === 'unknown' ||
+    rhesusFactor === 'unknown'
+  ) {
+    return 'unknown';
+  }
+
+  return selectionByBloodType[`${bloodGroup}:${rhesusFactor}`];
+}

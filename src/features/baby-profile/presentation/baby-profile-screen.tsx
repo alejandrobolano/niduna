@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,7 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
+  formatBloodType,
   parseBloodType,
   type BloodTypeSelection,
 } from '@/features/baby-profile/application/parse-blood-type';
@@ -90,14 +92,18 @@ function parseOptionalNumber(value: string): number | undefined {
 }
 
 interface BabyProfileScreenProps {
+  repository: BabyProfileRepository;
   topContent?: ReactNode;
 }
 
-export function BabyProfileScreen({ topContent }: BabyProfileScreenProps) {
+export function BabyProfileScreen({
+  repository,
+  topContent,
+}: BabyProfileScreenProps) {
   const [lifeStage, setLifeStage] = useState<BabyLifeStage>('expected');
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
-  const [sexAtBirth, setSexAtBirth] = useState<SexAtBirth>('female');
+  const [sexAtBirth, setSexAtBirth] = useState<SexAtBirth>('unknown');
   const [gestationalWeeks, setGestationalWeeks] = useState('');
   const [gestationalDays, setGestationalDays] = useState('');
   const [weightGrams, setWeightGrams] = useState('');
@@ -106,6 +112,71 @@ export function BabyProfileScreen({ topContent }: BabyProfileScreenProps) {
   const [bloodType, setBloodType] = useState<BloodTypeSelection>();
   const [notes, setNotes] = useState('');
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [babyId, setBabyId] = useState<string>();
+  const [lastSavedProfile, setLastSavedProfile] = useState<BabyProfile>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    void repository
+      .load()
+      .then((storedProfile) => {
+        if (!active || !storedProfile) {
+          return;
+        }
+
+        const loadedProfile = storedProfile.profile;
+        const measurement = loadedProfile.birthMeasurement;
+
+        setBabyId(storedProfile.id);
+        setLifeStage(loadedProfile.lifeStage);
+        setName(loadedProfile.name);
+        setDate(
+          loadedProfile.lifeStage === 'expected'
+            ? (loadedProfile.expectedDueDate ?? '')
+            : (loadedProfile.birthDate ?? ''),
+        );
+        setSexAtBirth(loadedProfile.sexAtBirth ?? 'unknown');
+        setGestationalWeeks(
+          loadedProfile.gestationalAgeWeeks?.toString() ?? '',
+        );
+        setGestationalDays(loadedProfile.gestationalAgeDays?.toString() ?? '');
+        setWeightGrams(measurement?.weightGrams?.toString() ?? '');
+        setLengthCentimeters(
+          measurement?.lengthCentimeters?.toString() ?? '',
+        );
+        setHeadCircumference(
+          measurement?.headCircumferenceCentimeters?.toString() ?? '',
+        );
+        setBloodType(
+          formatBloodType(
+            loadedProfile.bloodGroup,
+            loadedProfile.rhesusFactor,
+          ),
+        );
+        setNotes(loadedProfile.notes ?? '');
+        setLastSavedProfile(loadedProfile);
+      })
+      .catch(() => {
+        if (active) {
+          setLoadError(true);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [loadAttempt, repository]);
 
   const profile = useMemo<BabyProfile>(
     () => {
@@ -151,13 +222,79 @@ export function BabyProfileScreen({ topContent }: BabyProfileScreenProps) {
     [hasReviewed, profile],
   );
   const isValid = hasReviewed && validationErrors.length === 0;
+  const hasUnsavedChanges =
+    !lastSavedProfile ||
+    JSON.stringify(profile) !== JSON.stringify(lastSavedProfile);
+  const isSaved = Boolean(lastSavedProfile) && !hasUnsavedChanges;
 
   function getError(field: keyof BabyProfile | 'birthMeasurement'): string | undefined {
     return validationErrors.find((error) => error.field === field)?.message;
   }
 
-  function handleReview() {
+  async function handleSave() {
     setHasReviewed(true);
+    setSaveError(false);
+
+    if (validateBabyProfile(profile).length > 0) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const storedProfile = await repository.save(babyId, profile);
+      setBabyId(storedProfile.id);
+      setName(storedProfile.profile.name);
+      setNotes(storedProfile.profile.notes ?? '');
+      setLastSavedProfile(storedProfile.profile);
+    } catch {
+      setSaveError(true);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateScreen}>
+          <NuniMascot size={150} />
+          <Text style={styles.stateTitle}>Preparando el perfil</Text>
+          <Text style={styles.stateText}>
+            Estamos recuperando la información guardada de tu familia.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.stateScreen}>
+          <NuniMascot size={150} />
+          <Text style={styles.stateTitle}>No pudimos cargar el perfil</Text>
+          <Text style={styles.stateText}>
+            Revisa tu conexión e inténtalo de nuevo. Tus datos siguen seguros.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setIsLoading(true);
+              setLoadError(false);
+              setLoadAttempt((attempt) => attempt + 1);
+            }}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              styles.retryButton,
+              pressed && styles.primaryButtonPressed,
+            ]}
+          >
+            <Text style={styles.primaryButtonText}>Volver a intentar</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -355,32 +492,74 @@ export function BabyProfileScreen({ topContent }: BabyProfileScreenProps) {
 
           <Pressable
             accessibilityRole="button"
-            onPress={handleReview}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
+            disabled={isSaving || (!hasUnsavedChanges && Boolean(babyId))}
+            onPress={() => void handleSave()}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.primaryButtonPressed,
+              (isSaving || (!hasUnsavedChanges && Boolean(babyId))) &&
+                styles.primaryButtonDisabled,
+            ]}
           >
-            <Text style={styles.primaryButtonText}>Revisar perfil</Text>
+            <Text style={styles.primaryButtonText}>
+              {isSaving
+                ? 'Guardando…'
+                : !hasUnsavedChanges && babyId
+                  ? 'Perfil al día'
+                  : babyId
+                    ? 'Guardar cambios'
+                    : 'Guardar perfil'}
+            </Text>
           </Pressable>
-          {hasReviewed ? (
+          {hasReviewed || saveError || isSaved ? (
             <View
               accessibilityLiveRegion="polite"
               style={[
                 styles.reviewNotice,
-                isValid ? styles.reviewNoticeSuccess : styles.reviewNoticeError,
+                (isSaved || isValid) && !saveError
+                  ? styles.reviewNoticeSuccess
+                  : styles.reviewNoticeError,
               ]}
             >
-              <View style={[styles.reviewMark, isValid && styles.reviewMarkSuccess]}>
-                <Text style={[styles.reviewMarkText, isValid && styles.reviewMarkTextSuccess]}>
-                  {isValid ? '✓' : validationErrors.length}
+              <View
+                style={[
+                  styles.reviewMark,
+                  (isSaved || isValid) &&
+                    !saveError &&
+                    styles.reviewMarkSuccess,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.reviewMarkText,
+                    (isSaved || isValid) &&
+                      !saveError &&
+                      styles.reviewMarkTextSuccess,
+                  ]}
+                >
+                  {(isSaved || isValid) && !saveError
+                    ? '✓'
+                    : validationErrors.length || '!'}
                 </Text>
               </View>
               <View style={styles.reviewCopy}>
                 <Text style={styles.reviewTitle}>
-                  {isValid ? 'Datos básicos completos' : 'Hay datos que necesitan revisión'}
+                  {saveError
+                    ? 'No pudimos guardar el perfil'
+                    : isSaved
+                      ? 'Perfil guardado'
+                      : isValid
+                        ? 'Datos listos para guardar'
+                        : 'Hay datos que necesitan revisión'}
                 </Text>
                 <Text style={styles.reviewText}>
-                  {isValid
-                    ? 'El perfil está preparado para conectarlo al guardado seguro.'
-                    : 'Los campos marcados indican exactamente qué debes corregir.'}
+                  {saveError
+                    ? 'Tus cambios siguen en pantalla. Revisa la conexión y vuelve a intentarlo.'
+                    : isSaved
+                      ? 'La información está protegida y disponible cuando vuelvas a entrar.'
+                      : isValid
+                        ? 'Pulsa guardar para conservar los cambios de forma segura.'
+                        : 'Los campos marcados indican exactamente qué debes corregir.'}
                 </Text>
               </View>
             </View>
@@ -524,7 +703,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   primaryButtonPressed: { backgroundColor: colors.coralPressed },
+  primaryButtonDisabled: { opacity: 0.6 },
   primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  retryButton: { marginTop: spacing.md, minWidth: 220 },
+  stateScreen: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    padding: spacing.xl,
+  },
+  stateTitle: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: spacing.lg,
+    textAlign: 'center',
+  },
+  stateText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: spacing.sm,
+    maxWidth: 360,
+    textAlign: 'center',
+  },
   reviewNotice: {
     alignItems: 'center',
     backgroundColor: colors.peach,

@@ -37,4 +37,19 @@ describe('validateBabyProfile', () => {
       message: 'Indica una fecha de nacimiento válida.',
     });
   });
+
+  it('rejects invalid birth measurements before persistence', () => {
+    const errors = validateBabyProfile({
+      birthDate: '2026-07-29',
+      birthMeasurement: {
+        headCircumferenceCentimeters: 90,
+        lengthCentimeters: 10,
+        weightGrams: 100,
+      },
+      lifeStage: 'born',
+      name: 'Lucía',
+    });
+
+    expect(errors.filter((error) => error.field === 'birthMeasurement')).toHaveLength(3);
+  });
 });
