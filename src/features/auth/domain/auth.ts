@@ -37,5 +37,5 @@ export function normalizeOtp(value: string): string {
 }
 
 export function isValidOtp(value: string): boolean {
-  return /^\d{6}$/.test(value);
+  return /^\d{8}$/.test(value);
 }
