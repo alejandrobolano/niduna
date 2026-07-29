@@ -1,4 +1,5 @@
 import type { AuthError, Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 
 import type { AuthService } from '@/features/auth/application/auth-service';
 import {
@@ -6,6 +7,7 @@ import {
   type AuthFailureCode,
   type AuthSession,
 } from '@/features/auth/domain/auth';
+import { parseAuthLink } from '@/features/auth/infrastructure/auth-link';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 
 function toAuthSession(session: Session | null): AuthSession | null {
@@ -42,6 +44,33 @@ function mapFailure(error: AuthError): AuthFailure {
 }
 
 export const supabaseAuthService: AuthService = {
+  async completeEmailLink(url) {
+    const { accessToken, code, refreshToken, tokenHash } = parseAuthLink(url);
+    let result: { data: { session: Session | null }; error: AuthError | null };
+
+    if (tokenHash) {
+      result = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'email',
+      });
+    } else if (code) {
+      result = await supabase.auth.exchangeCodeForSession(code);
+    } else if (accessToken && refreshToken) {
+      result = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+    } else {
+      return null;
+    }
+
+    if (result.error) {
+      throw mapFailure(result.error);
+    }
+
+    return toAuthSession(result.data.session);
+  },
+
   async getSession() {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
@@ -65,6 +94,7 @@ export const supabaseAuthService: AuthService = {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        emailRedirectTo: Linking.createURL('/'),
         shouldCreateUser: true,
       },
     });

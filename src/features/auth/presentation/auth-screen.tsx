@@ -87,7 +87,7 @@ export function AuthScreen() {
 
   async function verifyCode() {
     if (!isValidOtp(code)) {
-      setError('Introduce los seis números del código.');
+      setError('Introduce los ocho números del código.');
       return;
     }
 
@@ -131,7 +131,7 @@ export function AuthScreen() {
               <Text style={styles.subtitle}>
                 {step === 'email'
                   ? 'Entra o crea tu cuenta con un código. Sin contraseñas que recordar.'
-                  : `Enviamos un código de seis dígitos a ${email}.`}
+                  : `Enviamos un código de ocho dígitos a ${email}.`}
               </Text>
             </View>
             <View style={styles.mascot}>

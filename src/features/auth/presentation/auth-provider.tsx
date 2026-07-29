@@ -6,6 +6,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import * as Linking from 'expo-linking';
 import { AppState, Platform } from 'react-native';
 
 import type { AuthService } from '@/features/auth/application/auth-service';
@@ -28,40 +29,69 @@ interface AuthProviderProps {
   service: AuthService;
 }
 
+function clearWebAuthParameters() {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+    return;
+  }
+
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 export function AuthProvider({ children, service }: AuthProviderProps) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
 
   useEffect(() => {
     let active = true;
-    const unsubscribe = service.onSessionChange((nextSession) => {
+    const acceptSession = (nextSession: AuthSession | null) => {
       if (!active) {
         return;
       }
 
       setSession(nextSession);
       setStatus(nextSession ? 'authenticated' : 'anonymous');
+    };
+
+    const unsubscribe = service.onSessionChange((nextSession) => {
+      acceptSession(nextSession);
     });
 
-    void service
-      .getSession()
-      .then((currentSession) => {
-        if (!active) {
-          return;
+    const linkSubscription = Linking.addEventListener('url', ({ url }) => {
+      void service
+        .completeEmailLink(url)
+        .then((linkedSession) => {
+          if (linkedSession) {
+            clearWebAuthParameters();
+            acceptSession(linkedSession);
+          }
+        })
+        .catch(() => undefined);
+    });
+
+    void Linking.getInitialURL()
+      .then(async (initialUrl) => {
+        if (initialUrl) {
+          try {
+            const linkedSession = await service.completeEmailLink(initialUrl);
+            if (linkedSession) {
+              clearWebAuthParameters();
+              return linkedSession;
+            }
+          } catch {
+            return service.getSession();
+          }
         }
 
-        setSession(currentSession);
-        setStatus(currentSession ? 'authenticated' : 'anonymous');
+        return service.getSession();
       })
+      .then(acceptSession)
       .catch(() => {
-        if (active) {
-          setSession(null);
-          setStatus('anonymous');
-        }
+        acceptSession(null);
       });
 
     return () => {
       active = false;
+      linkSubscription.remove();
       unsubscribe();
     };
   }, [service]);

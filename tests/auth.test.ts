@@ -20,13 +20,13 @@ describe('authentication input', () => {
     expect(isValidEmail('family@example')).toBe(false);
   });
 
-  it('keeps only the first six OTP digits', () => {
-    expect(normalizeOtp('12 34-567')).toBe('123456');
+  it('keeps only the first eight OTP digits', () => {
+    expect(normalizeOtp('12 34-567 890')).toBe('12345678');
   });
 
-  it('requires exactly six OTP digits', () => {
-    expect(isValidOtp('123456')).toBe(true);
-    expect(isValidOtp('12345')).toBe(false);
-    expect(isValidOtp('12345a')).toBe(false);
+  it('requires exactly eight OTP digits', () => {
+    expect(isValidOtp('12345678')).toBe(true);
+    expect(isValidOtp('1234567')).toBe(false);
+    expect(isValidOtp('1234567a')).toBe(false);
   });
 });
