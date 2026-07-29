@@ -87,6 +87,29 @@ export type Database = {
           role?: FamilyRole;
         }
       >;
+      family_invitations: Table<
+        {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          code_hash: string;
+          created_at: string;
+          created_by: string;
+          expires_at: string;
+          family_id: string;
+          id: string;
+          revoked_at: string | null;
+          role: Exclude<FamilyRole, 'owner'>;
+        },
+        {
+          code_hash: string;
+          expires_at: string;
+          family_id: string;
+          role: Exclude<FamilyRole, 'owner'>;
+        },
+        {
+          revoked_at?: string | null;
+        }
+      >;
       babies: Table<
         {
           birth_date: string | null;
@@ -165,6 +188,48 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      accept_family_invitation: {
+        Args: {
+          target_code: string;
+          target_display_name: string;
+          target_relationship: FamilyRelationship;
+        };
+        Returns: string;
+      };
+      create_family: {
+        Args: {
+          target_display_name: string;
+          target_name: string;
+          target_relationship: FamilyRelationship;
+        };
+        Returns: string;
+      };
+      create_family_invitation: {
+        Args: {
+          target_family_id: string;
+          target_role: Exclude<FamilyRole, 'owner'>;
+          validity_hours?: number;
+        };
+        Returns: {
+          invitation_code: string;
+          invitation_expires_at: string;
+          invitation_id: string;
+        }[];
+      };
+      revoke_family_invitation: {
+        Args: {
+          target_invitation_id: string;
+        };
+        Returns: undefined;
+      };
+      update_my_family_identity: {
+        Args: {
+          target_display_name: string;
+          target_family_id: string;
+          target_relationship: FamilyRelationship;
+        };
+        Returns: undefined;
+      };
       save_baby_profile: {
         Args: {
           target_baby_id: string | null;

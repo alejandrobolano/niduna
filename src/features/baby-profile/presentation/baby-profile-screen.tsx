@@ -458,6 +458,7 @@ export function BabyProfileScreen({
               title="Información de salud"
             />
             <SelectField
+              eyebrow="INFORMACIÓN DE SALUD"
               hint="No lo deduzcas. Déjalo vacío si no aparece en documentación clínica."
               label="Grupo sanguíneo y Rh"
               onChange={setBloodType}

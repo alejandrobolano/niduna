@@ -10,6 +10,7 @@ export interface SelectOption<T extends string> {
 }
 
 interface SelectFieldProps<T extends string> {
+  eyebrow?: string;
   error?: string;
   hint?: string;
   label: string;
@@ -21,6 +22,7 @@ interface SelectFieldProps<T extends string> {
 }
 
 export function SelectField<T extends string>({
+  eyebrow = 'ELIGE UNA OPCIÓN',
   error,
   hint,
   label,
@@ -86,7 +88,7 @@ export function SelectField<T extends string>({
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
               <View>
-                <Text style={styles.sheetEyebrow}>INFORMACIÓN DE SALUD</Text>
+                <Text style={styles.sheetEyebrow}>{eyebrow}</Text>
                 <Text style={styles.sheetTitle}>{title}</Text>
               </View>
               <Pressable
