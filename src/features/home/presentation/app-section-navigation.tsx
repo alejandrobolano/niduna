@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
-export type AppSection = 'baby' | 'family';
+export type AppSection = 'handoff' | 'baby' | 'family';
 
 interface AppSectionNavigationProps {
   onChange: (section: AppSection) => void;
@@ -10,6 +10,7 @@ interface AppSectionNavigationProps {
 }
 
 const sections = [
+  { glyph: '☾', label: 'Relevo', value: 'handoff' },
   { glyph: '♡', label: 'Bebé', value: 'baby' },
   { glyph: '⌂', label: 'Familia', value: 'family' },
 ] satisfies { glyph: string; label: string; value: AppSection }[];
