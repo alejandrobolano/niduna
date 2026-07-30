@@ -45,4 +45,3 @@ export async function exportCareHistoryFile(
     UTI: 'public.comma-separated-values-text',
   });
 }
-

@@ -49,4 +49,3 @@ export function getCareSnapshot(events: CareEvent[]): CareSnapshot {
 export function getDurationMinutes(start: string, end: string): number {
   return Math.max(0, Math.round((Date.parse(end) - Date.parse(start)) / 60_000));
 }
-
