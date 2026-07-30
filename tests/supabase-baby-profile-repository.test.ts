@@ -50,7 +50,7 @@ describe('Supabase baby profile mapping', () => {
 
   it('maps domain values to the atomic save operation', () => {
     expect(
-      toRpcArguments(undefined, {
+      toRpcArguments('family-id', undefined, {
         birthDate: '2026-07-29',
         birthMeasurement: {
           headCircumferenceCentimeters: 35.2,
@@ -65,6 +65,7 @@ describe('Supabase baby profile mapping', () => {
       }),
     ).toMatchObject({
       target_baby_id: null,
+      target_family_id: 'family-id',
       target_head_circumference_millimeters: 352,
       target_length_millimeters: 505,
       target_name: 'Lucía',

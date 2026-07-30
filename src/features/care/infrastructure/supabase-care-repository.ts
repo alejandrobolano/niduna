@@ -51,12 +51,11 @@ async function insertEvent(
 }
 
 export const supabaseCareRepository: CareRepository = {
-  async load(userId) {
+  async load(userId, babyId) {
     const { data: baby, error: babyError } = await supabase
       .from('babies')
       .select('id, family_id, life_stage, name')
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('id', babyId)
       .maybeSingle();
 
     if (babyError) {

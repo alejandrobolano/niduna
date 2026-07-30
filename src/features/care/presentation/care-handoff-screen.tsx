@@ -54,6 +54,8 @@ const diaperLabels: Record<DiaperEvent['condition'], string> = {
 };
 
 interface CareHandoffScreenProps {
+  babyId?: string;
+  canCreateBaby: boolean;
   exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
@@ -461,6 +463,8 @@ function DashboardContent({
 }
 
 export function CareHandoffScreen({
+  babyId: selectedBabyId,
+  canCreateBaby,
   exportHistory,
   onOpenBabyProfile,
   repository,
@@ -468,7 +472,7 @@ export function CareHandoffScreen({
   userId,
 }: CareHandoffScreenProps) {
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [action, setAction] = useState<CareAction>();
@@ -482,8 +486,14 @@ export function CareHandoffScreen({
   useEffect(() => {
     let active = true;
 
+    if (!selectedBabyId) {
+      return () => {
+        active = false;
+      };
+    }
+
     void repository
-      .load(userId)
+      .load(userId, selectedBabyId)
       .then((loadedDashboard) => {
         if (active) {
           setLoadError(false);
@@ -504,7 +514,7 @@ export function CareHandoffScreen({
     return () => {
       active = false;
     };
-  }, [loadAttempt, repository, userId]);
+  }, [loadAttempt, repository, selectedBabyId, userId]);
 
   const babyId = dashboard?.baby.id;
 
@@ -568,23 +578,26 @@ export function CareHandoffScreen({
               <NuniMascot size={190} />
               <Text style={styles.setupEyebrow}>Relevo familiar</Text>
               <Text style={styles.setupTitle}>
-                Primero necesitamos el perfil del bebé
+                {canCreateBaby
+                  ? 'Primero necesitamos el perfil del bebé'
+                  : 'Esta familia todavía no tiene un bebé'}
               </Text>
               <Text style={styles.setupText}>
-                El relevo se vincula a un bebé para mantener los datos separados
-                y protegidos dentro de la familia.
+                {canCreateBaby
+                  ? 'El relevo se vincula a un bebé para mantener los datos separados y protegidos dentro de la familia.'
+                  : 'Cuando un administrador cree el perfil, podrás consultar aquí el relevo familiar.'}
               </Text>
-              <Pressable
-                onPress={onOpenBabyProfile}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed && styles.primaryButtonPressed,
-                ]}
-              >
-                <Text style={styles.primaryButtonText}>
-                  Crear perfil
-                </Text>
-              </Pressable>
+              {canCreateBaby ? (
+                <Pressable
+                  onPress={onOpenBabyProfile}
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && styles.primaryButtonPressed,
+                  ]}
+                >
+                  <Text style={styles.primaryButtonText}>Crear perfil</Text>
+                </Pressable>
+              ) : null}
             </View>
           </View>
         </ScrollView>

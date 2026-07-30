@@ -24,7 +24,7 @@ export type SleepInput = CareEventInput;
 
 export interface CareRepository {
   finishSleep(eventId: string): Promise<void>;
-  load(userId: string): Promise<CareDashboard | null>;
+  load(userId: string, babyId: string): Promise<CareDashboard | null>;
   recordDiaper(input: DiaperInput): Promise<void>;
   recordFeeding(input: FeedingInput): Promise<void>;
   startSleep(input: SleepInput): Promise<void>;

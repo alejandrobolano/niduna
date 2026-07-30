@@ -9,12 +9,15 @@ import {
 import { supabase } from '@/shared/infrastructure/supabase/client';
 
 export const supabaseBabyProfileRepository: BabyProfileRepository = {
-  async load() {
+  async load(babyId) {
+    if (!babyId) {
+      return null;
+    }
+
     const { data: baby, error: babyError } = await supabase
       .from('babies')
       .select('*')
-      .order('created_at', { ascending: true })
-      .limit(1)
+      .eq('id', babyId)
       .maybeSingle();
 
     if (babyError) {
@@ -40,10 +43,10 @@ export const supabaseBabyProfileRepository: BabyProfileRepository = {
     return mapStoredProfile(baby, birthMeasurement);
   },
 
-  async save(babyId, profile) {
+  async save({ babyId, familyId, profile }) {
     const { data: savedBabyId, error } = await supabase.rpc(
       'save_baby_profile',
-      toRpcArguments(babyId, profile),
+      toRpcArguments(familyId, babyId, profile),
     );
 
     if (error || !savedBabyId) {

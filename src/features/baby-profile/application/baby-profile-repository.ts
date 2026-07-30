@@ -5,9 +5,15 @@ export interface StoredBabyProfile {
   profile: BabyProfile;
 }
 
+export interface SaveBabyProfileInput {
+  babyId?: string;
+  familyId: string;
+  profile: BabyProfile;
+}
+
 export interface BabyProfileRepository {
-  load(): Promise<StoredBabyProfile | null>;
-  save(babyId: string | undefined, profile: BabyProfile): Promise<StoredBabyProfile>;
+  load(babyId: string | undefined): Promise<StoredBabyProfile | null>;
+  save(input: SaveBabyProfileInput): Promise<StoredBabyProfile>;
 }
 
 export class BabyProfilePersistenceError extends Error {
