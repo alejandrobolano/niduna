@@ -9,6 +9,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  filterCareEvents,
+  type CareEventFilter,
+} from '@/features/care/application/care-history';
+import {
   getCareSnapshot,
   getDurationMinutes,
 } from '@/features/care/application/care-snapshot';
@@ -23,6 +27,7 @@ import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
+import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -49,6 +54,7 @@ const diaperLabels: Record<DiaperEvent['condition'], string> = {
 };
 
 interface CareHandoffScreenProps {
+  exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   topContent?: ReactNode;
@@ -210,13 +216,19 @@ function DashboardContent({
   dashboard,
   now,
   onAction,
+  onExport,
   onOpenBabyProfile,
 }: {
   dashboard: CareDashboard;
   now: Date;
   onAction: (action: CareAction) => void;
+  onExport: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
 }) {
+  const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
+  const [selectedDate, setSelectedDate] = useState<string>();
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
     [dashboard.events],
@@ -226,6 +238,23 @@ function DashboardContent({
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
   const isExpected = dashboard.baby.lifeStage === 'expected';
+  const filteredEvents = useMemo(
+    () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
+    [dashboard.events, eventFilter, selectedDate],
+  );
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportError(false);
+
+    try {
+      await onExport(filteredEvents, dashboard.baby.name);
+    } catch {
+      setExportError(true);
+    } finally {
+      setIsExporting(false);
+    }
+  }
 
   return (
     <>
@@ -370,11 +399,33 @@ function DashboardContent({
       )}
 
       <View style={styles.section}>
+        <CareHistoryControls
+          eventFilter={eventFilter}
+          events={dashboard.events}
+          exportCount={filteredEvents.length}
+          isExporting={isExporting}
+          onChangeDate={setSelectedDate}
+          onChangeFilter={setEventFilter}
+          onExport={() => void handleExport()}
+          selectedDate={selectedDate}
+        />
+        {exportError ? (
+          <Text accessibilityRole="alert" style={styles.exportError}>
+            No pudimos crear el archivo. Inténtalo de nuevo.
+          </Text>
+        ) : null}
+        {dashboard.hasOlderEvents ? (
+          <Text style={styles.historyLimitNotice}>
+            Se muestran los 1000 registros más recientes. La paginación del
+            historial antiguo se añadirá antes de cerrar el MVP.
+          </Text>
+        ) : null}
         <View style={styles.sectionHeading}>
           <View>
             <Text style={styles.sectionTitle}>Lo más reciente</Text>
             <Text style={styles.sectionSubtitle}>
-              Últimos {Math.min(dashboard.events.length, 50)} registros.
+              {filteredEvents.length}{' '}
+              {filteredEvents.length === 1 ? 'registro visible' : 'registros visibles'}.
             </Text>
           </View>
           <View style={styles.liveBadge}>
@@ -384,19 +435,22 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {dashboard.events.length > 0 ? (
-            dashboard.events.map((event) => (
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
               <TimelineEvent event={event} key={event.id} now={now} />
             ))
           ) : (
             <View style={styles.emptyTimeline}>
               <Text style={styles.emptyTimelineGlyph}>☆</Text>
               <Text style={styles.emptyTimelineTitle}>
-                El relevo empieza aquí
+                {dashboard.events.length > 0
+                  ? 'No hay registros con este filtro'
+                  : 'El relevo empieza aquí'}
               </Text>
               <Text style={styles.emptyTimelineText}>
-                El primer registro aparecerá en esta cronología para toda la
-                familia.
+                {dashboard.events.length > 0
+                  ? 'Prueba otro tipo de cuidado, otro día o vuelve a mostrar todo.'
+                  : 'El primer registro aparecerá en esta cronología para toda la familia.'}
               </Text>
             </View>
           )}
@@ -407,6 +461,7 @@ function DashboardContent({
 }
 
 export function CareHandoffScreen({
+  exportHistory,
   onOpenBabyProfile,
   repository,
   topContent,
@@ -546,6 +601,7 @@ export function CareHandoffScreen({
             dashboard={dashboard}
             now={now}
             onAction={setAction}
+            onExport={exportHistory}
             onOpenBabyProfile={onOpenBabyProfile}
           />
         </View>
@@ -740,6 +796,16 @@ const styles = StyleSheet.create({
     color: colors.primaryPressed,
     fontSize: 12,
     fontWeight: '900',
+  },
+  exportError: {
+    color: colors.error,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  historyLimitNotice: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
   },
   timeline: {
     backgroundColor: colors.surface,

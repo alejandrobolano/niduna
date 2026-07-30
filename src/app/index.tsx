@@ -7,6 +7,12 @@ import { AuthScreen } from '@/features/auth/presentation/auth-screen';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
+import {
+  createCareHistoryCsv,
+  createCareHistoryFileName,
+} from '@/features/care/application/care-history-csv';
+import type { CareEvent } from '@/features/care/domain/care-event';
+import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
 import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
@@ -16,6 +22,16 @@ import {
   type AppSection,
 } from '@/features/home/presentation/app-section-navigation';
 import { spacing } from '@/shared/presentation/theme';
+
+async function exportCareHistory(
+  events: CareEvent[],
+  babyName: string,
+): Promise<void> {
+  await exportCareHistoryFile({
+    content: createCareHistoryCsv(events),
+    fileName: createCareHistoryFileName(babyName),
+  });
+}
 
 export default function IndexRoute() {
   const { session, status } = useAuth();
@@ -39,6 +55,7 @@ export default function IndexRoute() {
   if (section === 'handoff') {
     return (
       <CareHandoffScreen
+        exportHistory={exportCareHistory}
         onOpenBabyProfile={() => setSection('baby')}
         repository={supabaseCareRepository}
         topContent={topContent}

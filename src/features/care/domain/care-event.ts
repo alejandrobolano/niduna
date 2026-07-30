@@ -47,5 +47,5 @@ export interface CareDashboard {
   baby: CareBaby;
   canRecord: boolean;
   events: CareEvent[];
+  hasOlderEvents: boolean;
 }
-

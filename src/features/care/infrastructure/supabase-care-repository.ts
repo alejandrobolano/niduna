@@ -81,7 +81,7 @@ export const supabaseCareRepository: CareRepository = {
         )
         .eq('baby_id', baby.id)
         .order('occurred_at', { ascending: false })
-        .limit(50),
+        .limit(1001),
     ]);
     const loadError = membershipResult.error ?? eventsResult.error;
 
@@ -89,7 +89,8 @@ export const supabaseCareRepository: CareRepository = {
       throwOperationError(loadError.code, loadError.message);
     }
 
-    const rows = eventsResult.data ?? [];
+    const loadedRows = eventsResult.data ?? [];
+    const rows = loadedRows.slice(0, 1000);
     const userIds = [...new Set(rows.map((row) => row.recorded_by))];
     const displayNames = new Map<string, string>();
 
@@ -121,6 +122,7 @@ export const supabaseCareRepository: CareRepository = {
         membershipResult.data?.role === 'admin' ||
         membershipResult.data?.role === 'caregiver',
       events: rows.map((row) => mapCareEvent(row, displayNames)),
+      hasOlderEvents: loadedRows.length > rows.length,
     };
   },
 
