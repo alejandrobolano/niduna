@@ -9,6 +9,10 @@ export interface SelectOption<T extends string> {
   value: T;
 }
 
+function getOptionMark(label: string): string {
+  return label.length <= 3 ? label : label.slice(0, 1).toLocaleUpperCase('es');
+}
+
 interface SelectFieldProps<T extends string> {
   eyebrow?: string;
   error?: string;
@@ -57,7 +61,9 @@ export function SelectField<T extends string>({
         <View style={styles.dropIcon}>
           <View style={styles.dropTop} />
           <View style={styles.dropBody}>
-            <Text style={styles.dropText}>{selectedOption?.label ?? '?'}</Text>
+            <Text numberOfLines={1} style={styles.dropText}>
+              {selectedOption ? getOptionMark(selectedOption.label) : '?'}
+            </Text>
           </View>
         </View>
         <View style={styles.triggerCopy}>
@@ -117,7 +123,7 @@ export function SelectField<T extends string>({
                   >
                     <View style={[styles.optionMark, selected && styles.optionMarkSelected]}>
                       <Text style={[styles.optionMarkText, selected && styles.optionMarkTextSelected]}>
-                        {selected ? '✓' : option.label}
+                        {selected ? '✓' : getOptionMark(option.label)}
                       </Text>
                     </View>
                     <View style={styles.optionCopy}>

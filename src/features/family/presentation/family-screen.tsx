@@ -55,7 +55,11 @@ const invitationRoleOptions = [
 const relationshipOptions = [
   { label: 'Madre', value: 'mother' },
   { label: 'Padre', value: 'father' },
-  { label: 'Progenitor/a', value: 'parent' },
+  {
+    label: 'Otro progenitor/a',
+    supportingText: 'Si madre o padre no describen cómo quieres identificarte.',
+    value: 'parent',
+  },
   { label: 'Tutor/a', value: 'guardian' },
   { label: 'Abuelo/a', value: 'grandparent' },
   { label: 'Familiar', value: 'relative' },
@@ -76,7 +80,7 @@ const relationshipLabels: Record<FamilyRelationship, string> = {
   guardian: 'Tutor/a',
   mother: 'Madre',
   other: 'Otra relación',
-  parent: 'Progenitor/a',
+  parent: 'Otro progenitor/a',
   professional_caregiver: 'Cuidador/a profesional',
   relative: 'Familiar',
 };

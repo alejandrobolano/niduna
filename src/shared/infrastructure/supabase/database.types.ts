@@ -15,6 +15,10 @@ type Table<Row, Insert, Update> = {
 
 type BabyLifeStage = 'expected' | 'born';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
+type BreastSide = 'left' | 'right' | 'both';
+type CareEventType = 'feeding' | 'diaper' | 'sleep';
+type DiaperCondition = 'wet' | 'dirty' | 'both';
+type FeedingMethod = 'breast' | 'expressed_milk' | 'formula' | 'mixed';
 type FamilyRelationship =
   | 'mother'
   | 'father'
@@ -185,6 +189,38 @@ export type Database = {
           weight_grams?: number | null;
         }
       >;
+      care_events: Table<
+        {
+          amount_milliliters: number | null;
+          baby_id: string;
+          breast_side: BreastSide | null;
+          created_at: string;
+          diaper_condition: DiaperCondition | null;
+          ended_at: string | null;
+          event_type: CareEventType;
+          feeding_method: FeedingMethod | null;
+          id: string;
+          notes: string | null;
+          occurred_at: string;
+          recorded_by: string;
+          updated_at: string;
+          updated_by: string;
+        },
+        {
+          amount_milliliters?: number | null;
+          baby_id: string;
+          breast_side?: BreastSide | null;
+          diaper_condition?: DiaperCondition | null;
+          ended_at?: string | null;
+          event_type: CareEventType;
+          feeding_method?: FeedingMethod | null;
+          notes?: string | null;
+          occurred_at?: string;
+        },
+        {
+          ended_at?: string | null;
+        }
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -253,8 +289,12 @@ export type Database = {
     Enums: {
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;
+      breast_side: BreastSide;
+      care_event_type: CareEventType;
+      diaper_condition: DiaperCondition;
       family_relationship: FamilyRelationship;
       family_role: FamilyRole;
+      feeding_method: FeedingMethod;
       rhesus_factor: RhesusFactor;
       sex_at_birth: SexAtBirth;
     };
