@@ -53,6 +53,7 @@ export function mapStoredProfile(
 }
 
 export function toRpcArguments(
+  familyId: string,
   babyId: string | undefined,
   profile: BabyProfile,
 ) {
@@ -60,6 +61,7 @@ export function toRpcArguments(
 
   return {
     target_baby_id: babyId ?? null,
+    target_family_id: familyId,
     target_birth_date: profile.birthDate ?? null,
     target_blood_group:
       profile.bloodGroup && profile.bloodGroup !== 'unknown'

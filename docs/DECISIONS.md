@@ -27,6 +27,16 @@ Blood group, Rh factor, gestational age, and sex recorded at birth are optional.
 
 Relationship labels and permissions are separate. A member may identify as a parent, grandparent, relative, or professional caregiver while receiving an administrator, caregiver, or read-only permission set.
 
+## Explicit family and baby context
+
+A person may belong to multiple families, and each family may contain multiple
+babies. The client always selects a family before a baby and passes both
+identifiers to profile and care operations. Repositories never infer context by
+loading the first accessible row.
+
+The active selection is a device preference, not an authorization mechanism.
+Supabase RLS remains responsible for validating every read and write.
+
 ## Cloudflare environments
 
 Niduna uses `niduna-dev` for development and `niduna` for production.

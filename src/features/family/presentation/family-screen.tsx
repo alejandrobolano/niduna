@@ -111,12 +111,14 @@ function getOperationMessage(error: unknown): string {
 }
 
 interface FamilyScreenProps {
+  onContextChanged?: (preferredFamilyId?: string) => Promise<void> | void;
   repository: FamilyRepository;
   topContent?: ReactNode;
   userId: string;
 }
 
 export function FamilyScreen({
+  onContextChanged,
   repository,
   topContent,
   userId,
@@ -199,6 +201,7 @@ export function FamilyScreen({
         ? preferredFamilyId
         : loadedFamilies[0]?.id,
     );
+    await onContextChanged?.(preferredFamilyId);
   }
 
   function startOperation() {

@@ -92,11 +92,17 @@ function parseOptionalNumber(value: string): number | undefined {
 }
 
 interface BabyProfileScreenProps {
+  babyId?: string;
+  familyId: string;
+  onSaved?: (babyId: string) => void;
   repository: BabyProfileRepository;
   topContent?: ReactNode;
 }
 
 export function BabyProfileScreen({
+  babyId: selectedBabyId,
+  familyId,
+  onSaved,
   repository,
   topContent,
 }: BabyProfileScreenProps) {
@@ -112,7 +118,7 @@ export function BabyProfileScreen({
   const [bloodType, setBloodType] = useState<BloodTypeSelection>();
   const [notes, setNotes] = useState('');
   const [hasReviewed, setHasReviewed] = useState(false);
-  const [babyId, setBabyId] = useState<string>();
+  const [storedBabyId, setStoredBabyId] = useState<string>();
   const [lastSavedProfile, setLastSavedProfile] = useState<BabyProfile>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -124,7 +130,7 @@ export function BabyProfileScreen({
     let active = true;
 
     void repository
-      .load()
+      .load(selectedBabyId)
       .then((storedProfile) => {
         if (!active || !storedProfile) {
           return;
@@ -133,7 +139,7 @@ export function BabyProfileScreen({
         const loadedProfile = storedProfile.profile;
         const measurement = loadedProfile.birthMeasurement;
 
-        setBabyId(storedProfile.id);
+        setStoredBabyId(storedProfile.id);
         setLifeStage(loadedProfile.lifeStage);
         setName(loadedProfile.name);
         setDate(
@@ -176,7 +182,7 @@ export function BabyProfileScreen({
     return () => {
       active = false;
     };
-  }, [loadAttempt, repository]);
+  }, [loadAttempt, repository, selectedBabyId]);
 
   const profile = useMemo<BabyProfile>(
     () => {
@@ -242,11 +248,16 @@ export function BabyProfileScreen({
     setIsSaving(true);
 
     try {
-      const storedProfile = await repository.save(babyId, profile);
-      setBabyId(storedProfile.id);
+      const storedProfile = await repository.save({
+        babyId: storedBabyId,
+        familyId,
+        profile,
+      });
+      setStoredBabyId(storedProfile.id);
       setName(storedProfile.profile.name);
       setNotes(storedProfile.profile.notes ?? '');
       setLastSavedProfile(storedProfile.profile);
+      onSaved?.(storedProfile.id);
     } catch {
       setSaveError(true);
     } finally {
@@ -493,21 +504,21 @@ export function BabyProfileScreen({
 
           <Pressable
             accessibilityRole="button"
-            disabled={isSaving || (!hasUnsavedChanges && Boolean(babyId))}
+            disabled={isSaving || (!hasUnsavedChanges && Boolean(storedBabyId))}
             onPress={() => void handleSave()}
             style={({ pressed }) => [
               styles.primaryButton,
               pressed && styles.primaryButtonPressed,
-              (isSaving || (!hasUnsavedChanges && Boolean(babyId))) &&
+              (isSaving || (!hasUnsavedChanges && Boolean(storedBabyId))) &&
                 styles.primaryButtonDisabled,
             ]}
           >
             <Text style={styles.primaryButtonText}>
               {isSaving
                 ? 'Guardando…'
-                : !hasUnsavedChanges && babyId
+                : !hasUnsavedChanges && storedBabyId
                   ? 'Perfil al día'
-                  : babyId
+                  : storedBabyId
                     ? 'Guardar cambios'
                     : 'Guardar perfil'}
             </Text>

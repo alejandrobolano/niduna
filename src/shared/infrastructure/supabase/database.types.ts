@@ -269,6 +269,7 @@ export type Database = {
       save_baby_profile: {
         Args: {
           target_baby_id: string | null;
+          target_family_id: string;
           target_birth_date: string | null;
           target_blood_group: BloodGroup | null;
           target_expected_due_date: string | null;
