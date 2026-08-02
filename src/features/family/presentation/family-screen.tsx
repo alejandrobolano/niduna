@@ -28,6 +28,8 @@ import type {
   FamilyRole,
   InvitableFamilyRole,
 } from '@/features/family/domain/family';
+import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
+import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import {
   SelectField,
@@ -113,14 +115,20 @@ function getOperationMessage(error: unknown): string {
 }
 
 interface FamilyScreenProps {
+  babyGroups?: FamilyBabyGroup[];
   onContextChanged?: (preferredFamilyId?: string) => Promise<void> | void;
+  onFollowBaby?: (babyId: string) => Promise<void>;
+  onRestoreBaby?: (babyId: string) => Promise<void>;
   repository: FamilyRepository;
   topContent?: ReactNode;
   userId: string;
 }
 
 export function FamilyScreen({
+  babyGroups = [],
   onContextChanged,
+  onFollowBaby,
+  onRestoreBaby,
   repository,
   topContent,
   userId,
@@ -188,6 +196,9 @@ export function FamilyScreen({
     () =>
       families.find((family) => family.id === selectedFamilyId) ?? families[0],
     [families, selectedFamilyId],
+  );
+  const selectedBabyGroup = babyGroups.find(
+    (group) => group.id === selectedFamily?.id,
   );
   const canManageFamily =
     selectedFamily?.currentUserRole === 'owner' ||
@@ -958,6 +969,13 @@ export function FamilyScreen({
                 </Text>
               </Pressable>
               {showJoinForm ? joinForm : null}
+              {selectedBabyGroup && onFollowBaby && onRestoreBaby ? (
+                <FamilyBabyManagement
+                  family={selectedBabyGroup}
+                  onFollowBaby={onFollowBaby}
+                  onRestoreBaby={onRestoreBaby}
+                />
+              ) : null}
             </>
           )}
         </ScrollView>

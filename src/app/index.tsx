@@ -117,7 +117,12 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
 
   const topContent = (
     <View style={styles.topContent}>
-      {sessionBanner}
+      <View style={styles.navigationRow}>
+        <View style={styles.primaryNavigation}>
+          <AppSectionNavigation onChange={changeSection} value={section} />
+        </View>
+        {sessionBanner}
+      </View>
       <FamilyBabySwitcher
         activeBaby={context.activeBaby}
         activeFamily={activeFamily}
@@ -126,10 +131,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         onAddBaby={addBaby}
         onChangeBaby={changeBaby}
         onChangeFamily={changeFamily}
-        onFollowBaby={context.followBaby}
-        onRestoreBaby={context.restoreBaby}
       />
-      <AppSectionNavigation onChange={changeSection} value={section} />
     </View>
   );
   const canManageBabies =
@@ -154,9 +156,12 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   if (section === 'baby' && !context.activeBaby && !canManageBabies) {
     return (
       <FamilyScreen
+        babyGroups={context.families}
         onContextChanged={(familyId) =>
           context.refresh(familyId ? { familyId } : undefined)
         }
+        onFollowBaby={context.followBaby}
+        onRestoreBaby={context.restoreBaby}
         repository={supabaseFamilyRepository}
         topContent={topContent}
         userId={user.id}
@@ -186,9 +191,12 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     />
   ) : (
     <FamilyScreen
+      babyGroups={context.families}
       onContextChanged={(familyId) =>
         context.refresh(familyId ? { familyId } : undefined)
       }
+      onFollowBaby={context.followBaby}
+      onRestoreBaby={context.restoreBaby}
       repository={supabaseFamilyRepository}
       topContent={topContent}
       userId={user.id}
@@ -198,4 +206,10 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
 
 const styles = StyleSheet.create({
   topContent: { gap: spacing.md },
+  navigationRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  primaryNavigation: { flex: 1 },
 });
