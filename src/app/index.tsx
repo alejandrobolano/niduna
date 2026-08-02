@@ -121,17 +121,17 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         <View style={styles.primaryNavigation}>
           <AppSectionNavigation onChange={changeSection} value={section} />
         </View>
+        <FamilyBabySwitcher
+          activeBaby={context.activeBaby}
+          activeFamily={activeFamily}
+          families={context.families}
+          isCreatingBaby={isCreatingBaby}
+          onAddBaby={addBaby}
+          onChangeBaby={changeBaby}
+          onChangeFamily={changeFamily}
+        />
         {sessionBanner}
       </View>
-      <FamilyBabySwitcher
-        activeBaby={context.activeBaby}
-        activeFamily={activeFamily}
-        families={context.families}
-        isCreatingBaby={isCreatingBaby}
-        onAddBaby={addBaby}
-        onChangeBaby={changeBaby}
-        onChangeFamily={changeFamily}
-      />
     </View>
   );
   const canManageBabies =
@@ -209,7 +209,8 @@ const styles = StyleSheet.create({
   navigationRow: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  primaryNavigation: { flex: 1 },
+  primaryNavigation: { flex: 1, minWidth: 260 },
 });
