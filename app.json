@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.niduna.app",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.niduna.app",
@@ -27,6 +30,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#FF6F61",
+          "defaultChannel": "care-updates",
+          "icon": "./assets/images/android-icon-monochrome.png"
+        }
+      ],
       [
         "expo-splash-screen",
         {

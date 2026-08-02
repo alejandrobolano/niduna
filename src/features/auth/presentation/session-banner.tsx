@@ -1,14 +1,22 @@
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useState } from 'react';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   email: string;
+  settingsContent?: ReactNode;
 }
 
-export function SessionBanner({ email }: SessionBannerProps) {
+export function SessionBanner({ email, settingsContent }: SessionBannerProps) {
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string>();
@@ -66,33 +74,40 @@ export function SessionBanner({ email }: SessionBannerProps) {
                 <Text style={styles.closeButtonText}>×</Text>
               </Pressable>
             </View>
-            <View style={styles.identity}>
-              <View style={styles.panelAvatar}>
-                <Text style={styles.panelAvatarText}>
-                  {email.slice(0, 1).toUpperCase()}
-                </Text>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.identity}>
+                <View style={styles.panelAvatar}>
+                  <Text style={styles.panelAvatarText}>
+                    {email.slice(0, 1).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.copy}>
+                  <Text numberOfLines={2} style={styles.email}>
+                    {email}
+                  </Text>
+                  <Text style={styles.caption}>
+                    Sesión protegida en este dispositivo
+                  </Text>
+                </View>
               </View>
-              <View style={styles.copy}>
-                <Text numberOfLines={2} style={styles.email}>
-                  {email}
+              {settingsContent ?? (
+                <View style={styles.panelBody}>
+                  <Text style={styles.panelTitle}>Ajustes personales</Text>
+                  <Text style={styles.panelText}>
+                    Tus preferencias estarán disponibles cuando tengas una
+                    familia activa.
+                  </Text>
+                </View>
+              )}
+              {error ? (
+                <Text accessibilityLiveRegion="polite" style={styles.error}>
+                  {error}
                 </Text>
-                <Text style={styles.caption}>
-                  Sesión protegida en este dispositivo
-                </Text>
-              </View>
-            </View>
-            <View style={styles.panelBody}>
-              <Text style={styles.panelTitle}>Ajustes personales</Text>
-              <Text style={styles.panelText}>
-                Aquí aparecerán tu perfil, las preferencias de notificaciones y
-                la privacidad de la cuenta.
-              </Text>
-            </View>
-            {error ? (
-              <Text accessibilityLiveRegion="polite" style={styles.error}>
-                {error}
-              </Text>
-            ) : null}
+              ) : null}
+            </ScrollView>
             <Pressable
               accessibilityRole="button"
               disabled={isSigningOut}
@@ -157,6 +172,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  scrollContent: { gap: spacing.xl },
   panelEyebrow: {
     color: colors.coral,
     fontSize: 11,
