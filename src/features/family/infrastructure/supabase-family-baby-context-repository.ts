@@ -2,15 +2,23 @@ import {
   FamilyBabyContextPersistenceError,
   type FamilyBabyContextRepository,
 } from '@/features/family/application/family-baby-context-repository';
-import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
+import { mapFamilyBabyGroups } from '@/features/family/infrastructure/family-baby-context-mapper';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 
 export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
   {
+    async archiveBaby(babyId) {
+      await setBabyArchived(babyId, true);
+    },
+
+    async followBaby(babyId) {
+      await setBabyFollowing(babyId, true);
+    },
+
     async load(userId) {
       const { data: memberships, error: membershipError } = await supabase
         .from('family_members')
-        .select('family_id, role, created_at')
+        .select('id, family_id, role, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
@@ -24,54 +32,69 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
         return [];
       }
 
-      const [familiesResult, babiesResult] = await Promise.all([
-        supabase
-          .from('families')
-          .select('id, name')
-          .in('id', familyIds),
-        supabase
-          .from('babies')
-          .select('id, family_id, life_stage, name, created_at')
-          .in('family_id', familyIds)
-          .order('created_at', { ascending: true }),
-      ]);
-      const error = familiesResult.error ?? babiesResult.error;
+      const [familiesResult, babiesResult, followersResult, archivedResult] =
+        await Promise.all([
+          supabase
+            .from('families')
+            .select('id, name')
+            .in('id', familyIds),
+          supabase
+            .from('babies')
+            .select('id, family_id, life_stage, name, created_at')
+            .in('family_id', familyIds)
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('baby_followers')
+            .select('baby_id')
+            .eq('user_id', userId),
+          supabase.rpc('list_archived_babies'),
+        ]);
+      const error =
+        familiesResult.error ??
+        babiesResult.error ??
+        followersResult.error ??
+        archivedResult.error;
 
       if (error) {
         throw new FamilyBabyContextPersistenceError();
       }
 
-      const familiesById = new Map(
-        (familiesResult.data ?? []).map((family) => [family.id, family]),
+      return mapFamilyBabyGroups(
+        memberships,
+        familiesResult.data ?? [],
+        babiesResult.data ?? [],
+        followersResult.data ?? [],
+        archivedResult.data ?? [],
       );
-      const babiesByFamily = new Map<
-        string,
-        FamilyBabyGroup['babies']
-      >();
+    },
 
-      for (const baby of babiesResult.data ?? []) {
-        const babies = babiesByFamily.get(baby.family_id) ?? [];
-        babies.push({
-          id: baby.id,
-          lifeStage: baby.life_stage,
-          name: baby.name,
-        });
-        babiesByFamily.set(baby.family_id, babies);
-      }
+    async restoreBaby(babyId) {
+      await setBabyArchived(babyId, false);
+    },
 
-      return memberships.flatMap((membership) => {
-        const family = familiesById.get(membership.family_id);
-
-        return family
-          ? [
-              {
-                babies: babiesByFamily.get(family.id) ?? [],
-                id: family.id,
-                name: family.name,
-                role: membership.role,
-              },
-            ]
-          : [];
-      });
+    async unfollowBaby(babyId) {
+      await setBabyFollowing(babyId, false);
     },
   };
+
+async function setBabyFollowing(babyId: string, shouldFollow: boolean) {
+  const { error } = await supabase.rpc('set_baby_following', {
+    should_follow: shouldFollow,
+    target_baby_id: babyId,
+  });
+
+  if (error) {
+    throw new FamilyBabyContextPersistenceError();
+  }
+}
+
+async function setBabyArchived(babyId: string, shouldArchive: boolean) {
+  const { error } = await supabase.rpc('set_baby_archived', {
+    should_archive: shouldArchive,
+    target_baby_id: babyId,
+  });
+
+  if (error) {
+    throw new FamilyBabyContextPersistenceError();
+  }
+}

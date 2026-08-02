@@ -91,6 +91,20 @@ export type Database = {
           role?: FamilyRole;
         }
       >;
+      baby_followers: Table<
+        {
+          baby_id: string;
+          created_at: string;
+          family_id: string;
+          user_id: string;
+        },
+        {
+          baby_id: string;
+          family_id: string;
+          user_id: string;
+        },
+        Record<string, never>
+      >;
       family_invitations: Table<
         {
           accepted_at: string | null;
@@ -116,6 +130,8 @@ export type Database = {
       >;
       babies: Table<
         {
+          archived_at: string | null;
+          archived_by: string | null;
           birth_date: string | null;
           blood_group: BloodGroup | null;
           created_at: string;
@@ -255,6 +271,35 @@ export type Database = {
       revoke_family_invitation: {
         Args: {
           target_invitation_id: string;
+        };
+        Returns: undefined;
+      };
+      list_archived_babies: {
+        Args: Record<string, never>;
+        Returns: {
+          archived_at: string;
+          baby_id: string;
+          baby_name: string;
+          family_id: string;
+        }[];
+      };
+      remove_family_member: {
+        Args: {
+          target_member_id: string;
+        };
+        Returns: undefined;
+      };
+      set_baby_archived: {
+        Args: {
+          should_archive: boolean;
+          target_baby_id: string;
+        };
+        Returns: undefined;
+      };
+      set_baby_following: {
+        Args: {
+          should_follow: boolean;
+          target_baby_id: string;
         };
         Returns: undefined;
       };

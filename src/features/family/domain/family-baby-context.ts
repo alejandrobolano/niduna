@@ -7,11 +7,19 @@ export interface FamilyBabySummary {
   name: string;
 }
 
+export interface ArchivedBabySummary {
+  archivedAt: string;
+  id: string;
+  name: string;
+}
+
 export interface FamilyBabyGroup {
+  archivedBabies: ArchivedBabySummary[];
   babies: FamilyBabySummary[];
   id: string;
   name: string;
   role: FamilyRole;
+  unfollowedBabies: FamilyBabySummary[];
 }
 
 export interface FamilyBabySelection {

@@ -19,9 +19,11 @@ import {
   formatInvitationCode,
   isInvitationCodeComplete,
 } from '@/features/family/application/invitation-code';
+import { canRemoveFamilyMember } from '@/features/family/application/family-member-permissions';
 import type {
   CreatedFamilyInvitation,
   Family,
+  FamilyMember,
   FamilyRelationship,
   FamilyRole,
   InvitableFamilyRole,
@@ -147,6 +149,7 @@ export function FamilyScreen({
   const [identityDisplayName, setIdentityDisplayName] = useState('');
   const [identityRelationship, setIdentityRelationship] =
     useState<FamilyRelationship>();
+  const [memberToRemove, setMemberToRemove] = useState<FamilyMember>();
 
   useEffect(() => {
     let active = true;
@@ -378,6 +381,25 @@ export function FamilyScreen({
         current?.id === invitationId ? undefined : current,
       );
       setOperationMessage('Invitación revocada.');
+      setOperationSucceeded(true);
+      setIsWorking(false);
+    } catch (error) {
+      finishWithError(error);
+    }
+  }
+
+  async function handleRemoveMember() {
+    if (!selectedFamily || !memberToRemove) {
+      return;
+    }
+
+    startOperation();
+
+    try {
+      await repository.removeMember(memberToRemove.id);
+      await refreshFamilies(selectedFamily.id);
+      setMemberToRemove(undefined);
+      setOperationMessage('La persona ya no tiene acceso a esta familia.');
       setOperationSucceeded(true);
       setIsWorking(false);
     } catch (error) {
@@ -769,15 +791,62 @@ export function FamilyScreen({
                         <Text style={styles.memberRelationship}>
                           {relationshipLabels[member.relationship]}
                         </Text>
+                        {canRemoveFamilyMember(
+                          selectedFamily.currentUserRole,
+                          member,
+                        ) ? (
+                          <Pressable
+                            accessibilityRole="link"
+                            disabled={isWorking}
+                            onPress={() => setMemberToRemove(member)}
+                          >
+                            <Text style={styles.removeMemberLink}>
+                              Quitar de esta familia
+                            </Text>
+                          </Pressable>
+                        ) : null}
                       </View>
                       <View style={styles.roleBadge}>
-                        <Text style={styles.roleBadgeText}>
+                        <Text numberOfLines={1} style={styles.roleBadgeText}>
                           {roleLabels[member.role]}
                         </Text>
                       </View>
                     </View>
                   ))}
                 </View>
+                {memberToRemove ? (
+                  <View style={styles.memberConfirmation}>
+                    <Text style={styles.memberConfirmationTitle}>
+                      ¿Quitar a {memberToRemove.displayName ?? 'esta persona'}?
+                    </Text>
+                    <Text style={styles.memberConfirmationText}>
+                      Perderá el acceso a los bebés, registros e historial de
+                      esta familia. Su cuenta y sus otras familias no se borrarán.
+                    </Text>
+                    <View style={styles.memberConfirmationActions}>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={isWorking}
+                        onPress={() => setMemberToRemove(undefined)}
+                        style={styles.memberConfirmationCancel}
+                      >
+                        <Text style={styles.memberConfirmationCancelText}>
+                          Cancelar
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={isWorking}
+                        onPress={() => void handleRemoveMember()}
+                        style={styles.memberConfirmationAccept}
+                      >
+                        <Text style={styles.memberConfirmationAcceptText}>
+                          {isWorking ? 'Quitando…' : 'Quitar acceso'}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : null}
               </View>
 
               {canManageFamily ? (
@@ -1093,13 +1162,64 @@ const styles = StyleSheet.create({
   memberCopy: { flex: 1 },
   memberName: { color: colors.text, fontSize: 14, fontWeight: '800' },
   memberRelationship: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  removeMemberLink: {
+    color: colors.error,
+    fontSize: 11,
+    fontWeight: '800',
+    marginTop: spacing.xs,
+  },
   roleBadge: {
     backgroundColor: colors.lavenderSoft,
     borderRadius: radius.pill,
+    flexShrink: 0,
+    maxWidth: 112,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  roleBadgeText: { color: colors.lavender, fontSize: 10, fontWeight: '900' },
+  roleBadgeText: {
+    color: colors.lavender,
+    fontSize: 10,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  memberConfirmation: {
+    backgroundColor: colors.peach,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    padding: spacing.lg,
+  },
+  memberConfirmationTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  memberConfirmationText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  memberConfirmationActions: { flexDirection: 'row', gap: spacing.sm },
+  memberConfirmationCancel: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  memberConfirmationCancelText: {
+    color: colors.textMuted,
+    fontWeight: '800',
+  },
+  memberConfirmationAccept: {
+    alignItems: 'center',
+    backgroundColor: colors.coral,
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  memberConfirmationAcceptText: { color: colors.white, fontWeight: '900' },
   invitationSection: { backgroundColor: colors.butterSoft },
   codeCard: {
     alignItems: 'center',

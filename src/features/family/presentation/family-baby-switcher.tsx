@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,6 +18,8 @@ interface FamilyBabySwitcherProps {
   onAddBaby: () => void;
   onChangeBaby: (babyId: string) => void;
   onChangeFamily: (familyId: string) => void;
+  onFollowBaby: (babyId: string) => Promise<void>;
+  onRestoreBaby: (babyId: string) => Promise<void>;
 }
 
 export function FamilyBabySwitcher({
@@ -27,7 +30,11 @@ export function FamilyBabySwitcher({
   onAddBaby,
   onChangeBaby,
   onChangeFamily,
+  onFollowBaby,
+  onRestoreBaby,
 }: FamilyBabySwitcherProps) {
+  const [isManaging, setIsManaging] = useState(false);
+  const [managementError, setManagementError] = useState(false);
   const familyOptions = families.map((family) => ({
     label: family.name,
     supportingText: `${family.babies.length} ${
@@ -41,6 +48,19 @@ export function FamilyBabySwitcher({
       baby.lifeStage === 'expected' ? 'Aún por nacer' : 'Ya nació',
     value: baby.id,
   }));
+
+  async function manageBaby(action: () => Promise<void>) {
+    setIsManaging(true);
+    setManagementError(false);
+
+    try {
+      await action();
+    } catch {
+      setManagementError(true);
+    } finally {
+      setIsManaging(false);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -80,6 +100,54 @@ export function FamilyBabySwitcher({
           <Text style={styles.addGlyph}>＋</Text>
           <Text style={styles.addLabel}>Añadir bebé</Text>
         </Pressable>
+      ) : null}
+      {activeFamily.unfollowedBabies.length > 0 ||
+      activeFamily.archivedBabies.length > 0 ? (
+        <View style={styles.managementCard}>
+          {activeFamily.unfollowedBabies.length > 0 ? (
+            <View style={styles.managementGroup}>
+              <Text style={styles.managementTitle}>Bebés que no sigues</Text>
+              {activeFamily.unfollowedBabies.map((baby) => (
+                <Pressable
+                  accessibilityRole="link"
+                  disabled={isManaging}
+                  key={baby.id}
+                  onPress={() =>
+                    void manageBaby(() => onFollowBaby(baby.id))
+                  }
+                >
+                  <Text style={styles.managementLink}>
+                    Volver a seguir a {baby.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          {activeFamily.archivedBabies.length > 0 ? (
+            <View style={styles.managementGroup}>
+              <Text style={styles.managementTitle}>Retirados de la familia</Text>
+              {activeFamily.archivedBabies.map((baby) => (
+                <Pressable
+                  accessibilityRole="link"
+                  disabled={isManaging}
+                  key={baby.id}
+                  onPress={() =>
+                    void manageBaby(() => onRestoreBaby(baby.id))
+                  }
+                >
+                  <Text style={styles.managementLink}>
+                    Restaurar a {baby.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+          {managementError ? (
+            <Text accessibilityLiveRegion="polite" style={styles.managementError}>
+              No pudimos actualizar el seguimiento. Inténtalo de nuevo.
+            </Text>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -193,4 +261,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
   },
+  managementCard: {
+    alignSelf: 'stretch',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    gap: spacing.md,
+    padding: spacing.md,
+  },
+  managementGroup: { gap: spacing.xs },
+  managementTitle: { color: colors.text, fontSize: 12, fontWeight: '900' },
+  managementLink: {
+    color: colors.primaryPressed,
+    fontSize: 13,
+    fontWeight: '800',
+    paddingVertical: spacing.xs,
+  },
+  managementError: { color: colors.error, fontSize: 12 },
 });

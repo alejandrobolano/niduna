@@ -126,12 +126,15 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         onAddBaby={addBaby}
         onChangeBaby={changeBaby}
         onChangeFamily={changeFamily}
+        onFollowBaby={context.followBaby}
+        onRestoreBaby={context.restoreBaby}
       />
       <AppSectionNavigation onChange={changeSection} value={section} />
     </View>
   );
   const canManageBabies =
     activeFamily.role === 'owner' || activeFamily.role === 'admin';
+  const activeBabyId = context.activeBaby?.id;
 
   if (section === 'handoff') {
     return (
@@ -164,6 +167,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   return section === 'baby' ? (
     <BabyProfileScreen
       babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+      canArchive={canManageBabies}
       familyId={activeFamily.id}
       key={`${activeFamily.id}:${
         isCreatingBaby
@@ -175,6 +179,8 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
           .refresh({ babyId, familyId: activeFamily.id })
           .then(() => setIsCreatingBaby(false));
       }}
+      onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
+      onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
       repository={supabaseBabyProfileRepository}
       topContent={topContent}
     />
