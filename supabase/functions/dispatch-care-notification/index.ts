@@ -1,4 +1,8 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.110.8';
+import { withSupabase } from 'npm:@supabase/server@1.4.1';
+import {
+  createClient,
+  type SupabaseClient,
+} from 'npm:@supabase/supabase-js@2.110.8';
 
 import { shouldNotifyCareFollower } from '../_shared/notification-rules.ts';
 
@@ -27,38 +31,62 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-function getNamedKey(environmentName: string, legacyName: string): string {
-  const namedKeys = Deno.env.get(environmentName);
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { headers: corsHeaders, status });
+}
+
+function getAdminKey(): string {
+  const namedKeys = Deno.env.get('SUPABASE_SECRET_KEYS');
 
   if (namedKeys) {
-    const parsed = JSON.parse(namedKeys) as Record<string, string>;
-    const key = parsed.default;
+    const defaultKey = (JSON.parse(namedKeys) as Record<string, string>).default;
 
-    if (key) {
-      return key;
+    if (defaultKey) {
+      return defaultKey;
     }
   }
 
-  const legacyKey = Deno.env.get(legacyName);
+  const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!legacyKey) {
-    throw new Error(`missing_${legacyName.toLowerCase()}`);
+    throw new Error('missing_supabase_admin_key');
   }
 
   return legacyKey;
 }
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { headers: corsHeaders, status });
+function createAdminClient(): SupabaseClient {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const adminKey = getAdminKey();
+
+  if (!supabaseUrl) {
+    throw new Error('missing_supabase_admin_configuration');
+  }
+
+  const adminFetch: typeof fetch = (input, init) => {
+    const headers = new Headers(init?.headers);
+
+    headers.set('apikey', adminKey);
+
+    if (adminKey.startsWith('sb_secret_')) {
+      headers.delete('Authorization');
+    }
+
+    return fetch(input, { ...init, headers });
+  };
+
+  return createClient(supabaseUrl, adminKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    global: { fetch: adminFetch },
+  });
 }
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-const adminClient = createClient(
-  supabaseUrl,
-  getNamedKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'),
-);
+const adminClient = createAdminClient();
 
-async function processReceipts(): Promise<void> {
+async function processReceipts(adminClient: SupabaseClient): Promise<void> {
   const cutoff = new Date(Date.now() - 15 * 60 * 1000).toISOString();
   const { data: deliveries } = await adminClient
     .from('notification_deliveries')
@@ -124,37 +152,21 @@ async function processReceipts(): Promise<void> {
   );
 }
 
-Deno.serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
+const authenticatedHandler = withSupabase(
+  { auth: 'user' },
+  async (request, context) => {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'method_not_allowed' }, 405);
   }
 
   try {
-    const authorization = request.headers.get('Authorization');
+    const userId = context.userClaims?.id;
 
-    if (!authorization?.startsWith('Bearer ')) {
+    if (!userId) {
       return jsonResponse({ error: 'authentication_required' }, 401);
     }
 
-    const userClient = createClient(
-      supabaseUrl,
-      getNamedKey('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY'),
-      { global: { headers: { Authorization: authorization } } },
-    );
-    const token = authorization.slice('Bearer '.length);
-    const {
-      data: { user },
-      error: userError,
-    } = await userClient.auth.getUser(token);
-
-    if (userError || !user) {
-      return jsonResponse({ error: 'authentication_required' }, 401);
-    }
-
+    const userClient = context.supabase;
     const input = (await request.json()) as DispatchRequest;
 
     if (typeof input.eventId !== 'string' || !input.eventId) {
@@ -167,11 +179,11 @@ Deno.serve(async (request: Request) => {
       .eq('id', input.eventId)
       .maybeSingle();
 
-    if (eventError || !event || event.recorded_by !== user.id) {
+    if (eventError || !event || event.recorded_by !== userId) {
       return jsonResponse({ error: 'event_not_allowed' }, 403);
     }
 
-    await processReceipts();
+    await processReceipts(adminClient);
 
     const { data: baby, error: babyError } = await adminClient
       .from('babies')
@@ -187,7 +199,7 @@ Deno.serve(async (request: Request) => {
       .from('baby_followers')
       .select('user_id')
       .eq('baby_id', event.baby_id)
-      .neq('user_id', user.id);
+      .neq('user_id', userId);
 
     if (followersError || !followers?.length) {
       return jsonResponse({ sent: 0 });
@@ -223,7 +235,7 @@ Deno.serve(async (request: Request) => {
       const preference = preferencesByUser.get(device.user_id);
 
       return shouldNotifyCareFollower({
-        actorUserId: user.id,
+        actorUserId: userId,
         eventType: event.event_type as CareEventType,
         hasActiveDevice: true,
         isActiveFollower: true,
@@ -318,4 +330,13 @@ Deno.serve(async (request: Request) => {
   } catch {
     return jsonResponse({ error: 'unexpected_notification_error' }, 500);
   }
+  },
+);
+
+Deno.serve((request: Request) => {
+  if (request.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  return authenticatedHandler(request);
 });
