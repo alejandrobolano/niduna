@@ -35,7 +35,9 @@ function getFailureMessage(error: unknown): string {
     case 'rate_limited':
       return 'Espera un momento antes de solicitar otro código.';
     case 'network':
-      return 'No hay conexión con el servicio. Revisa internet e inténtalo de nuevo.';
+      return 'No pudimos conectar con Niduna. Revisa internet, VPN o DNS privado e inténtalo de nuevo.';
+    case 'service_unavailable':
+      return 'El servicio no está disponible temporalmente. Inténtalo de nuevo en unos minutos.';
     default:
       return 'No pudimos completar el acceso. Inténtalo de nuevo.';
   }
