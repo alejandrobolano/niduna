@@ -43,10 +43,26 @@ function normalizeNotes(notes: string | undefined): string | null {
 async function insertEvent(
   event: CareEventInsert,
 ): Promise<void> {
-  const { error } = await supabase.from('care_events').insert(event);
+  const { data, error } = await supabase
+    .from('care_events')
+    .insert(event)
+    .select('id')
+    .single();
 
   if (error) {
     throwOperationError(error.code, error.message);
+  }
+
+  void dispatchCareNotification(data.id);
+}
+
+async function dispatchCareNotification(eventId: string): Promise<void> {
+  try {
+    await supabase.functions.invoke('dispatch-care-notification', {
+      body: { eventId },
+    });
+  } catch {
+    return;
   }
 }
 

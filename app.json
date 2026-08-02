@@ -9,10 +9,14 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.niduna.app",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.niduna.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFF8E8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -27,6 +31,14 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#FF6F61",
+          "defaultChannel": "care-updates",
+          "icon": "./assets/images/android-icon-monochrome.png"
+        }
+      ],
       [
         "expo-splash-screen",
         {

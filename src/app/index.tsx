@@ -28,6 +28,9 @@ import {
   AppSectionNavigation,
   type AppSection,
 } from '@/features/home/presentation/app-section-navigation';
+import { expoPushPermissionService } from '@/features/notifications/infrastructure/expo-push-permission-service';
+import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
+import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
 import { spacing } from '@/shared/presentation/theme';
 
 async function exportCareHistory(
@@ -99,8 +102,23 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     context.changeBaby(babyId);
   }
 
-  const sessionBanner = <SessionBanner email={user.email} />;
   const activeFamily = context.activeFamily;
+  const sessionBanner = (
+    <SessionBanner
+      email={user.email}
+      settingsContent={
+        activeFamily ? (
+          <NotificationSettingsPanel
+            familyId={activeFamily.id}
+            familyName={activeFamily.name}
+            permissionService={expoPushPermissionService}
+            repository={supabaseNotificationRepository}
+            userId={user.id}
+          />
+        ) : undefined
+      }
+    />
+  );
 
   if (!activeFamily) {
     return (

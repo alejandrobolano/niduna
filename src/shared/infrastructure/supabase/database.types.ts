@@ -105,6 +105,55 @@ export type Database = {
         },
         Record<string, never>
       >;
+      push_devices: Table<
+        {
+          created_at: string;
+          expo_push_token: string;
+          id: string;
+          is_active: boolean;
+          last_registered_at: string;
+          platform: 'android' | 'ios';
+          updated_at: string;
+          user_id: string;
+        },
+        {
+          expo_push_token: string;
+          platform: 'android' | 'ios';
+          user_id: string;
+        },
+        {
+          is_active?: boolean;
+          last_registered_at?: string;
+          platform?: 'android' | 'ios';
+          user_id?: string;
+        }
+      >;
+      notification_preferences: Table<
+        {
+          created_at: string;
+          diaper_enabled: boolean;
+          family_id: string;
+          feeding_enabled: boolean;
+          paused_until: string | null;
+          sleep_enabled: boolean;
+          updated_at: string;
+          user_id: string;
+        },
+        {
+          diaper_enabled?: boolean;
+          family_id: string;
+          feeding_enabled?: boolean;
+          paused_until?: string | null;
+          sleep_enabled?: boolean;
+          user_id: string;
+        },
+        {
+          diaper_enabled?: boolean;
+          feeding_enabled?: boolean;
+          paused_until?: string | null;
+          sleep_enabled?: boolean;
+        }
+      >;
       family_invitations: Table<
         {
           accepted_at: string | null;
@@ -288,6 +337,13 @@ export type Database = {
           target_member_id: string;
         };
         Returns: undefined;
+      };
+      register_push_device: {
+        Args: {
+          target_expo_push_token: string;
+          target_platform: string;
+        };
+        Returns: string;
       };
       set_baby_archived: {
         Args: {
