@@ -117,21 +117,26 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
 
   const topContent = (
     <View style={styles.topContent}>
-      {sessionBanner}
-      <FamilyBabySwitcher
-        activeBaby={context.activeBaby}
-        activeFamily={activeFamily}
-        families={context.families}
-        isCreatingBaby={isCreatingBaby}
-        onAddBaby={addBaby}
-        onChangeBaby={changeBaby}
-        onChangeFamily={changeFamily}
-      />
-      <AppSectionNavigation onChange={changeSection} value={section} />
+      <View style={styles.navigationRow}>
+        <View style={styles.primaryNavigation}>
+          <AppSectionNavigation onChange={changeSection} value={section} />
+        </View>
+        <FamilyBabySwitcher
+          activeBaby={context.activeBaby}
+          activeFamily={activeFamily}
+          families={context.families}
+          isCreatingBaby={isCreatingBaby}
+          onAddBaby={addBaby}
+          onChangeBaby={changeBaby}
+          onChangeFamily={changeFamily}
+        />
+        {sessionBanner}
+      </View>
     </View>
   );
   const canManageBabies =
     activeFamily.role === 'owner' || activeFamily.role === 'admin';
+  const activeBabyId = context.activeBaby?.id;
 
   if (section === 'handoff') {
     return (
@@ -151,9 +156,12 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   if (section === 'baby' && !context.activeBaby && !canManageBabies) {
     return (
       <FamilyScreen
+        babyGroups={context.families}
         onContextChanged={(familyId) =>
           context.refresh(familyId ? { familyId } : undefined)
         }
+        onFollowBaby={context.followBaby}
+        onRestoreBaby={context.restoreBaby}
         repository={supabaseFamilyRepository}
         topContent={topContent}
         userId={user.id}
@@ -164,6 +172,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   return section === 'baby' ? (
     <BabyProfileScreen
       babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+      canArchive={canManageBabies}
       familyId={activeFamily.id}
       key={`${activeFamily.id}:${
         isCreatingBaby
@@ -175,14 +184,19 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
           .refresh({ babyId, familyId: activeFamily.id })
           .then(() => setIsCreatingBaby(false));
       }}
+      onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
+      onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
       repository={supabaseBabyProfileRepository}
       topContent={topContent}
     />
   ) : (
     <FamilyScreen
+      babyGroups={context.families}
       onContextChanged={(familyId) =>
         context.refresh(familyId ? { familyId } : undefined)
       }
+      onFollowBaby={context.followBaby}
+      onRestoreBaby={context.restoreBaby}
       repository={supabaseFamilyRepository}
       topContent={topContent}
       userId={user.id}
@@ -192,4 +206,11 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
 
 const styles = StyleSheet.create({
   topContent: { gap: spacing.md },
+  navigationRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  primaryNavigation: { flex: 1, minWidth: 260 },
 });

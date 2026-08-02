@@ -24,6 +24,7 @@ function mapErrorReason(message: string): FamilyOperationErrorReason {
   }
 
   if (
+    message.includes('family_member_removal_not_allowed') ||
     message.includes('row-level security') ||
     message.includes('permission denied')
   ) {
@@ -143,6 +144,16 @@ export const supabaseFamilyRepository: FamilyRepository = {
   async revokeInvitation(invitationId) {
     const { error } = await supabase.rpc('revoke_family_invitation', {
       target_invitation_id: invitationId,
+    });
+
+    if (error) {
+      throwOperationError(error.message);
+    }
+  },
+
+  async removeMember(memberId) {
+    const { error } = await supabase.rpc('remove_family_member', {
+      target_member_id: memberId,
     });
 
     if (error) {

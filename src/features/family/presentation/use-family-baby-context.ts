@@ -112,13 +112,39 @@ export function useFamilyBabyContext(
     storeSelection(nextSelection);
   }
 
+  async function archiveBaby(babyId: string) {
+    await repository.archiveBaby(babyId);
+    await refresh();
+  }
+
+  async function followBaby(babyId: string) {
+    const familyId = activeFamily?.id;
+    await repository.followBaby(babyId);
+    await refresh(familyId ? { babyId, familyId } : undefined);
+  }
+
+  async function restoreBaby(babyId: string) {
+    const familyId = activeFamily?.id;
+    await repository.restoreBaby(babyId);
+    await refresh(familyId ? { babyId, familyId } : undefined);
+  }
+
+  async function unfollowBaby(babyId: string) {
+    await repository.unfollowBaby(babyId);
+    await refresh();
+  }
+
   return {
     activeBaby,
     activeFamily,
+    archiveBaby,
     changeBaby,
     changeFamily,
     families,
+    followBaby,
     refresh,
+    restoreBaby,
     status,
+    unfollowBaby,
   };
 }

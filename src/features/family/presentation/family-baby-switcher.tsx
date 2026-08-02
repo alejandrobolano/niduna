@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SelectField } from '@/features/baby-profile/presentation/select-field';
@@ -28,10 +29,11 @@ export function FamilyBabySwitcher({
   onChangeBaby,
   onChangeFamily,
 }: FamilyBabySwitcherProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const familyOptions = families.map((family) => ({
     label: family.name,
     supportingText: `${family.babies.length} ${
-      family.babies.length === 1 ? 'bebé' : 'bebés'
+      family.babies.length === 1 ? 'bebé seguido' : 'bebés seguidos'
     }`,
     value: family.id,
   }));
@@ -41,47 +43,119 @@ export function FamilyBabySwitcher({
       baby.lifeStage === 'expected' ? 'Aún por nacer' : 'Ya nació',
     value: baby.id,
   }));
+  const initial = (activeBaby?.name ?? activeFamily.name)
+    .slice(0, 1)
+    .toUpperCase();
+
+  function changeFamily(familyId: string) {
+    onChangeFamily(familyId);
+    setIsOpen(false);
+  }
+
+  function changeBaby(babyId: string) {
+    onChangeBaby(babyId);
+    setIsOpen(false);
+  }
+
+  function addBaby() {
+    setIsOpen(false);
+    onAddBaby();
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.selectors}>
-        <View style={styles.selector}>
-          <SelectField
-            eyebrow="CONTEXTO FAMILIAR"
-            label="Familia activa"
-            onChange={onChangeFamily}
-            options={familyOptions}
-            placeholder="Selecciona una familia"
-            title="Cambiar de familia"
-            value={activeFamily.id}
-          />
+    <>
+      <Pressable
+        accessibilityLabel={`Cambiar contexto. ${activeBaby?.name ?? 'Sin bebé activo'}, ${activeFamily.name}`}
+        accessibilityRole="button"
+        onPress={() => setIsOpen(true)}
+        style={({ pressed }) => [
+          styles.contextButton,
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <View style={styles.contextAvatar}>
+          <Text style={styles.contextAvatarText}>{initial}</Text>
         </View>
-        <View style={styles.selector}>
-          <SelectField
-            eyebrow="CONTEXTO FAMILIAR"
-            label="Bebé activo"
-            onChange={onChangeBaby}
-            options={babyOptions}
-            placeholder={isCreatingBaby ? 'Creando un nuevo perfil' : 'Sin bebés'}
-            title="Cambiar de bebé"
-            value={isCreatingBaby ? undefined : activeBaby?.id}
-          />
+        <View style={styles.contextCopy}>
+          <Text numberOfLines={1} style={styles.contextName}>
+            {isCreatingBaby
+              ? 'Nuevo bebé'
+              : (activeBaby?.name ?? 'Elegir bebé')}
+          </Text>
+          <Text numberOfLines={1} style={styles.contextFamily}>
+            {activeFamily.name}
+          </Text>
         </View>
-      </View>
-      {activeFamily.role === 'owner' || activeFamily.role === 'admin' ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onAddBaby}
-          style={({ pressed }) => [
-            styles.addButton,
-            pressed && styles.addButtonPressed,
-          ]}
-        >
-          <Text style={styles.addGlyph}>＋</Text>
-          <Text style={styles.addLabel}>Añadir bebé</Text>
-        </Pressable>
-      ) : null}
-    </View>
+        <Text style={styles.contextChevron}>⌄</Text>
+      </Pressable>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setIsOpen(false)}
+        transparent
+        visible={isOpen}
+      >
+        <View style={styles.modalRoot}>
+          <Pressable
+            accessibilityLabel="Cerrar selector de familia y bebé"
+            accessibilityRole="button"
+            onPress={() => setIsOpen(false)}
+            style={styles.backdrop}
+          />
+          <View style={styles.panel}>
+            <View style={styles.panelHeading}>
+              <View>
+                <Text style={styles.panelEyebrow}>CONTEXTO ACTIVO</Text>
+                <Text style={styles.panelTitle}>Familia y bebé</Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Cerrar"
+                accessibilityRole="button"
+                onPress={() => setIsOpen(false)}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>×</Text>
+              </Pressable>
+            </View>
+            <Text style={styles.panelText}>
+              Los nuevos registros se guardarán en el bebé que selecciones aquí.
+            </Text>
+            <SelectField
+              eyebrow="CONTEXTO FAMILIAR"
+              label="Familia activa"
+              onChange={changeFamily}
+              options={familyOptions}
+              placeholder="Selecciona una familia"
+              title="Cambiar de familia"
+              value={activeFamily.id}
+            />
+            <SelectField
+              eyebrow="CONTEXTO FAMILIAR"
+              label="Bebé activo"
+              onChange={changeBaby}
+              options={babyOptions}
+              placeholder={
+                isCreatingBaby ? 'Creando un nuevo perfil' : 'Sin bebés seguidos'
+              }
+              title="Cambiar de bebé"
+              value={isCreatingBaby ? undefined : activeBaby?.id}
+            />
+            {activeFamily.role === 'owner' || activeFamily.role === 'admin' ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={addBaby}
+                style={({ pressed }) => [
+                  styles.addButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.addGlyph}>＋</Text>
+                <Text style={styles.addLabel}>Añadir bebé</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -103,7 +177,7 @@ export function FamilyBabyContextErrorScreen({
           onPress={onRetry}
           style={({ pressed }) => [
             styles.retryButton,
-            pressed && styles.addButtonPressed,
+            pressed && styles.buttonPressed,
           ]}
         >
           <Text style={styles.retryLabel}>Volver a intentar</Text>
@@ -114,10 +188,7 @@ export function FamilyBabyContextErrorScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.background,
-    flex: 1,
-  },
+  safeArea: { backgroundColor: colors.background, flex: 1 },
   errorScreen: {
     alignItems: 'center',
     flex: 1,
@@ -144,53 +215,95 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.primary,
     borderRadius: radius.md,
-    minHeight: 50,
     justifyContent: 'center',
+    minHeight: 50,
     paddingHorizontal: spacing.xl,
   },
-  retryLabel: {
-    color: colors.white,
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  container: {
-    alignItems: 'flex-end',
-    backgroundColor: colors.sky,
-    borderRadius: radius.lg,
-    gap: spacing.md,
-    padding: spacing.md,
-  },
-  selectors: {
-    alignSelf: 'stretch',
+  retryLabel: { color: colors.white, fontSize: 15, fontWeight: '900' },
+  contextButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: spacing.sm,
+    maxWidth: 230,
+    minHeight: 48,
+    minWidth: 160,
+    paddingHorizontal: spacing.sm,
   },
-  selector: {
+  contextAvatar: {
+    alignItems: 'center',
+    backgroundColor: colors.peach,
+    borderRadius: radius.md,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  contextAvatarText: { color: colors.coral, fontSize: 13, fontWeight: '900' },
+  contextCopy: { flex: 1 },
+  contextName: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  contextFamily: { color: colors.textMuted, fontSize: 10, marginTop: 1 },
+  contextChevron: { color: colors.coral, fontSize: 16, fontWeight: '900' },
+  buttonPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
+  modalRoot: { flex: 1 },
+  backdrop: {
+    backgroundColor: 'rgba(25, 31, 52, 0.28)',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  panel: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.background,
     flex: 1,
-    minWidth: 220,
+    gap: spacing.xl,
+    maxWidth: 420,
+    padding: spacing.xl,
+    width: '92%',
   },
-  addButton: {
+  panelHeading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  panelEyebrow: {
+    color: colors.coral,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.6,
+  },
+  panelTitle: {
+    color: colors.text,
+    fontSize: 25,
+    fontWeight: '900',
+    letterSpacing: -0.7,
+    marginTop: spacing.xs,
+  },
+  panelText: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  closeButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radius.pill,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  closeButtonText: { color: colors.text, fontSize: 25, lineHeight: 27 },
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
-    minHeight: 40,
-    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
+    minHeight: 50,
   },
-  addButtonPressed: {
-    opacity: 0.72,
-    transform: [{ scale: 0.99 }],
-  },
-  addGlyph: {
-    color: colors.coral,
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  addLabel: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '900',
-  },
+  addGlyph: { color: colors.coral, fontSize: 18, fontWeight: '900' },
+  addLabel: { color: colors.text, fontSize: 13, fontWeight: '900' },
 });

@@ -45,6 +45,7 @@ export interface FamilyRepository {
     role: InvitableFamilyRole,
   ): Promise<CreatedFamilyInvitation>;
   load(userId: string): Promise<Family[]>;
+  removeMember(memberId: string): Promise<void>;
   revokeInvitation(invitationId: string): Promise<void>;
   updateIdentity(input: UpdateFamilyIdentityInput): Promise<void>;
 }

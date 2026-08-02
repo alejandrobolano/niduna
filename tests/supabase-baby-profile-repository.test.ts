@@ -9,6 +9,8 @@ describe('Supabase baby profile mapping', () => {
   it('maps stored birth measurements to domain units', () => {
     const stored = mapStoredProfile(
       {
+        archived_at: null,
+        archived_by: null,
         birth_date: '2026-07-29',
         blood_group: 'O',
         created_at: '2026-07-29T12:00:00Z',

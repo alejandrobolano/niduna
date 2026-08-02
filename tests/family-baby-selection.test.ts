@@ -8,6 +8,7 @@ import type { FamilyBabyGroup } from '../src/features/family/domain/family-baby-
 
 const families: FamilyBabyGroup[] = [
   {
+    archivedBabies: [],
     babies: [
       { id: 'baby-1', lifeStage: 'born', name: 'Luna' },
       { id: 'baby-2', lifeStage: 'expected', name: 'Nora' },
@@ -15,18 +16,23 @@ const families: FamilyBabyGroup[] = [
     id: 'family-1',
     name: 'Casa Luna',
     role: 'owner',
+    unfollowedBabies: [],
   },
   {
+    archivedBabies: [],
     babies: [{ id: 'baby-3', lifeStage: 'born', name: 'Leo' }],
     id: 'family-2',
     name: 'Casa Sol',
     role: 'caregiver',
+    unfollowedBabies: [],
   },
   {
+    archivedBabies: [],
     babies: [],
     id: 'family-3',
     name: 'Familia sin bebé',
     role: 'admin',
+    unfollowedBabies: [],
   },
 ];
 

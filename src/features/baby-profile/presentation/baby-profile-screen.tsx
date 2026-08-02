@@ -93,16 +93,22 @@ function parseOptionalNumber(value: string): number | undefined {
 
 interface BabyProfileScreenProps {
   babyId?: string;
+  canArchive?: boolean;
   familyId: string;
+  onArchive?: () => Promise<void>;
   onSaved?: (babyId: string) => void;
+  onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
   topContent?: ReactNode;
 }
 
 export function BabyProfileScreen({
   babyId: selectedBabyId,
+  canArchive = false,
   familyId,
+  onArchive,
   onSaved,
+  onUnfollow,
   repository,
   topContent,
 }: BabyProfileScreenProps) {
@@ -125,6 +131,11 @@ export function BabyProfileScreen({
   const [loadError, setLoadError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [pendingAccessAction, setPendingAccessAction] = useState<
+    'archive' | 'unfollow'
+  >();
+  const [isChangingAccess, setIsChangingAccess] = useState(false);
+  const [accessError, setAccessError] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -183,6 +194,25 @@ export function BabyProfileScreen({
       active = false;
     };
   }, [loadAttempt, repository, selectedBabyId]);
+
+  async function handleAccessAction() {
+    const action =
+      pendingAccessAction === 'archive' ? onArchive : onUnfollow;
+
+    if (!action) {
+      return;
+    }
+
+    setIsChangingAccess(true);
+    setAccessError(false);
+
+    try {
+      await action();
+    } catch {
+      setAccessError(true);
+      setIsChangingAccess(false);
+    }
+  }
 
   const profile = useMemo<BabyProfile>(
     () => {
@@ -576,6 +606,83 @@ export function BabyProfileScreen({
               </View>
             </View>
           ) : null}
+          {storedBabyId && onUnfollow ? (
+            <View style={styles.accessSection}>
+              <Text style={styles.accessTitle}>Seguimiento en esta familia</Text>
+              <Text style={styles.accessText}>
+                Puedes ocultar este perfil sólo para ti. Si administras la
+                familia, también puedes retirarlo para todos sin borrar su
+                historial.
+              </Text>
+              <Pressable
+                accessibilityRole="link"
+                disabled={isChangingAccess}
+                onPress={() => {
+                  setAccessError(false);
+                  setPendingAccessAction('unfollow');
+                }}
+              >
+                <Text style={styles.accessLink}>Dejar de seguir a {name}</Text>
+              </Pressable>
+              {canArchive && onArchive ? (
+                <Pressable
+                  accessibilityRole="link"
+                  disabled={isChangingAccess}
+                  onPress={() => {
+                    setAccessError(false);
+                    setPendingAccessAction('archive');
+                  }}
+                >
+                  <Text style={[styles.accessLink, styles.destructiveLink]}>
+                    Quitar a {name} de esta familia
+                  </Text>
+                </Pressable>
+              ) : null}
+              {pendingAccessAction ? (
+                <View style={styles.confirmationCard}>
+                  <Text style={styles.confirmationTitle}>
+                    {pendingAccessAction === 'archive'
+                      ? `¿Quitar a ${name} de la familia?`
+                      : `¿Dejar de seguir a ${name}?`}
+                  </Text>
+                  <Text style={styles.confirmationText}>
+                    {pendingAccessAction === 'archive'
+                      ? `${name} dejará de estar disponible para todos. Su perfil y su historial se conservarán para poder restaurarlos.`
+                      : `Sólo dejarás de verlo tú. El resto de la familia continuará con su seguimiento.`}
+                  </Text>
+                  <View style={styles.confirmationActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={isChangingAccess}
+                      onPress={() => setPendingAccessAction(undefined)}
+                      style={styles.confirmationCancel}
+                    >
+                      <Text style={styles.confirmationCancelText}>Cancelar</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={isChangingAccess}
+                      onPress={() => void handleAccessAction()}
+                      style={styles.confirmationAccept}
+                    >
+                      <Text style={styles.confirmationAcceptText}>
+                        {isChangingAccess
+                          ? 'Actualizando…'
+                          : pendingAccessAction === 'archive'
+                            ? 'Quitar de la familia'
+                            : 'Dejar de seguir'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : null}
+              {accessError ? (
+                <Text accessibilityLiveRegion="polite" style={styles.accessError}>
+                  No pudimos actualizar el seguimiento. Inténtalo de nuevo.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -768,4 +875,49 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginTop: spacing.xs,
   },
+  accessSection: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  accessTitle: { color: colors.text, fontSize: 16, fontWeight: '900' },
+  accessText: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  accessLink: {
+    color: colors.primaryPressed,
+    fontSize: 14,
+    fontWeight: '800',
+    paddingVertical: spacing.xs,
+  },
+  destructiveLink: { color: colors.error },
+  confirmationCard: {
+    backgroundColor: colors.peach,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    padding: spacing.lg,
+  },
+  confirmationTitle: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  confirmationText: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  confirmationActions: { flexDirection: 'row', gap: spacing.sm },
+  confirmationCancel: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  confirmationCancelText: { color: colors.textMuted, fontWeight: '800' },
+  confirmationAccept: {
+    alignItems: 'center',
+    backgroundColor: colors.coral,
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  confirmationAcceptText: { color: colors.white, fontWeight: '900' },
+  accessError: { color: colors.error, fontSize: 12 },
 });

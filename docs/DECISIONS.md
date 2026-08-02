@@ -37,6 +37,18 @@ loading the first accessible row.
 The active selection is a device preference, not an authorization mechanism.
 Supabase RLS remains responsible for validating every read and write.
 
+## Baby following and family removal
+
+Following a baby is a reversible preference belonging to one family member.
+New babies and members begin with all active babies followed so existing family
+workflows remain unchanged.
+
+Removing a baby from a family archives it for everyone and preserves its profile
+and care history. Only owners and administrators may archive or restore it.
+Removing a person deletes only that family membership; it never deletes the
+person's account. Both privileged operations run transactionally, validate roles
+in Postgres, and write minimal audit records in the private schema.
+
 ## Cloudflare environments
 
 Niduna uses `niduna-dev` for development and `niduna` for production.
