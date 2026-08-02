@@ -39,7 +39,7 @@ Configure the project with:
 
 Allow these authentication redirects in Supabase:
 
-- `https://niduna.com/**`
+- `https://app.niduna.com/**`
 - `https://dev.niduna.com/**`
 - `niduna://**`
 
