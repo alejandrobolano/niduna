@@ -11,6 +11,7 @@ export type AuthFailureCode =
   | 'invalid_code'
   | 'rate_limited'
   | 'network'
+  | 'service_unavailable'
   | 'unexpected';
 
 export class AuthFailure extends Error {

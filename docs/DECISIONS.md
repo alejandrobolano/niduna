@@ -44,3 +44,9 @@ Development is exposed only through `dev.niduna.com`; its `workers.dev` route is
 disabled to keep project namespaces isolated. Production is exposed only
 through `niduna.com`, with its `workers.dev` route and preview URLs disabled as
 well.
+
+# Native network transport
+
+- Native EAS builds use React Native's established fetch implementation through `EXPO_PUBLIC_USE_RN_FETCH=1`.
+- Expo SDK 57 installs `expo/fetch` globally on Android and iOS by default; the explicit fallback keeps Supabase Auth on the transport supported by React Native while web remains unchanged.
+- Authentication errors are classified from Supabase error types and stable error codes without logging emails, tokens, or API keys.
