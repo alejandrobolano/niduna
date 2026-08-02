@@ -12,7 +12,7 @@ Development uses the `niduna-dev` Worker through the custom domain
 or appear under another project's account subdomain.
 
 Production uses the separate `niduna` Worker through the custom domain
-`niduna.com`. Its `workers.dev` route and preview URLs are also disabled.
+`app.niduna.com`. Its `workers.dev` route and preview URLs are also disabled.
 
 ## GitHub configuration
 

@@ -5,7 +5,7 @@ import { parseAuthLink } from '../src/features/auth/infrastructure/auth-link';
 describe('authentication links', () => {
   it('reads a token hash callback', () => {
     expect(
-      parseAuthLink('https://niduna.com/?token_hash=hash-value&type=email'),
+      parseAuthLink('https://app.niduna.com/?token_hash=hash-value&type=email'),
     ).toEqual({
       accessToken: undefined,
       code: undefined,
@@ -28,7 +28,7 @@ describe('authentication links', () => {
   });
 
   it('ignores regular application links', () => {
-    expect(parseAuthLink('https://niduna.com/')).toEqual({
+    expect(parseAuthLink('https://app.niduna.com/')).toEqual({
       accessToken: undefined,
       code: undefined,
       refreshToken: undefined,
