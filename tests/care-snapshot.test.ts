@@ -1,5 +1,11 @@
 import { BabyIcon, Milk, Moon } from 'lucide-react-native';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+  Moon: 'Moon',
+}));
 
 import {
   getCareSnapshot,
