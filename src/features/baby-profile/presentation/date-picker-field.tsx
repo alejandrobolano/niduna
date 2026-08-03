@@ -1,3 +1,4 @@
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -70,7 +71,7 @@ export function DatePickerField({
           </Text>
           <Text style={styles.triggerHint}>Toca para abrir el calendario</Text>
         </View>
-        <Text style={styles.chevron}>⌄</Text>
+        <ChevronDown color={colors.primaryPressed} size={20} />
       </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -100,7 +101,7 @@ export function DatePickerField({
                 onPress={() => setIsOpen(false)}
                 style={({ pressed }) => [styles.closeButton, pressed && styles.controlPressed]}
               >
-                <Text style={styles.closeButtonText}>×</Text>
+                <X color={colors.text} size={20} />
               </Pressable>
             </View>
 
@@ -111,7 +112,7 @@ export function DatePickerField({
                 onPress={() => setVisibleMonth((month) => addMonths(month, -1))}
                 style={({ pressed }) => [styles.monthButton, pressed && styles.controlPressed]}
               >
-                <Text style={styles.monthButtonText}>‹</Text>
+                <ChevronLeft color={colors.primaryPressed} size={20} />
               </Pressable>
               <Text style={styles.monthLabel}>{formatMonth(visibleMonth)}</Text>
               <Pressable
@@ -120,7 +121,7 @@ export function DatePickerField({
                 onPress={() => setVisibleMonth((month) => addMonths(month, 1))}
                 style={({ pressed }) => [styles.monthButton, pressed && styles.controlPressed]}
               >
-                <Text style={styles.monthButtonText}>›</Text>
+                <ChevronRight color={colors.primaryPressed} size={20} />
               </Pressable>
             </View>
 
@@ -227,7 +228,6 @@ const styles = StyleSheet.create({
   value: { color: colors.text, fontSize: 15, fontWeight: '700' },
   placeholder: { color: colors.textMuted },
   triggerHint: { color: colors.textMuted, fontSize: 11, marginTop: 3 },
-  chevron: { color: colors.primaryPressed, fontSize: 22, fontWeight: '800' },
   error: { color: colors.error, fontSize: 12, lineHeight: 17 },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   backdrop: {
@@ -278,7 +278,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 40,
   },
-  closeButtonText: { color: colors.text, fontSize: 26, lineHeight: 28 },
   controlPressed: { opacity: 0.66, transform: [{ scale: 0.96 }] },
   monthControls: {
     alignItems: 'center',
@@ -294,7 +293,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 42,
   },
-  monthButtonText: { color: colors.primaryPressed, fontSize: 28, lineHeight: 30 },
   monthLabel: {
     color: colors.text,
     fontSize: 17,

@@ -1,3 +1,4 @@
+import { BabyIcon, Heart, House, Moon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/shared/presentation/theme';
@@ -10,10 +11,10 @@ interface AppSectionNavigationProps {
 }
 
 const sections = [
-  { glyph: '☾', label: 'Relevo', value: 'handoff' },
-  { glyph: '♡', label: 'Bebé', value: 'baby' },
-  { glyph: '⌂', label: 'Familia', value: 'family' },
-] satisfies { glyph: string; label: string; value: AppSection }[];
+  { icon: Moon, label: 'Relevo', value: 'handoff' },
+  { icon: Heart, label: 'Bebé', value: 'baby' },
+  { icon: House, label: 'Familia', value: 'family' },
+] satisfies { icon: typeof BabyIcon | typeof Heart | typeof House; label: string; value: AppSection }[];
 
 export function AppSectionNavigation({
   onChange,
@@ -36,9 +37,10 @@ export function AppSectionNavigation({
               pressed && styles.itemPressed,
             ]}
           >
-            <Text style={[styles.glyph, selected && styles.glyphSelected]}>
-              {section.glyph}
-            </Text>
+            <section.icon
+              color={selected ? colors.coral : colors.textMuted}
+              size={18}
+            />
             <Text style={[styles.label, selected && styles.labelSelected]}>
               {section.label}
             </Text>

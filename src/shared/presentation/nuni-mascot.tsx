@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -5,8 +6,7 @@ import {
   Easing,
   Platform,
   StyleSheet,
-  Text,
-  View,
+  View
 } from 'react-native';
 
 import { colors } from '@/shared/presentation/theme';
@@ -64,8 +64,12 @@ export function NuniMascot({ size = ARTBOARD_WIDTH }: NuniMascotProps) {
       style={{ height: ARTBOARD_HEIGHT * scale, width: size }}
     >
       <View style={[styles.artboard, { transform: [{ scale }] }]}>
-        <Text style={[styles.star, styles.starLeft]}>✦</Text>
-        <Text style={[styles.star, styles.starRight]}>✦</Text>
+        <View style={[styles.star, styles.starLeft]}>
+          <Sparkles color={colors.butter} size={20} />
+        </View>
+        <View style={[styles.star, styles.starRight]}>
+          <Sparkles color={colors.butter} size={20} />
+        </View>
         <View style={[styles.cloud, styles.cloudLeft]}>
           <View style={[styles.cloudBubble, styles.cloudBubbleSmall]} />
           <View style={styles.cloudBubble} />
@@ -106,7 +110,7 @@ const styles = StyleSheet.create({
     transformOrigin: 'top left',
     width: ARTBOARD_WIDTH,
   },
-  star: { color: colors.butter, fontSize: 20, position: 'absolute' },
+  star: { position: 'absolute' },
   starLeft: { left: 19, top: 22 },
   starRight: { right: 16, top: 5 },
   cloud: {

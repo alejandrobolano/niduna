@@ -1,3 +1,4 @@
+import { AlertCircle, CheckCircle2 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -275,7 +276,7 @@ export function AuthScreen() {
 
             {error ? (
               <View accessibilityLiveRegion="polite" style={styles.errorNotice}>
-                <Text style={styles.errorMark}>!</Text>
+                <AlertCircle color={colors.error} size={18} />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
             ) : null}
@@ -283,7 +284,7 @@ export function AuthScreen() {
 
           <View style={styles.securityNote}>
             <View style={styles.securityMark}>
-              <Text style={styles.securityMarkText}>✓</Text>
+              <CheckCircle2 color={colors.primary} size={18} />
             </View>
             <View style={styles.securityCopy}>
               <Text style={styles.securityTitle}>Acceso sencillo y privado</Text>

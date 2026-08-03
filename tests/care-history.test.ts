@@ -1,3 +1,4 @@
+import { BabyIcon, Milk } from 'lucide-react-native';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -14,6 +15,7 @@ import type { CareEvent } from '../src/features/care/domain/care-event';
 const events: CareEvent[] = [
   {
     babyId: 'baby-1',
+    icon: Milk,
     id: 'feeding-1',
     method: 'formula',
     notes: '=unsafe formula',
@@ -24,6 +26,7 @@ const events: CareEvent[] = [
   {
     babyId: 'baby-1',
     condition: 'wet',
+    icon: BabyIcon,
     id: 'diaper-1',
     occurredAt: '2026-07-30T08:00:00',
     type: 'diaper',

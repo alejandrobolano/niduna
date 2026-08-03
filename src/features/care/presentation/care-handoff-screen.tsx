@@ -1,4 +1,14 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  BabyIcon,
+  Check,
+  CloudSun,
+  Milk,
+  Moon,
+  Plus,
+  Star,
+  type LucideIcon
+} from 'lucide-react-native';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -12,11 +22,11 @@ import {
   filterCareEvents,
   type CareEventFilter,
 } from '@/features/care/application/care-history';
+import type { CareRepository } from '@/features/care/application/care-repository';
 import {
   getCareSnapshot,
   getDurationMinutes,
 } from '@/features/care/application/care-snapshot';
-import type { CareRepository } from '@/features/care/application/care-repository';
 import type {
   CareDashboard,
   CareEvent,
@@ -66,7 +76,7 @@ interface CareHandoffScreenProps {
 interface SummaryCardProps {
   accent: string;
   detail: string;
-  glyph: string;
+  icon: LucideIcon;
   title: string;
   value: string;
 }
@@ -74,14 +84,18 @@ interface SummaryCardProps {
 function SummaryCard({
   accent,
   detail,
-  glyph,
+  icon: Icon,
   title,
   value,
 }: SummaryCardProps) {
   return (
     <View style={[styles.summaryCard, { borderTopColor: accent }]}>
       <View style={styles.summaryHeading}>
-        <Text style={[styles.summaryGlyph, { color: accent }]}>{glyph}</Text>
+        <View
+          style={[styles.summaryIconBadge, { backgroundColor: `${accent}22` }]}
+        >
+          <Icon color={accent} size={16} />
+        </View>
         <Text style={styles.summaryTitle}>{title}</Text>
       </View>
       <Text style={styles.summaryValue}>{value}</Text>
@@ -144,7 +158,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
     return {
       accent: colors.coral,
       description: getFeedingDetail(event),
-      glyph: '●',
+      icon: event.icon ?? Milk,
       title: feedingLabels[event.method],
     };
   }
@@ -153,7 +167,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
     return {
       accent: colors.butter,
       description: event.notes || 'Cambio de pañal',
-      glyph: '◆',
+      icon: event.icon ?? BabyIcon,
       title: diaperLabels[event.condition],
     };
   }
@@ -167,7 +181,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
       : `Durmiendo ${formatDuration(
           getDurationMinutes(event.occurredAt, now.toISOString()),
         )}`,
-    glyph: '☾',
+    icon: event.icon ?? Moon,
     title: event.endedAt ? 'Sueño terminado' : 'Sueño en curso',
   };
 }
@@ -189,9 +203,7 @@ function TimelineEvent({
           { backgroundColor: `${presentation.accent}22` },
         ]}
       >
-        <Text style={[styles.timelineGlyphText, { color: presentation.accent }]}>
-          {presentation.glyph}
-        </Text>
+        <presentation.icon color={presentation.accent} size={18} />
       </View>
       <View style={styles.timelineCopy}>
         <View style={styles.timelineTitleRow}>
@@ -281,14 +293,14 @@ function DashboardContent({
         <SummaryCard
           accent={colors.coral}
           detail={feeding ? getFeedingDetail(feeding) : 'Todavía sin registros'}
-          glyph="●"
+          icon={Milk}
           title="Última alimentación"
           value={feeding ? formatWhen(feeding.occurredAt, now) : 'Sin datos'}
         />
         <SummaryCard
           accent={colors.butter}
           detail={diaper ? diaperLabels[diaper.condition] : 'Todavía sin registros'}
-          glyph="◆"
+          icon={BabyIcon}
           title="Último pañal"
           value={diaper ? formatWhen(diaper.occurredAt, now) : 'Sin datos'}
         />
@@ -306,7 +318,7 @@ function DashboardContent({
                   )}`
                 : 'Todavía sin registros'
           }
-          glyph="☾"
+          icon={Moon}
           title="Sueño"
           value={
             openSleep
@@ -358,9 +370,11 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>●</Text>
+              <Milk color={colors.text} size={20} />
               <Text style={styles.actionLabel}>Alimentación</Text>
-              <Text style={styles.actionArrow}>＋</Text>
+              <View style={styles.actionArrow}>
+                <Plus color={colors.text} size={18} />
+              </View>
             </Pressable>
             <Pressable
               onPress={() => onAction('diaper')}
@@ -370,9 +384,11 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>◆</Text>
+              <BabyIcon color={colors.text} size={20} />
               <Text style={styles.actionLabel}>Pañal</Text>
-              <Text style={styles.actionArrow}>＋</Text>
+              <View style={styles.actionArrow}>
+                <Plus color={colors.text} size={18} />
+              </View>
             </Pressable>
             <Pressable
               onPress={() => onAction('sleep')}
@@ -382,11 +398,17 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>☾</Text>
+              <Moon color={colors.text} size={20} />
               <Text style={styles.actionLabel}>
                 {openSleep ? 'Despertó' : 'Se durmió'}
               </Text>
-              <Text style={styles.actionArrow}>{openSleep ? '✓' : '＋'}</Text>
+              <View style={styles.actionArrow}>
+                {openSleep ? (
+                  <Check color={colors.text} size={18} />
+                ) : (
+                  <Plus color={colors.text} size={18} />
+                )}
+              </View>
             </Pressable>
           </View>
         </View>
@@ -443,7 +465,7 @@ function DashboardContent({
             ))
           ) : (
             <View style={styles.emptyTimeline}>
-              <Text style={styles.emptyTimelineGlyph}>☆</Text>
+              <Star color={colors.butter} size={34} />
               <Text style={styles.emptyTimelineTitle}>
                 {dashboard.events.length > 0
                   ? 'No hay registros con este filtro'
@@ -548,7 +570,7 @@ export function CareHandoffScreen({
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.stateScreen}>
-          <Text style={styles.stateGlyph}>☁</Text>
+          <CloudSun color={colors.lavender} size={56} />
           <Text style={styles.stateTitle}>No pudimos cargar el relevo</Text>
           <Text style={styles.stateText}>
             Comprueba la conexión y vuelve a intentarlo.
@@ -692,7 +714,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  summaryGlyph: { fontSize: 18, fontWeight: '900' },
+  summaryIconBadge: {
+    alignItems: 'center',
+    borderRadius: 999,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
   summaryTitle: {
     color: colors.textMuted,
     fontSize: 13,
@@ -744,14 +772,16 @@ const styles = StyleSheet.create({
   diaperAction: { backgroundColor: colors.butterSoft },
   sleepAction: { backgroundColor: colors.lavenderSoft },
   actionPressed: { opacity: 0.72, transform: [{ scale: 0.99 }] },
-  actionGlyph: { color: colors.text, fontSize: 20, fontWeight: '900' },
   actionLabel: {
     color: colors.text,
     flex: 1,
     fontSize: 15,
     fontWeight: '900',
   },
-  actionArrow: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  actionArrow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   readOnlyNotice: {
     backgroundColor: colors.butterSoft,
     borderRadius: radius.md,
@@ -880,11 +910,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.xxl,
   },
-  emptyTimelineGlyph: {
-    color: colors.butter,
-    fontSize: 42,
-    fontWeight: '900',
-  },
   emptyTimelineTitle: {
     color: colors.text,
     fontSize: 18,
@@ -903,7 +928,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
   },
-  stateGlyph: { color: colors.lavender, fontSize: 58 },
   stateTitle: {
     color: colors.text,
     fontSize: 23,
