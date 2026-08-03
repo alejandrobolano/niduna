@@ -1,3 +1,4 @@
+import { X } from 'lucide-react-native';
 import { type ReactNode, useState } from 'react';
 import {
   Modal,
@@ -71,7 +72,7 @@ export function SessionBanner({ email, settingsContent }: SessionBannerProps) {
                 onPress={() => setIsOpen(false)}
                 style={styles.closeButton}
               >
-                <Text style={styles.closeButtonText}>×</Text>
+                <X color={colors.text} size={18} />
               </Pressable>
             </View>
             <ScrollView

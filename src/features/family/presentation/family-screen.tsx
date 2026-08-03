@@ -1,3 +1,10 @@
+import {
+  AlertCircle,
+  House,
+  Plus,
+  Sparkles,
+  Users,
+} from 'lucide-react-native';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -11,6 +18,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
+import {
+  SelectField,
+  type SelectOption,
+} from '@/features/baby-profile/presentation/select-field';
+import { canRemoveFamilyMember } from '@/features/family/application/family-member-permissions';
 import {
   FamilyOperationError,
   type FamilyRepository,
@@ -19,7 +32,6 @@ import {
   formatInvitationCode,
   isInvitationCodeComplete,
 } from '@/features/family/application/invitation-code';
-import { canRemoveFamilyMember } from '@/features/family/application/family-member-permissions';
 import type {
   CreatedFamilyInvitation,
   Family,
@@ -30,11 +42,6 @@ import type {
 } from '@/features/family/domain/family';
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
-import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
-import {
-  SelectField,
-  type SelectOption,
-} from '@/features/baby-profile/presentation/select-field';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -482,7 +489,7 @@ export function FamilyScreen({
     <View style={styles.section}>
       <View style={styles.sectionHeading}>
         <View style={[styles.sectionIcon, styles.lavenderIcon]}>
-          <Text style={styles.sectionIconText}>✦</Text>
+          <Sparkles color={colors.text} size={16} />
         </View>
         <View style={styles.sectionHeadingCopy}>
           <Text style={styles.sectionTitle}>Unirme con un código</Text>
@@ -568,9 +575,11 @@ export function FamilyScreen({
                 operationSucceeded ? styles.noticeSuccess : styles.noticeError,
               ]}
             >
-              <Text style={styles.noticeMark}>
-                {operationSucceeded ? '✓' : '!'}
-              </Text>
+              {operationSucceeded ? (
+                <Sparkles color={colors.text} size={16} />
+              ) : (
+                <AlertCircle color={colors.text} size={16} />
+              )}
               <Text style={styles.noticeText}>{operationMessage}</Text>
             </View>
           ) : null}
@@ -580,7 +589,7 @@ export function FamilyScreen({
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <View style={[styles.sectionIcon, styles.aquaIcon]}>
-                    <Text style={styles.sectionIconText}>⌂</Text>
+                    <House color={colors.text} size={16} />
                   </View>
                   <View style={styles.sectionHeadingCopy}>
                     <Text style={styles.sectionTitle}>Crear mi familia</Text>
@@ -718,7 +727,7 @@ export function FamilyScreen({
                 <View style={styles.section}>
                   <View style={styles.sectionHeading}>
                     <View style={[styles.sectionIcon, styles.aquaIcon]}>
-                      <Text style={styles.sectionIconText}>☺</Text>
+                      <Sparkles color={colors.text} size={16} />
                     </View>
                     <View style={styles.sectionHeadingCopy}>
                       <Text style={styles.sectionTitle}>Mi identidad familiar</Text>
@@ -774,7 +783,7 @@ export function FamilyScreen({
               <View style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <View style={[styles.sectionIcon, styles.butterIcon]}>
-                    <Text style={styles.sectionIconText}>♡</Text>
+                    <Users color={colors.text} size={16} />
                   </View>
                   <View style={styles.sectionHeadingCopy}>
                     <Text style={styles.sectionTitle}>Personas con acceso</Text>
@@ -864,7 +873,7 @@ export function FamilyScreen({
                 <View style={[styles.section, styles.invitationSection]}>
                   <View style={styles.sectionHeading}>
                     <View style={[styles.sectionIcon, styles.coralIcon]}>
-                      <Text style={styles.sectionIconText}>+</Text>
+                      <Plus color={colors.text} size={16} />
                     </View>
                     <View style={styles.sectionHeadingCopy}>
                       <Text style={styles.sectionTitle}>Invitar a alguien</Text>
@@ -1045,7 +1054,6 @@ const styles = StyleSheet.create({
   butterIcon: { backgroundColor: colors.butterSoft },
   coralIcon: { backgroundColor: colors.peach },
   lavenderIcon: { backgroundColor: colors.lavenderSoft },
-  sectionIconText: { color: colors.text, fontSize: 21, fontWeight: '900' },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
   sectionSubtitle: {
     color: colors.textMuted,

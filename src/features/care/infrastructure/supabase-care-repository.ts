@@ -1,7 +1,7 @@
 import {
-  CareOperationError,
-  type CareOperationErrorReason,
-  type CareRepository,
+    CareOperationError,
+    type CareOperationErrorReason,
+    type CareRepository,
 } from '@/features/care/application/care-repository';
 import { mapCareEvent } from '@/features/care/infrastructure/supabase-care-event-mapper';
 import { supabase } from '@/shared/infrastructure/supabase/client';
@@ -70,7 +70,7 @@ export const supabaseCareRepository: CareRepository = {
   async load(userId, babyId) {
     const { data: baby, error: babyError } = await supabase
       .from('babies')
-      .select('id, family_id, life_stage, name')
+      .select('id, birth_date, family_id, life_stage, name')
       .eq('id', babyId)
       .maybeSingle();
 
@@ -128,6 +128,7 @@ export const supabaseCareRepository: CareRepository = {
 
     return {
       baby: {
+        birthDate: baby.birth_date ?? undefined,
         id: baby.id,
         lifeStage: baby.life_stage,
         name: baby.name,

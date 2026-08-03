@@ -1,4 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { BabyIcon, Milk, Moon } from 'lucide-react-native';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+  Moon: 'Moon',
+}));
 
 import {
   getCareSnapshot,
@@ -10,6 +17,7 @@ const events: CareEvent[] = [
   {
     babyId: 'baby-1',
     condition: 'wet',
+    icon: BabyIcon,
     id: 'diaper-old',
     occurredAt: '2026-07-29T08:00:00.000Z',
     type: 'diaper',
@@ -17,12 +25,14 @@ const events: CareEvent[] = [
   {
     babyId: 'baby-1',
     condition: 'both',
+    icon: BabyIcon,
     id: 'diaper-new',
     occurredAt: '2026-07-29T11:00:00.000Z',
     type: 'diaper',
   },
   {
     babyId: 'baby-1',
+    icon: Milk,
     id: 'feeding',
     method: 'breast',
     occurredAt: '2026-07-29T10:30:00.000Z',
@@ -31,12 +41,14 @@ const events: CareEvent[] = [
   {
     babyId: 'baby-1',
     endedAt: '2026-07-29T10:00:00.000Z',
+    icon: Moon,
     id: 'sleep-finished',
     occurredAt: '2026-07-29T09:00:00.000Z',
     type: 'sleep',
   },
   {
     babyId: 'baby-1',
+    icon: Moon,
     id: 'sleep-open',
     occurredAt: '2026-07-29T12:00:00.000Z',
     type: 'sleep',

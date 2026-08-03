@@ -1,3 +1,4 @@
+import { ChevronDown, Plus, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,7 +87,7 @@ export function FamilyBabySwitcher({
             {activeFamily.name}
           </Text>
         </View>
-        <Text style={styles.contextChevron}>⌄</Text>
+        <ChevronDown color={colors.coral} size={18} />
       </Pressable>
       <Modal
         animationType="fade"
@@ -113,7 +114,7 @@ export function FamilyBabySwitcher({
                 onPress={() => setIsOpen(false)}
                 style={styles.closeButton}
               >
-                <Text style={styles.closeButtonText}>×</Text>
+                <X color={colors.text} size={20} />
               </Pressable>
             </View>
             <Text style={styles.panelText}>
@@ -148,7 +149,7 @@ export function FamilyBabySwitcher({
                   pressed && styles.buttonPressed,
                 ]}
               >
-                <Text style={styles.addGlyph}>＋</Text>
+                <Plus color={colors.coral} size={18} />
                 <Text style={styles.addLabel}>Añadir bebé</Text>
               </Pressable>
             ) : null}
@@ -245,7 +246,6 @@ const styles = StyleSheet.create({
   contextCopy: { flex: 1 },
   contextName: { color: colors.text, fontSize: 13, fontWeight: '900' },
   contextFamily: { color: colors.textMuted, fontSize: 10, marginTop: 1 },
-  contextChevron: { color: colors.coral, fontSize: 16, fontWeight: '900' },
   buttonPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
   modalRoot: { flex: 1 },
   backdrop: {
@@ -292,7 +292,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 40,
   },
-  closeButtonText: { color: colors.text, fontSize: 25, lineHeight: 27 },
   addButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -304,6 +303,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 50,
   },
-  addGlyph: { color: colors.coral, fontSize: 18, fontWeight: '900' },
   addLabel: { color: colors.text, fontSize: 13, fontWeight: '900' },
 });

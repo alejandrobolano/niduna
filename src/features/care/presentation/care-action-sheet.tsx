@@ -1,3 +1,4 @@
+import { MoonStar, X } from 'lucide-react-native';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -197,7 +198,7 @@ export function CareActionSheet({
               onPress={handleClose}
               style={styles.closeButton}
             >
-              <Text style={styles.closeButtonText}>×</Text>
+              <X color={colors.text} size={20} />
             </Pressable>
           </View>
 
@@ -255,7 +256,7 @@ export function CareActionSheet({
 
             {action === 'sleep' && openSleep ? (
               <View style={styles.sleepNotice}>
-                <Text style={styles.sleepNoticeGlyph}>☾</Text>
+                <MoonStar color={colors.lavender} size={24} />
                 <View style={styles.sleepNoticeCopy}>
                   <Text style={styles.sleepNoticeTitle}>Sueño en curso</Text>
                   <Text style={styles.sleepNoticeText}>
@@ -352,11 +353,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 40,
   },
-  closeButtonText: {
-    color: colors.text,
-    fontSize: 27,
-    lineHeight: 29,
-  },
   form: {
     gap: spacing.lg,
     padding: spacing.xl,
@@ -368,11 +364,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.lg,
-  },
-  sleepNoticeGlyph: {
-    color: colors.lavender,
-    fontSize: 38,
-    fontWeight: '900',
   },
   sleepNoticeCopy: { flex: 1, gap: spacing.xs },
   sleepNoticeTitle: {

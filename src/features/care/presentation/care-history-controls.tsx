@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -90,7 +91,7 @@ export function CareHistoryControls({
             (isExporting || exportCount === 0) && styles.disabled,
           ]}
         >
-          <Text style={styles.exportGlyph}>⇩</Text>
+          <Download color={colors.primaryPressed} size={18} />
           <View>
             <Text style={styles.exportLabel}>
               {isExporting ? 'Preparando…' : 'Exportar para Excel'}
@@ -138,7 +139,7 @@ export function CareHistoryControls({
             onPress={() => changeMonth(-1)}
             style={styles.monthButton}
           >
-            <Text style={styles.monthButtonText}>‹</Text>
+            <ChevronLeft color={colors.text} size={20} />
           </Pressable>
           <Text style={styles.monthLabel}>{monthLabel}</Text>
           <Pressable
@@ -146,7 +147,7 @@ export function CareHistoryControls({
             onPress={() => changeMonth(1)}
             style={styles.monthButton}
           >
-            <Text style={styles.monthButtonText}>›</Text>
+            <ChevronRight color={colors.text} size={20} />
           </Pressable>
         </View>
 
@@ -252,11 +253,6 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: spacing.md,
   },
-  exportGlyph: {
-    color: colors.primaryPressed,
-    fontSize: 21,
-    fontWeight: '900',
-  },
   exportLabel: {
     color: colors.primaryPressed,
     fontSize: 13,
@@ -293,12 +289,6 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: 'center',
     width: 36,
-  },
-  monthButtonText: {
-    color: colors.text,
-    fontSize: 25,
-    fontWeight: '900',
-    lineHeight: 27,
   },
   monthLabel: {
     color: colors.text,

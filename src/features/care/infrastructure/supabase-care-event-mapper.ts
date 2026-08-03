@@ -3,6 +3,7 @@ import type {
   SleepEvent,
 } from '@/features/care/domain/care-event';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
+import { BabyIcon, Milk, Moon } from 'lucide-react-native';
 
 type CareEventRow = Database['public']['Tables']['care_events']['Row'];
 
@@ -45,6 +46,7 @@ export function mapCareEvent(
       ...base,
       amountMilliliters: row.amount_milliliters ?? undefined,
       breastSide: row.breast_side ?? undefined,
+      icon: Milk,
       method: row.feeding_method,
       type: 'feeding',
     };
@@ -58,6 +60,7 @@ export function mapCareEvent(
     return {
       ...base,
       condition: row.diaper_condition,
+      icon: BabyIcon,
       type: 'diaper',
     };
   }
@@ -65,6 +68,7 @@ export function mapCareEvent(
   return {
     ...base,
     endedAt: row.ended_at ?? undefined,
+    icon: Moon,
     type: 'sleep',
   } satisfies SleepEvent;
 }

@@ -1,4 +1,12 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  Heart,
+  HeartHandshake,
+  MoveVertical,
+  Plus,
+  Sparkles,
+  Sun
+} from 'lucide-react-native';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -63,17 +71,17 @@ const bloodTypeOptions = [
 
 interface SectionHeadingProps {
   accent: string;
-  glyph: string;
+  icon?: React.ComponentType<{ color?: string; size?: number }>;
   optional?: boolean;
   title: string;
 }
 
-function SectionHeading({ accent, glyph, optional = false, title }: SectionHeadingProps) {
+function SectionHeading({ accent, icon: Icon, optional = false, title }: SectionHeadingProps) {
   return (
     <View style={styles.sectionHeading}>
       <View style={styles.sectionTitleRow}>
         <View style={[styles.sectionIcon, { backgroundColor: accent }]}>
-          <Text style={styles.sectionIconText}>{glyph}</Text>
+          {Icon ? <Icon color={colors.text} size={16} /> : null}
         </View>
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
@@ -365,7 +373,7 @@ export function BabyProfileScreen({
 
           <View style={styles.photoCard}>
             <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoGlyph}>♡</Text>
+              <Heart color={colors.coral} size={24} />
             </View>
             <View style={styles.photoCopy}>
               <Text style={styles.photoTitle}>Foto del bebé</Text>
@@ -379,7 +387,7 @@ export function BabyProfileScreen({
           </View>
 
           <View style={[styles.section, styles.momentSection]}>
-            <SectionHeading accent={colors.butter} glyph="☀" title="Momento" />
+            <SectionHeading accent={colors.butter} icon={Sun} title="Momento" />
             <SegmentedControl
               onChange={(value) => {
                 setLifeStage(value);
@@ -392,7 +400,7 @@ export function BabyProfileScreen({
           </View>
 
           <View style={styles.section}>
-            <SectionHeading accent={colors.aquaSoft} glyph="♡" title="Datos principales" />
+            <SectionHeading accent={colors.aquaSoft} icon={Heart} title="Datos principales" />
             <ProfileField
               autoCapitalize="words"
               error={getError('name')}
@@ -424,7 +432,7 @@ export function BabyProfileScreen({
           <View style={styles.section}>
             <SectionHeading
               accent={colors.lavenderSoft}
-              glyph="✦"
+              icon={Sparkles}
               optional
               title="Gestación"
             />
@@ -457,7 +465,7 @@ export function BabyProfileScreen({
             <View style={styles.section}>
               <SectionHeading
                 accent={colors.butterSoft}
-                glyph="↕"
+                icon={MoveVertical}
                 optional
                 title="Medidas al nacer"
               />
@@ -494,7 +502,7 @@ export function BabyProfileScreen({
           <View style={styles.section}>
             <SectionHeading
               accent={colors.peach}
-              glyph="+"
+              icon={Plus}
               optional
               title="Información de salud"
             />
@@ -522,7 +530,7 @@ export function BabyProfileScreen({
 
           <View style={styles.privacyNotice}>
             <View style={styles.privacyIcon}>
-              <Text style={styles.privacyIconText}>♡</Text>
+              <HeartHandshake color={colors.primary} size={20} />
             </View>
             <View style={styles.privacyCopy}>
               <Text style={styles.privacyTitle}>Privado para tu familia</Text>
@@ -743,7 +751,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 56,
   },
-  photoGlyph: { color: colors.coral, fontSize: 27, fontWeight: '900' },
   photoCopy: { flex: 1 },
   photoTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
   photoHint: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 2 },
@@ -776,7 +783,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 36,
   },
-  sectionIconText: { color: colors.text, fontSize: 18, fontWeight: '900' },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '800' },
   optional: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
   fieldGroup: { gap: spacing.sm },
@@ -809,7 +815,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 42,
   },
-  privacyIconText: { color: colors.lavender, fontSize: 22, fontWeight: '900' },
   privacyCopy: { flex: 1, gap: spacing.xs },
   privacyTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   privacyText: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },

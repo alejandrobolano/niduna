@@ -1,4 +1,15 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  BabyIcon,
+  Check,
+  CloudSun,
+  Milk,
+  Moon,
+  Plus,
+  RefreshCw,
+  Star,
+  type LucideIcon,
+} from 'lucide-react-native';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -12,11 +23,11 @@ import {
   filterCareEvents,
   type CareEventFilter,
 } from '@/features/care/application/care-history';
+import type { CareRepository } from '@/features/care/application/care-repository';
 import {
   getCareSnapshot,
   getDurationMinutes,
 } from '@/features/care/application/care-snapshot';
-import type { CareRepository } from '@/features/care/application/care-repository';
 import type {
   CareDashboard,
   CareEvent,
@@ -66,7 +77,7 @@ interface CareHandoffScreenProps {
 interface SummaryCardProps {
   accent: string;
   detail: string;
-  glyph: string;
+  icon: LucideIcon;
   title: string;
   value: string;
 }
@@ -74,14 +85,18 @@ interface SummaryCardProps {
 function SummaryCard({
   accent,
   detail,
-  glyph,
+  icon: Icon,
   title,
   value,
 }: SummaryCardProps) {
   return (
     <View style={[styles.summaryCard, { borderTopColor: accent }]}>
       <View style={styles.summaryHeading}>
-        <Text style={[styles.summaryGlyph, { color: accent }]}>{glyph}</Text>
+        <View
+          style={[styles.summaryIconBadge, { backgroundColor: `${accent}22` }]}
+        >
+          <Icon color={accent} size={16} />
+        </View>
         <Text style={styles.summaryTitle}>{title}</Text>
       </View>
       <Text style={styles.summaryValue}>{value}</Text>
@@ -130,6 +145,43 @@ function formatDuration(minutes: number): string {
     : `${hours} h`;
 }
 
+function formatBabyAgeLabel(birthDate: string | undefined, now: Date): string | undefined {
+  if (!birthDate) {
+    return undefined;
+  }
+
+  const birth = new Date(birthDate);
+  if (Number.isNaN(birth.getTime())) {
+    return undefined;
+  }
+
+  const diffMs = now.getTime() - birth.getTime();
+  if (diffMs <= 0) {
+    return undefined;
+  }
+
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (totalDays < 14) {
+    return `${totalDays} ${totalDays === 1 ? 'día' : 'días'}`;
+  }
+
+  const totalWeeks = Math.floor(totalDays / 7);
+  if (totalWeeks < 8) {
+    return `${totalWeeks} ${totalWeeks === 1 ? 'semana' : 'semanas'}`;
+  }
+
+  const months =
+    (now.getFullYear() - birth.getFullYear()) * 12 +
+    (now.getMonth() - birth.getMonth()) +
+    (now.getDate() < birth.getDate() ? -1 : 0);
+
+  if (months < 1) {
+    return `${totalWeeks} ${totalWeeks === 1 ? 'semana' : 'semanas'}`;
+  }
+
+  return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+}
+
 function getFeedingDetail(event: FeedingEvent): string {
   const details = [
     event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined,
@@ -144,7 +196,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
     return {
       accent: colors.coral,
       description: getFeedingDetail(event),
-      glyph: '●',
+      icon: event.icon ?? Milk,
       title: feedingLabels[event.method],
     };
   }
@@ -153,7 +205,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
     return {
       accent: colors.butter,
       description: event.notes || 'Cambio de pañal',
-      glyph: '◆',
+      icon: event.icon ?? BabyIcon,
       title: diaperLabels[event.condition],
     };
   }
@@ -167,7 +219,7 @@ function getEventPresentation(event: CareEvent, now: Date) {
       : `Durmiendo ${formatDuration(
           getDurationMinutes(event.occurredAt, now.toISOString()),
         )}`,
-    glyph: '☾',
+    icon: event.icon ?? Moon,
     title: event.endedAt ? 'Sueño terminado' : 'Sueño en curso',
   };
 }
@@ -189,9 +241,7 @@ function TimelineEvent({
           { backgroundColor: `${presentation.accent}22` },
         ]}
       >
-        <Text style={[styles.timelineGlyphText, { color: presentation.accent }]}>
-          {presentation.glyph}
-        </Text>
+        <presentation.icon color={presentation.accent} size={18} />
       </View>
       <View style={styles.timelineCopy}>
         <View style={styles.timelineTitleRow}>
@@ -216,16 +266,20 @@ function TimelineEvent({
 
 function DashboardContent({
   dashboard,
+  isRefreshing,
   now,
   onAction,
   onExport,
   onOpenBabyProfile,
+  onRefresh,
 }: {
   dashboard: CareDashboard;
+  isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
   onExport: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
+  onRefresh: () => void;
 }) {
   const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string>();
@@ -240,6 +294,7 @@ function DashboardContent({
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
   const isExpected = dashboard.baby.lifeStage === 'expected';
+  const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
   const filteredEvents = useMemo(
     () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
     [dashboard.events, eventFilter, selectedDate],
@@ -271,7 +326,9 @@ function DashboardContent({
           <Text style={styles.heroText}>
             {isExpected
               ? 'Aquí tendréis lo esencial para coordinar los cuidados desde el primer día.'
-              : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
+              : ageLabel
+                ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
+                : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
           </Text>
         </View>
         <NuniMascot size={138} />
@@ -281,14 +338,14 @@ function DashboardContent({
         <SummaryCard
           accent={colors.coral}
           detail={feeding ? getFeedingDetail(feeding) : 'Todavía sin registros'}
-          glyph="●"
+          icon={Milk}
           title="Última alimentación"
           value={feeding ? formatWhen(feeding.occurredAt, now) : 'Sin datos'}
         />
         <SummaryCard
           accent={colors.butter}
           detail={diaper ? diaperLabels[diaper.condition] : 'Todavía sin registros'}
-          glyph="◆"
+          icon={BabyIcon}
           title="Último pañal"
           value={diaper ? formatWhen(diaper.occurredAt, now) : 'Sin datos'}
         />
@@ -306,7 +363,7 @@ function DashboardContent({
                   )}`
                 : 'Todavía sin registros'
           }
-          glyph="☾"
+          icon={Moon}
           title="Sueño"
           value={
             openSleep
@@ -358,9 +415,11 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>●</Text>
+              <Milk color={colors.text} size={20} />
               <Text style={styles.actionLabel}>Alimentación</Text>
-              <Text style={styles.actionArrow}>＋</Text>
+              <View style={styles.actionArrow}>
+                <Plus color={colors.text} size={18} />
+              </View>
             </Pressable>
             <Pressable
               onPress={() => onAction('diaper')}
@@ -370,9 +429,11 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>◆</Text>
+              <BabyIcon color={colors.text} size={20} />
               <Text style={styles.actionLabel}>Pañal</Text>
-              <Text style={styles.actionArrow}>＋</Text>
+              <View style={styles.actionArrow}>
+                <Plus color={colors.text} size={18} />
+              </View>
             </Pressable>
             <Pressable
               onPress={() => onAction('sleep')}
@@ -382,11 +443,17 @@ function DashboardContent({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Text style={styles.actionGlyph}>☾</Text>
+              <Moon color={colors.text} size={20} />
               <Text style={styles.actionLabel}>
                 {openSleep ? 'Despertó' : 'Se durmió'}
               </Text>
-              <Text style={styles.actionArrow}>{openSleep ? '✓' : '＋'}</Text>
+              <View style={styles.actionArrow}>
+                {openSleep ? (
+                  <Check color={colors.text} size={18} />
+                ) : (
+                  <Plus color={colors.text} size={18} />
+                )}
+              </View>
             </Pressable>
           </View>
         </View>
@@ -430,9 +497,25 @@ function DashboardContent({
               {filteredEvents.length === 1 ? 'registro visible' : 'registros visibles'}.
             </Text>
           </View>
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>En directo</Text>
+          <View style={styles.sectionActions}>
+            <Pressable
+              accessibilityLabel="Actualizar registros"
+              onPress={onRefresh}
+              style={({ pressed }) => [
+                styles.refreshButton,
+                pressed && styles.refreshButtonPressed,
+              ]}
+            >
+              <RefreshCw
+                color={colors.primaryPressed}
+                size={16}
+                style={isRefreshing ? styles.refreshIconSpin : undefined}
+              />
+            </Pressable>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>En directo</Text>
+            </View>
           </View>
         </View>
 
@@ -443,7 +526,7 @@ function DashboardContent({
             ))
           ) : (
             <View style={styles.emptyTimeline}>
-              <Text style={styles.emptyTimelineGlyph}>☆</Text>
+              <Star color={colors.butter} size={34} />
               <Text style={styles.emptyTimelineTitle}>
                 {dashboard.events.length > 0
                   ? 'No hay registros con este filtro'
@@ -473,6 +556,7 @@ export function CareHandoffScreen({
 }: CareHandoffScreenProps) {
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
   const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [action, setAction] = useState<CareAction>();
@@ -508,6 +592,7 @@ export function CareHandoffScreen({
       .finally(() => {
         if (active) {
           setIsLoading(false);
+          setIsRefreshing(false);
         }
       });
 
@@ -530,6 +615,11 @@ export function CareHandoffScreen({
 
   const snapshot = dashboard ? getCareSnapshot(dashboard.events) : undefined;
 
+  function handleRefresh() {
+    setIsRefreshing(true);
+    setLoadAttempt((current) => current + 1);
+  }
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -548,7 +638,7 @@ export function CareHandoffScreen({
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.stateScreen}>
-          <Text style={styles.stateGlyph}>☁</Text>
+          <CloudSun color={colors.lavender} size={56} />
           <Text style={styles.stateTitle}>No pudimos cargar el relevo</Text>
           <Text style={styles.stateText}>
             Comprueba la conexión y vuelve a intentarlo.
@@ -612,10 +702,12 @@ export function CareHandoffScreen({
           {topContent}
           <DashboardContent
             dashboard={dashboard}
+            isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
             onExport={exportHistory}
             onOpenBabyProfile={onOpenBabyProfile}
+            onRefresh={handleRefresh}
           />
         </View>
       </ScrollView>
@@ -692,7 +784,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  summaryGlyph: { fontSize: 18, fontWeight: '900' },
+  summaryIconBadge: {
+    alignItems: 'center',
+    borderRadius: 999,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
   summaryTitle: {
     color: colors.textMuted,
     fontSize: 13,
@@ -744,14 +842,16 @@ const styles = StyleSheet.create({
   diaperAction: { backgroundColor: colors.butterSoft },
   sleepAction: { backgroundColor: colors.lavenderSoft },
   actionPressed: { opacity: 0.72, transform: [{ scale: 0.99 }] },
-  actionGlyph: { color: colors.text, fontSize: 20, fontWeight: '900' },
   actionLabel: {
     color: colors.text,
     flex: 1,
     fontSize: 15,
     fontWeight: '900',
   },
-  actionArrow: { color: colors.text, fontSize: 22, fontWeight: '900' },
+  actionArrow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   readOnlyNotice: {
     backgroundColor: colors.butterSoft,
     borderRadius: radius.md,
@@ -789,6 +889,23 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     fontWeight: '900',
+  },
+  sectionActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  refreshButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  refreshButtonPressed: { opacity: 0.72 },
+  refreshIconSpin: {
+    transform: [{ rotate: '180deg' }],
   },
   liveBadge: {
     alignItems: 'center',
@@ -880,11 +997,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.xxl,
   },
-  emptyTimelineGlyph: {
-    color: colors.butter,
-    fontSize: 42,
-    fontWeight: '900',
-  },
   emptyTimelineTitle: {
     color: colors.text,
     fontSize: 18,
@@ -903,7 +1015,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.xl,
   },
-  stateGlyph: { color: colors.lavender, fontSize: 58 },
   stateTitle: {
     color: colors.text,
     fontSize: 23,

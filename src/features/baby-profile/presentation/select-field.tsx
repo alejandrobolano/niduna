@@ -1,3 +1,4 @@
+import { Check, ChevronDown, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -72,7 +73,7 @@ export function SelectField<T extends string>({
           </Text>
           <Text style={styles.triggerHint}>Toca para elegir una opción</Text>
         </View>
-        <Text style={styles.chevron}>⌄</Text>
+        <ChevronDown color={colors.coralPressed} size={20} />
       </Pressable>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -103,7 +104,7 @@ export function SelectField<T extends string>({
                 onPress={() => setIsOpen(false)}
                 style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
               >
-                <Text style={styles.closeButtonText}>×</Text>
+                <X color={colors.text} size={20} />
               </Pressable>
             </View>
             <View style={styles.options}>
@@ -123,7 +124,7 @@ export function SelectField<T extends string>({
                   >
                     <View style={[styles.optionMark, selected && styles.optionMarkSelected]}>
                       <Text style={[styles.optionMarkText, selected && styles.optionMarkTextSelected]}>
-                        {selected ? '✓' : getOptionMark(option.label)}
+                        {selected ? <Check color={colors.white} size={16} /> : getOptionMark(option.label)}
                       </Text>
                     </View>
                     <View style={styles.optionCopy}>
@@ -181,7 +182,6 @@ const styles = StyleSheet.create({
   value: { color: colors.text, fontSize: 15, fontWeight: '700' },
   placeholder: { color: colors.textMuted },
   triggerHint: { color: colors.textMuted, fontSize: 11, marginTop: 3 },
-  chevron: { color: colors.coralPressed, fontSize: 22, fontWeight: '800' },
   hint: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
   error: { color: colors.error, fontSize: 12, lineHeight: 17 },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
@@ -233,7 +233,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 40,
   },
-  closeButtonText: { color: colors.text, fontSize: 26, lineHeight: 28 },
   pressed: { opacity: 0.68, transform: [{ scale: 0.98 }] },
   options: {
     flexDirection: 'row',

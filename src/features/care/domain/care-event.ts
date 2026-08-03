@@ -1,4 +1,5 @@
 import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
+import { type LucideIcon } from 'lucide-react-native';
 
 export type FeedingMethod =
   | 'breast'
@@ -21,23 +22,27 @@ interface BaseCareEvent {
 export interface FeedingEvent extends BaseCareEvent {
   amountMilliliters?: number;
   breastSide?: BreastSide;
+  icon: LucideIcon;
   method: FeedingMethod;
   type: 'feeding';
 }
 
 export interface DiaperEvent extends BaseCareEvent {
   condition: DiaperCondition;
+  icon: LucideIcon;
   type: 'diaper';
 }
 
 export interface SleepEvent extends BaseCareEvent {
   endedAt?: string;
+  icon: LucideIcon;
   type: 'sleep';
 }
 
 export type CareEvent = FeedingEvent | DiaperEvent | SleepEvent;
 
 export interface CareBaby {
+  birthDate?: string;
   id: string;
   lifeStage: BabyLifeStage;
   name: string;
