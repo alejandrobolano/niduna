@@ -144,6 +144,43 @@ function formatDuration(minutes: number): string {
     : `${hours} h`;
 }
 
+function formatBabyAgeLabel(birthDate: string | undefined, now: Date): string | undefined {
+  if (!birthDate) {
+    return undefined;
+  }
+
+  const birth = new Date(birthDate);
+  if (Number.isNaN(birth.getTime())) {
+    return undefined;
+  }
+
+  const diffMs = now.getTime() - birth.getTime();
+  if (diffMs <= 0) {
+    return undefined;
+  }
+
+  const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (totalDays < 14) {
+    return `${totalDays} ${totalDays === 1 ? 'día' : 'días'}`;
+  }
+
+  const totalWeeks = Math.floor(totalDays / 7);
+  if (totalWeeks < 8) {
+    return `${totalWeeks} ${totalWeeks === 1 ? 'semana' : 'semanas'}`;
+  }
+
+  const months =
+    (now.getFullYear() - birth.getFullYear()) * 12 +
+    (now.getMonth() - birth.getMonth()) +
+    (now.getDate() < birth.getDate() ? -1 : 0);
+
+  if (months < 1) {
+    return `${totalWeeks} ${totalWeeks === 1 ? 'semana' : 'semanas'}`;
+  }
+
+  return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+}
+
 function getFeedingDetail(event: FeedingEvent): string {
   const details = [
     event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined,
@@ -252,6 +289,7 @@ function DashboardContent({
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
   const isExpected = dashboard.baby.lifeStage === 'expected';
+  const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
   const filteredEvents = useMemo(
     () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
     [dashboard.events, eventFilter, selectedDate],
@@ -283,7 +321,9 @@ function DashboardContent({
           <Text style={styles.heroText}>
             {isExpected
               ? 'Aquí tendréis lo esencial para coordinar los cuidados desde el primer día.'
-              : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
+              : ageLabel
+                ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
+                : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
           </Text>
         </View>
         <NuniMascot size={138} />

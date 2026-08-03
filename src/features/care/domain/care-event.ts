@@ -42,6 +42,7 @@ export interface SleepEvent extends BaseCareEvent {
 export type CareEvent = FeedingEvent | DiaperEvent | SleepEvent;
 
 export interface CareBaby {
+  birthDate?: string;
   id: string;
   lifeStage: BabyLifeStage;
   name: string;
