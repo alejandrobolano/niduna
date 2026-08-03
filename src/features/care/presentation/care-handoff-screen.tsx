@@ -5,8 +5,9 @@ import {
   Milk,
   Moon,
   Plus,
+  RefreshCw,
   Star,
-  type LucideIcon
+  type LucideIcon,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -265,16 +266,20 @@ function TimelineEvent({
 
 function DashboardContent({
   dashboard,
+  isRefreshing,
   now,
   onAction,
   onExport,
   onOpenBabyProfile,
+  onRefresh,
 }: {
   dashboard: CareDashboard;
+  isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
   onExport: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
+  onRefresh: () => void;
 }) {
   const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string>();
@@ -492,9 +497,25 @@ function DashboardContent({
               {filteredEvents.length === 1 ? 'registro visible' : 'registros visibles'}.
             </Text>
           </View>
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>En directo</Text>
+          <View style={styles.sectionActions}>
+            <Pressable
+              accessibilityLabel="Actualizar registros"
+              onPress={onRefresh}
+              style={({ pressed }) => [
+                styles.refreshButton,
+                pressed && styles.refreshButtonPressed,
+              ]}
+            >
+              <RefreshCw
+                color={colors.primaryPressed}
+                size={16}
+                style={isRefreshing ? styles.refreshIconSpin : undefined}
+              />
+            </Pressable>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>En directo</Text>
+            </View>
           </View>
         </View>
 
@@ -535,6 +556,7 @@ export function CareHandoffScreen({
 }: CareHandoffScreenProps) {
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
   const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [action, setAction] = useState<CareAction>();
@@ -570,6 +592,7 @@ export function CareHandoffScreen({
       .finally(() => {
         if (active) {
           setIsLoading(false);
+          setIsRefreshing(false);
         }
       });
 
@@ -591,6 +614,11 @@ export function CareHandoffScreen({
   }, [babyId, repository]);
 
   const snapshot = dashboard ? getCareSnapshot(dashboard.events) : undefined;
+
+  function handleRefresh() {
+    setIsRefreshing(true);
+    setLoadAttempt((current) => current + 1);
+  }
 
   if (isLoading) {
     return (
@@ -674,10 +702,12 @@ export function CareHandoffScreen({
           {topContent}
           <DashboardContent
             dashboard={dashboard}
+            isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
             onExport={exportHistory}
             onOpenBabyProfile={onOpenBabyProfile}
+            onRefresh={handleRefresh}
           />
         </View>
       </ScrollView>
@@ -859,6 +889,23 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 14,
     fontWeight: '900',
+  },
+  sectionActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  refreshButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  refreshButtonPressed: { opacity: 0.72 },
+  refreshIconSpin: {
+    transform: [{ rotate: '180deg' }],
   },
   liveBadge: {
     alignItems: 'center',
