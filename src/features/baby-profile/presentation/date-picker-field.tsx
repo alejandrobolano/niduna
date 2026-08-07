@@ -3,18 +3,19 @@ import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
-  addMonths,
-  dateToIso,
-  formatDate,
-  formatMonth,
-  getCalendarDays,
-  isoToDate,
+    addMonths,
+    dateToIso,
+    formatDate,
+    formatMonth,
+    getCalendarDays,
+    isoToDate,
 } from '@/shared/presentation/date';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'] as const;
 
 interface DatePickerFieldProps {
+  disabled?: boolean;
   error?: string;
   label: string;
   maximumDate?: string;
@@ -23,6 +24,7 @@ interface DatePickerFieldProps {
 }
 
 export function DatePickerField({
+  disabled = false,
   error,
   label,
   maximumDate,
@@ -54,11 +56,17 @@ export function DatePickerField({
         accessibilityHint="Abre un calendario para elegir la fecha"
         accessibilityLabel={`${label}. ${formatDate(value) || 'Sin seleccionar'}`}
         accessibilityRole="button"
-        onPress={openPicker}
+        disabled={disabled}
+        onPress={() => {
+          if (!disabled) {
+            openPicker();
+          }
+        }}
         style={({ pressed }) => [
           styles.trigger,
           error && styles.triggerError,
-          pressed && styles.triggerPressed,
+          disabled && styles.triggerDisabled,
+          pressed && !disabled && styles.triggerPressed,
         ]}
       >
         <View style={styles.calendarIcon}>
@@ -207,6 +215,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   triggerError: { borderColor: colors.error },
+  triggerDisabled: { opacity: 0.65 },
   triggerPressed: { backgroundColor: colors.aquaSoft, transform: [{ scale: 0.995 }] },
   calendarIcon: {
     alignItems: 'center',

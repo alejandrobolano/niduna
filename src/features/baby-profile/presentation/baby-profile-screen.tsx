@@ -101,7 +101,7 @@ function parseOptionalNumber(value: string): number | undefined {
 
 interface BabyProfileScreenProps {
   babyId?: string;
-  canArchive?: boolean;
+  canManageBabies?: boolean;
   familyId: string;
   onArchive?: () => Promise<void>;
   onSaved?: (babyId: string) => void;
@@ -112,7 +112,7 @@ interface BabyProfileScreenProps {
 
 export function BabyProfileScreen({
   babyId: selectedBabyId,
-  canArchive = false,
+  canManageBabies = false,
   familyId,
   onArchive,
   onSaved,
@@ -144,6 +144,7 @@ export function BabyProfileScreen({
   >();
   const [isChangingAccess, setIsChangingAccess] = useState(false);
   const [accessError, setAccessError] = useState(false);
+  const isReadOnly = !canManageBabies;
 
   useEffect(() => {
     let active = true;
@@ -389,6 +390,7 @@ export function BabyProfileScreen({
           <View style={[styles.section, styles.momentSection]}>
             <SectionHeading accent={colors.butter} icon={Sun} title="Momento" />
             <SegmentedControl
+              disabled={isReadOnly}
               onChange={(value) => {
                 setLifeStage(value);
                 setDate('');
@@ -403,6 +405,7 @@ export function BabyProfileScreen({
             <SectionHeading accent={colors.aquaSoft} icon={Heart} title="Datos principales" />
             <ProfileField
               autoCapitalize="words"
+              disabled={isReadOnly}
               error={getError('name')}
               label="Nombre"
               onChangeText={setName}
@@ -410,6 +413,7 @@ export function BabyProfileScreen({
               value={name}
             />
             <DatePickerField
+              disabled={isReadOnly}
               error={getError(lifeStage === 'expected' ? 'expectedDueDate' : 'birthDate')}
               label={lifeStage === 'expected' ? 'Fecha probable de parto' : 'Fecha de nacimiento'}
               maximumDate={lifeStage === 'born' ? dateToIso(new Date()) : undefined}
@@ -419,6 +423,7 @@ export function BabyProfileScreen({
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Sexo registrado al nacer</Text>
               <SegmentedControl
+                disabled={isReadOnly}
                 onChange={setSexAtBirth}
                 options={sexOptions}
                 value={sexAtBirth}
@@ -438,6 +443,7 @@ export function BabyProfileScreen({
             />
             <View style={styles.inlineFields}>
               <ProfileField
+                disabled={isReadOnly}
                 error={getError('gestationalAgeWeeks')}
                 keyboardType="number-pad"
                 label="Semanas"
@@ -447,6 +453,7 @@ export function BabyProfileScreen({
                 value={gestationalWeeks}
               />
               <ProfileField
+                disabled={isReadOnly}
                 error={getError('gestationalAgeDays')}
                 keyboardType="number-pad"
                 label="Días"
@@ -470,6 +477,7 @@ export function BabyProfileScreen({
                 title="Medidas al nacer"
               />
               <ProfileField
+                disabled={isReadOnly}
                 error={getError('birthMeasurement')}
                 keyboardType="decimal-pad"
                 label="Peso"
@@ -480,6 +488,7 @@ export function BabyProfileScreen({
               />
               <View style={styles.inlineFields}>
                 <ProfileField
+                  disabled={isReadOnly}
                   keyboardType="decimal-pad"
                   label="Longitud"
                   onChangeText={setLengthCentimeters}
@@ -488,6 +497,7 @@ export function BabyProfileScreen({
                   value={lengthCentimeters}
                 />
                 <ProfileField
+                  disabled={isReadOnly}
                   keyboardType="decimal-pad"
                   label="Perímetro cefálico"
                   onChangeText={setHeadCircumference}
@@ -507,6 +517,7 @@ export function BabyProfileScreen({
               title="Información de salud"
             />
             <SelectField
+              disabled={isReadOnly}
               eyebrow="INFORMACIÓN DE SALUD"
               hint="No lo deduzcas. Déjalo vacío si no aparece en documentación clínica."
               label="Grupo sanguíneo y Rh"
@@ -517,6 +528,7 @@ export function BabyProfileScreen({
               value={bloodType}
             />
             <ProfileField
+              disabled={isReadOnly}
               label="Observaciones"
               multiline
               numberOfLines={4}
@@ -542,23 +554,25 @@ export function BabyProfileScreen({
 
           <Pressable
             accessibilityRole="button"
-            disabled={isSaving || (!hasUnsavedChanges && Boolean(storedBabyId))}
+            disabled={isSaving || isReadOnly || (!hasUnsavedChanges && Boolean(storedBabyId))}
             onPress={() => void handleSave()}
             style={({ pressed }) => [
               styles.primaryButton,
               pressed && styles.primaryButtonPressed,
-              (isSaving || (!hasUnsavedChanges && Boolean(storedBabyId))) &&
+              (isSaving || isReadOnly || (!hasUnsavedChanges && Boolean(storedBabyId))) &&
                 styles.primaryButtonDisabled,
             ]}
           >
             <Text style={styles.primaryButtonText}>
               {isSaving
                 ? 'Guardando…'
-                : !hasUnsavedChanges && storedBabyId
-                  ? 'Perfil al día'
-                  : storedBabyId
-                    ? 'Guardar cambios'
-                    : 'Guardar perfil'}
+                : isReadOnly
+                  ? 'Sin permisos para editar'
+                  : !hasUnsavedChanges && storedBabyId
+                    ? 'Perfil al día'
+                    : storedBabyId
+                      ? 'Guardar cambios'
+                      : 'Guardar perfil'}
             </Text>
           </Pressable>
           {hasReviewed || saveError || isSaved ? (
@@ -618,9 +632,14 @@ export function BabyProfileScreen({
             <View style={styles.accessSection}>
               <Text style={styles.accessTitle}>Seguimiento en esta familia</Text>
               <Text style={styles.accessText}>
-                Puedes ocultar este perfil sólo para ti. Si administras la
-                familia, también puedes retirarlo para todos sin borrar su
-                historial.
+                Puedes ocultar este perfil sólo para ti. 
+                {canManageBabies && (
+                  <Text>
+                    Como administrador/a de la
+                    familia, también puedes retirarlo para todos sin borrar su
+                    historial.
+                  </Text>
+                )}
               </Text>
               <Pressable
                 accessibilityRole="link"
@@ -632,7 +651,7 @@ export function BabyProfileScreen({
               >
                 <Text style={styles.accessLink}>Dejar de seguir a {name}</Text>
               </Pressable>
-              {canArchive && onArchive ? (
+              {canManageBabies && onArchive ? (
                 <Pressable
                   accessibilityRole="link"
                   disabled={isChangingAccess}

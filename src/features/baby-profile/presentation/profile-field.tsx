@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-na
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 interface ProfileFieldProps extends TextInputProps {
+  disabled?: boolean;
   error?: string;
   label: string;
   hint?: string;
@@ -11,6 +12,7 @@ interface ProfileFieldProps extends TextInputProps {
 }
 
 export function ProfileField({
+  disabled = false,
   error,
   label,
   hint,
@@ -21,11 +23,12 @@ export function ProfileField({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, error && styles.inputRowError]}>
+      <View style={[styles.inputRow, error && styles.inputRowError, disabled && styles.inputRowDisabled]}>
         <TextInput
           accessibilityLabel={label}
+          editable={!disabled}
           placeholderTextColor={colors.textMuted}
-          style={[styles.input, style]}
+          style={[styles.input, style, disabled && styles.inputDisabled]}
           {...inputProps}
         />
         {trailing}
@@ -60,11 +63,17 @@ const styles = StyleSheet.create({
   inputRowError: {
     borderColor: colors.error,
   },
+  inputRowDisabled: {
+    opacity: 0.65,
+  },
   input: {
     color: colors.text,
     flex: 1,
     fontSize: 16,
     paddingVertical: spacing.md,
+  },
+  inputDisabled: {
+    color: colors.textMuted,
   },
   hint: {
     color: colors.textMuted,

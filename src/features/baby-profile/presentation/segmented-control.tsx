@@ -8,12 +8,14 @@ interface Segment<T extends string> {
 }
 
 interface SegmentedControlProps<T extends string> {
+  disabled?: boolean;
   options: Segment<T>[];
   value: T;
   onChange: (value: T) => void;
 }
 
 export function SegmentedControl<T extends string>({
+  disabled = false,
   options,
   value,
   onChange,
@@ -25,10 +27,11 @@ export function SegmentedControl<T extends string>({
         return (
           <Pressable
             accessibilityRole="button"
-            accessibilityState={{ selected }}
+            accessibilityState={{ disabled, selected }}
+            disabled={disabled}
             key={option.value}
             onPress={() => onChange(option.value)}
-            style={[styles.option, selected && styles.optionSelected]}
+            style={[styles.option, selected && styles.optionSelected, disabled && styles.optionDisabled]}
           >
             <Text style={[styles.label, selected && styles.labelSelected]}>{option.label}</Text>
           </Pressable>
@@ -55,6 +58,9 @@ const styles = StyleSheet.create({
   },
   optionSelected: {
     backgroundColor: colors.surface,
+  },
+  optionDisabled: {
+    opacity: 0.65,
   },
   label: {
     color: colors.textMuted,
