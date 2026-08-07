@@ -15,6 +15,7 @@ function getOptionMark(label: string): string {
 }
 
 interface SelectFieldProps<T extends string> {
+  disabled?: boolean;
   eyebrow?: string;
   error?: string;
   hint?: string;
@@ -27,6 +28,7 @@ interface SelectFieldProps<T extends string> {
 }
 
 export function SelectField<T extends string>({
+  disabled = false,
   eyebrow = 'ELIGE UNA OPCIÓN',
   error,
   hint,
@@ -52,11 +54,17 @@ export function SelectField<T extends string>({
         accessibilityHint={`Abre la lista de opciones para ${label.toLocaleLowerCase('es')}`}
         accessibilityLabel={`${label}. ${selectedOption?.label ?? 'Sin seleccionar'}`}
         accessibilityRole="button"
-        onPress={() => setIsOpen(true)}
+        disabled={disabled}
+        onPress={() => {
+          if (!disabled) {
+            setIsOpen(true);
+          }
+        }}
         style={({ pressed }) => [
           styles.trigger,
           error && styles.triggerError,
-          pressed && styles.triggerPressed,
+          disabled && styles.triggerDisabled,
+          pressed && !disabled && styles.triggerPressed,
         ]}
       >
         <View style={styles.dropIcon}>
@@ -159,6 +167,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   triggerError: { borderColor: colors.error },
+  triggerDisabled: { opacity: 0.65 },
   triggerPressed: { backgroundColor: colors.peach, transform: [{ scale: 0.995 }] },
   dropIcon: { alignItems: 'center', height: 44, justifyContent: 'center', width: 44 },
   dropTop: {

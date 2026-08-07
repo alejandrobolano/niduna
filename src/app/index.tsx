@@ -5,8 +5,8 @@ import type { AuthenticatedUser } from '@/features/auth/domain/auth';
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { AuthScreen } from '@/features/auth/presentation/auth-screen';
-import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
+import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
 import {
   createCareHistoryCsv,
@@ -16,8 +16,8 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
-import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
+import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
 import {
   FamilyBabyContextErrorScreen,
   FamilyBabySwitcher,
@@ -190,7 +190,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   return section === 'baby' ? (
     <BabyProfileScreen
       babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
-      canArchive={canManageBabies}
+      canManageBabies={canManageBabies}
       familyId={activeFamily.id}
       key={`${activeFamily.id}:${
         isCreatingBaby
