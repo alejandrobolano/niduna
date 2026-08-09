@@ -13,6 +13,8 @@ function mapPreferences(
     | {
         diaper_enabled: boolean;
         feeding_enabled: boolean;
+        measurement_enabled: boolean;
+        note_enabled: boolean;
         paused_until: string | null;
         sleep_enabled: boolean;
       }
@@ -25,6 +27,8 @@ function mapPreferences(
   return {
     diaperEnabled: row.diaper_enabled,
     feedingEnabled: row.feeding_enabled,
+    measurementEnabled: row.measurement_enabled,
+    noteEnabled: row.note_enabled,
     pausedUntil: row.paused_until ?? undefined,
     sleepEnabled: row.sleep_enabled,
   };
@@ -55,7 +59,9 @@ export const supabaseNotificationRepository: NotificationRepository = {
       deviceQuery,
       supabase
         .from('notification_preferences')
-        .select('feeding_enabled, diaper_enabled, sleep_enabled, paused_until')
+        .select(
+          'feeding_enabled, diaper_enabled, sleep_enabled, note_enabled, measurement_enabled, paused_until',
+        )
         .eq('family_id', familyId)
         .eq('user_id', userId)
         .maybeSingle(),
@@ -93,6 +99,8 @@ export const supabaseNotificationRepository: NotificationRepository = {
         diaper_enabled: preferences.diaperEnabled,
         family_id: familyId,
         feeding_enabled: preferences.feedingEnabled,
+        measurement_enabled: preferences.measurementEnabled,
+        note_enabled: preferences.noteEnabled,
         paused_until: preferences.pausedUntil ?? null,
         sleep_enabled: preferences.sleepEnabled,
         user_id: userId,

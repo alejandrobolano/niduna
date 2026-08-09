@@ -170,6 +170,31 @@ export type Database = {
           status?: 'pending' | 'sent' | 'failed';
         }
       >;
+      family_activity_notification_deliveries: Table<
+        {
+          channel: 'native' | 'web';
+          created_at: string;
+          device_id: string;
+          error_code: string | null;
+          id: string;
+          provider_message_id: string | null;
+          source_id: string;
+          source_type: 'note' | 'measurement';
+          status: 'pending' | 'sent' | 'delivered' | 'failed';
+          updated_at: string;
+        },
+        {
+          channel: 'native' | 'web';
+          device_id: string;
+          source_id: string;
+          source_type: 'note' | 'measurement';
+        },
+        {
+          error_code?: string | null;
+          provider_message_id?: string | null;
+          status?: 'pending' | 'sent' | 'delivered' | 'failed';
+        }
+      >;
       app_releases: Table<
         {
           app_build_version: string;
@@ -235,6 +260,8 @@ export type Database = {
           diaper_enabled: boolean;
           family_id: string;
           feeding_enabled: boolean;
+          measurement_enabled: boolean;
+          note_enabled: boolean;
           paused_until: string | null;
           sleep_enabled: boolean;
           updated_at: string;
@@ -244,6 +271,8 @@ export type Database = {
           diaper_enabled?: boolean;
           family_id: string;
           feeding_enabled?: boolean;
+          measurement_enabled?: boolean;
+          note_enabled?: boolean;
           paused_until?: string | null;
           sleep_enabled?: boolean;
           user_id: string;
@@ -251,6 +280,8 @@ export type Database = {
         {
           diaper_enabled?: boolean;
           feeding_enabled?: boolean;
+          measurement_enabled?: boolean;
+          note_enabled?: boolean;
           paused_until?: string | null;
           sleep_enabled?: boolean;
         }

@@ -34,11 +34,14 @@ registrations and delivery functions separate.
    `DeviceNotRegistered`.
 
 The web client invokes `dispatch-web-care-notification` independently. That
-function applies the same recipient rules and sends through FCM HTTP v1. A
-failure in either channel never blocks saving the care event.
+function applies the same recipient rules and sends through FCM HTTP v1.
+Notes and measurements use the additive `dispatch-activity-notification`
+function, which dispatches to both native and web devices without changing the
+existing care functions. A failure in any channel never blocks saving the
+record.
 
-An event remains saved if notification delivery fails. Push is an auxiliary
-signal and must never block care tracking.
+An event, note, or measurement remains saved if notification delivery fails.
+Push is an auxiliary signal and must never block care tracking.
 
 ## Native credentials
 

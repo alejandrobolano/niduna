@@ -15,6 +15,8 @@ import { colors, radius, spacing } from '@/shared/presentation/theme';
 const categoryLabels: Record<NotificationCategory, string> = {
   diaper: 'Pañal',
   feeding: 'Alimentación',
+  measurement: 'Medidas',
+  note: 'Notas',
   sleep: 'Sueño',
 };
 
@@ -45,6 +47,17 @@ function toggleCategory(
     return { ...preferences, diaperEnabled: !preferences.diaperEnabled };
   }
 
+  if (category === 'note') {
+    return { ...preferences, noteEnabled: !preferences.noteEnabled };
+  }
+
+  if (category === 'measurement') {
+    return {
+      ...preferences,
+      measurementEnabled: !preferences.measurementEnabled,
+    };
+  }
+
   return { ...preferences, sleepEnabled: !preferences.sleepEnabled };
 }
 
@@ -58,6 +71,14 @@ function categoryIsEnabled(
 
   if (category === 'diaper') {
     return preferences.diaperEnabled;
+  }
+
+  if (category === 'note') {
+    return preferences.noteEnabled;
+  }
+
+  if (category === 'measurement') {
+    return preferences.measurementEnabled;
   }
 
   return preferences.sleepEnabled;
@@ -184,7 +205,8 @@ export function NotificationSettingsPanel({
       </View>
 
       <Text style={styles.description}>
-        Recibe un aviso discreto cuando otra persona registre un cuidado.
+        Recibe un aviso discreto cuando otra persona registre un cuidado, una
+        nota o una medida.
       </Text>
 
       {!hasActiveDevice ? (
@@ -205,7 +227,13 @@ export function NotificationSettingsPanel({
       ) : (
         <>
           <View style={styles.categories}>
-            {(['feeding', 'diaper', 'sleep'] as const).map((category) => {
+            {([
+              'feeding',
+              'diaper',
+              'sleep',
+              'note',
+              'measurement',
+            ] as const).map((category) => {
               const enabled = categoryIsEnabled(preferences, category);
 
               return (
