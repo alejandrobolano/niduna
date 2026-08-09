@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type {
   NotificationRepository,
@@ -74,21 +74,17 @@ export function NotificationSettingsPanel({
     defaultNotificationPreferences,
   );
   const [hasActiveDevice, setHasActiveDevice] = useState(false);
-  const [isLoading, setIsLoading] = useState(Platform.OS !== 'web');
+  const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState<string>();
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      return;
-    }
-
     let active = true;
 
     void permissionService
       .getExistingRegistration()
       .then((registration) =>
-        repository.loadSettings(familyId, userId, registration?.token),
+        repository.loadSettings(familyId, userId, registration),
       )
       .then((settings) => {
         if (active) {
@@ -137,7 +133,7 @@ export function NotificationSettingsPanel({
 
       if (result.status === 'denied') {
         setMessage(
-          'El permiso está desactivado. Puedes habilitarlo desde los ajustes del dispositivo.',
+          'El permiso está desactivado. Puedes habilitarlo desde los ajustes del navegador o dispositivo.',
         );
         return;
       }
@@ -164,17 +160,6 @@ export function NotificationSettingsPanel({
       : new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
 
     void savePreferences({ ...preferences, pausedUntil: nextPausedUntil });
-  }
-
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.card}>
-        <Text style={styles.title}>Notificaciones</Text>
-        <Text style={styles.description}>
-          Los avisos push se configuran desde la app de Android o iOS.
-        </Text>
-      </View>
-    );
   }
 
   return (

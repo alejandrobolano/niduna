@@ -1,0 +1,25 @@
+import { ScrollViewStyleReset } from 'expo-router/html';
+import type { PropsWithChildren } from 'react';
+
+export default function Root({ children }: PropsWithChildren) {
+  return (
+    <html lang="es">
+      <head>
+        <meta charSet="utf-8" />
+        <meta content="IE=edge" httpEquiv="X-UA-Compatible" />
+        <meta
+          content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+          name="viewport"
+        />
+        <meta content="#fff8e8" name="theme-color" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="Niduna" name="apple-mobile-web-app-title" />
+        <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
+        <link href="/manifest.webmanifest" rel="manifest" />
+        <link href="/pwa/icon-192.png" rel="apple-touch-icon" />
+        <ScrollViewStyleReset />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}

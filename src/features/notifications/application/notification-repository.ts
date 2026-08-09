@@ -1,6 +1,6 @@
 import type { NotificationPreferences } from '@/features/notifications/domain/notification-preferences';
 
-export type NativeNotificationPlatform = 'android' | 'ios';
+export type NotificationPlatform = 'android' | 'ios' | 'web';
 
 export interface NotificationSettings {
   hasActiveDevice: boolean;
@@ -8,7 +8,7 @@ export interface NotificationSettings {
 }
 
 export interface PushDeviceRegistration {
-  platform: NativeNotificationPlatform;
+  platform: NotificationPlatform;
   token: string;
 }
 
@@ -16,7 +16,7 @@ export interface NotificationRepository {
   loadSettings(
     familyId: string,
     userId: string,
-    currentToken?: string,
+    currentRegistration?: PushDeviceRegistration,
   ): Promise<NotificationSettings>;
   registerDevice(registration: PushDeviceRegistration): Promise<void>;
   savePreferences(

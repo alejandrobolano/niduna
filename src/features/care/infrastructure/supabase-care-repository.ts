@@ -62,17 +62,18 @@ async function insertEvent(
     throwOperationError(error.code, error.message);
   }
 
-  void dispatchCareNotification(data.id);
+  void dispatchCareNotifications(data.id);
 }
 
-async function dispatchCareNotification(eventId: string): Promise<void> {
-  try {
-    await supabase.functions.invoke('dispatch-care-notification', {
+async function dispatchCareNotifications(eventId: string): Promise<void> {
+  await Promise.allSettled([
+    supabase.functions.invoke('dispatch-care-notification', {
       body: { eventId },
-    });
-  } catch {
-    return;
-  }
+    }),
+    supabase.functions.invoke('dispatch-web-care-notification', {
+      body: { eventId },
+    }),
+  ]);
 }
 
 async function loadDisplayNames(
