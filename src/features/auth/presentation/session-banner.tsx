@@ -1,4 +1,4 @@
-import { X } from 'lucide-react-native';
+import { History, X } from 'lucide-react-native';
 import { type ReactNode, useState } from 'react';
 import {
   Modal,
@@ -14,10 +14,15 @@ import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   email: string;
+  onOpenFamilyActivity?: () => void;
   settingsContent?: ReactNode;
 }
 
-export function SessionBanner({ email, settingsContent }: SessionBannerProps) {
+export function SessionBanner({
+  email,
+  onOpenFamilyActivity,
+  settingsContent,
+}: SessionBannerProps) {
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string>();
@@ -94,6 +99,29 @@ export function SessionBanner({ email, settingsContent }: SessionBannerProps) {
                   </Text>
                 </View>
               </View>
+              {onOpenFamilyActivity ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setIsOpen(false);
+                    onOpenFamilyActivity();
+                  }}
+                  style={({ pressed }) => [
+                    styles.activityLink,
+                    pressed && styles.buttonPressed,
+                  ]}
+                >
+                  <View style={styles.activityIcon}>
+                    <History color={colors.primaryPressed} size={19} />
+                  </View>
+                  <View style={styles.copy}>
+                    <Text style={styles.activityTitle}>Actividad familiar</Text>
+                    <Text style={styles.activityText}>
+                      Consulta los cambios realizados por la familia.
+                    </Text>
+                  </View>
+                </Pressable>
+              ) : null}
               {settingsContent ?? (
                 <View style={styles.panelBody}>
                   <Text style={styles.panelTitle}>Ajustes personales</Text>
@@ -209,6 +237,25 @@ const styles = StyleSheet.create({
   copy: { flex: 1 },
   email: { color: colors.text, fontSize: 13, fontWeight: '800' },
   caption: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  activityLink: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 64,
+    padding: spacing.md,
+  },
+  activityIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  activityTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  activityText: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
   error: { color: colors.error, fontSize: 11, marginTop: spacing.xs },
   panelBody: {
     backgroundColor: colors.aquaSoft,
