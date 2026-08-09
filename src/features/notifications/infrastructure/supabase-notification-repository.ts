@@ -34,16 +34,25 @@ export const supabaseNotificationRepository: NotificationRepository = {
   async loadSettings(
     familyId,
     userId,
-    currentToken,
+    currentRegistration,
   ): Promise<NotificationSettings> {
+    const deviceQuery = currentRegistration?.platform === 'web'
+      ? supabase
+          .from('web_push_devices')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('firebase_installation_id', currentRegistration.token)
+          .eq('is_active', true)
+          .limit(1)
+      : supabase
+          .from('push_devices')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('expo_push_token', currentRegistration?.token ?? '')
+          .eq('is_active', true)
+          .limit(1);
     const [deviceResult, preferencesResult] = await Promise.all([
-      supabase
-        .from('push_devices')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('expo_push_token', currentToken ?? '')
-        .eq('is_active', true)
-        .limit(1),
+      deviceQuery,
       supabase
         .from('notification_preferences')
         .select('feeding_enabled, diaper_enabled, sleep_enabled, paused_until')
@@ -64,10 +73,14 @@ export const supabaseNotificationRepository: NotificationRepository = {
   },
 
   async registerDevice(registration) {
-    const { error } = await supabase.rpc('register_push_device', {
-      target_expo_push_token: registration.token,
-      target_platform: registration.platform,
-    });
+    const { error } = registration.platform === 'web'
+      ? await supabase.rpc('register_web_push_device', {
+          target_firebase_installation_id: registration.token,
+        })
+      : await supabase.rpc('register_push_device', {
+          target_expo_push_token: registration.token,
+          target_platform: registration.platform,
+        });
 
     if (error) {
       throw new Error('push_device_registration_failed');

@@ -128,6 +128,48 @@ export type Database = {
           user_id?: string;
         }
       >;
+      web_push_devices: Table<
+        {
+          created_at: string;
+          firebase_installation_id: string;
+          id: string;
+          is_active: boolean;
+          last_registered_at: string;
+          updated_at: string;
+          user_id: string;
+        },
+        {
+          firebase_installation_id: string;
+          user_id: string;
+        },
+        {
+          firebase_installation_id?: string;
+          is_active?: boolean;
+          last_registered_at?: string;
+          user_id?: string;
+        }
+      >;
+      web_notification_deliveries: Table<
+        {
+          care_event_id: string;
+          created_at: string;
+          error_code: string | null;
+          fcm_message_id: string | null;
+          id: string;
+          status: 'pending' | 'sent' | 'failed';
+          updated_at: string;
+          web_push_device_id: string;
+        },
+        {
+          care_event_id: string;
+          web_push_device_id: string;
+        },
+        {
+          error_code?: string | null;
+          fcm_message_id?: string | null;
+          status?: 'pending' | 'sent' | 'failed';
+        }
+      >;
       app_releases: Table<
         {
           app_build_version: string;
@@ -467,6 +509,12 @@ export type Database = {
         Args: {
           target_expo_push_token: string;
           target_platform: string;
+        };
+        Returns: string;
+      };
+      register_web_push_device: {
+        Args: {
+          target_firebase_installation_id: string;
         };
         Returns: string;
       };

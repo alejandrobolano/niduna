@@ -34,9 +34,10 @@ import {
   type AppSection,
 } from '@/features/home/presentation/app-section-navigation';
 import { AppHeader } from '@/features/home/presentation/app-header';
-import { expoPushPermissionService } from '@/features/notifications/infrastructure/expo-push-permission-service';
+import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
+import { PwaInstallPanel } from '@/features/pwa/presentation/pwa-install-panel';
 import { colors, spacing } from '@/shared/presentation/theme';
 
 async function exportCareHistory(
@@ -121,12 +122,13 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
       }
       settingsContent={
         <View style={styles.accountSettings}>
+          <PwaInstallPanel />
           <AppUpdatePanel repository={supabaseAppReleaseRepository} />
           {activeFamily ? (
             <NotificationSettingsPanel
               familyId={activeFamily.id}
               familyName={activeFamily.name}
-              permissionService={expoPushPermissionService}
+              permissionService={pushPermissionService}
               repository={supabaseNotificationRepository}
               userId={user.id}
             />
