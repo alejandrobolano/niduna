@@ -1,10 +1,15 @@
 import type {
   BreastSide,
   CareDashboard,
+  CareEvent,
   DiaperCondition,
   FeedingMethod,
   MeasurementSource,
 } from '@/features/care/domain/care-event';
+import type {
+  CareEventFilter,
+  CareHistoryPageSize,
+} from '@/features/care/application/care-history';
 
 interface CareEventInput {
   babyId: string;
@@ -35,8 +40,29 @@ export interface MeasurementInput extends CareEventInput {
   weightGrams?: number;
 }
 
+export interface CareHistoryQuery {
+  babyId: string;
+  date?: string;
+  filter: CareEventFilter;
+  page: number;
+  pageSize: CareHistoryPageSize;
+}
+
+export interface CareHistoryPage {
+  events: CareEvent[];
+  page: number;
+  pageSize: CareHistoryPageSize;
+  total: number;
+  totalPages: number;
+}
+
 export interface CareRepository {
+  deleteEvent(event: CareEvent): Promise<void>;
   finishSleep(eventId: string): Promise<void>;
+  loadHistory(query: CareHistoryQuery): Promise<CareHistoryPage>;
+  loadHistoryForExport(
+    query: Omit<CareHistoryQuery, 'page' | 'pageSize'>,
+  ): Promise<CareEvent[]>;
   load(userId: string, babyId: string): Promise<CareDashboard | null>;
   recordDiaper(input: DiaperInput): Promise<void>;
   recordFeeding(input: FeedingInput): Promise<void>;

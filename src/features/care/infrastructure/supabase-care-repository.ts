@@ -1,13 +1,18 @@
 import {
     CareOperationError,
     type CareOperationErrorReason,
+    type CareHistoryPage,
+    type CareHistoryQuery,
     type CareRepository,
 } from '@/features/care/application/care-repository';
 import {
     mapBabyNote,
     mapCareEvent,
+    mapCareTimelineRow,
     mapMeasurement,
+    type CareTimelineRow,
 } from '@/features/care/infrastructure/supabase-care-event-mapper';
+import type { CareEvent } from '@/features/care/domain/care-event';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
 
@@ -70,7 +75,128 @@ async function dispatchCareNotification(eventId: string): Promise<void> {
   }
 }
 
+async function loadDisplayNames(
+  userIds: string[],
+): Promise<ReadonlyMap<string, string>> {
+  const displayNames = new Map<string, string>();
+
+  if (userIds.length === 0) {
+    return displayNames;
+  }
+
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', [...new Set(userIds)]);
+
+  if (error) {
+    throwOperationError(error.code, error.message);
+  }
+
+  for (const profile of profiles ?? []) {
+    if (profile.display_name) {
+      displayNames.set(profile.id, profile.display_name);
+    }
+  }
+
+  return displayNames;
+}
+
+function getDateRange(date: string): { from: string; to: string } {
+  const [year, month, day] = date.split('-').map(Number);
+  const from = new Date(year, month - 1, day);
+  const to = new Date(year, month - 1, day + 1);
+
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+async function loadHistoryPage(
+  query: CareHistoryQuery,
+): Promise<CareHistoryPage> {
+  const from = (query.page - 1) * query.pageSize;
+  const to = from + query.pageSize - 1;
+  let request = supabase
+    .from('care_timeline')
+    .select('*', { count: 'exact' })
+    .eq('baby_id', query.babyId)
+    .order('occurred_at', { ascending: false })
+    .order('id', { ascending: false });
+
+  if (query.filter !== 'all') {
+    request = request.eq('event_type', query.filter);
+  }
+
+  if (query.date) {
+    const range = getDateRange(query.date);
+    request = request.gte('occurred_at', range.from).lt('occurred_at', range.to);
+  }
+
+  const { count, data, error } = await request.range(from, to);
+
+  if (error) {
+    throwOperationError(error.code, error.message);
+  }
+
+  const rows = (data ?? []) as CareTimelineRow[];
+  const displayNames = await loadDisplayNames(
+    rows.map((row) => row.recorded_by),
+  );
+  const total = count ?? 0;
+
+  return {
+    events: rows.map((row) => mapCareTimelineRow(row, displayNames)),
+    page: query.page,
+    pageSize: query.pageSize,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+  };
+}
+
 export const supabaseCareRepository: CareRepository = {
+  async deleteEvent(event) {
+    const table =
+      event.sourceType === 'care_event'
+        ? 'care_events'
+        : event.sourceType === 'baby_note'
+          ? 'baby_notes'
+          : 'baby_measurements';
+    const { data, error } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', event.id)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+
+    if (!data) {
+      throw new CareOperationError('not_allowed');
+    }
+  },
+
+  loadHistory: loadHistoryPage,
+
+  async loadHistoryForExport(query) {
+    const events: CareEvent[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    do {
+      const result = await loadHistoryPage({
+        ...query,
+        page,
+        pageSize: 100,
+      });
+      events.push(...result.events);
+      totalPages = result.totalPages;
+      page += 1;
+    } while (page <= totalPages);
+
+    return events;
+  },
+
   async load(userId, babyId) {
     const { data: baby, error: babyError } = await supabase
       .from('babies')
@@ -105,19 +231,19 @@ export const supabaseCareRepository: CareRepository = {
         )
         .eq('baby_id', baby.id)
         .order('occurred_at', { ascending: false })
-        .limit(1001),
+        .limit(25),
       supabase
         .from('baby_notes')
         .select('*')
         .eq('baby_id', baby.id)
         .order('occurred_at', { ascending: false })
-        .limit(1001),
+        .limit(25),
       supabase
         .from('baby_measurements')
         .select('*')
         .eq('baby_id', baby.id)
         .order('measured_at', { ascending: false })
-        .limit(1001),
+        .limit(25),
     ]);
     const loadError =
       membershipResult.error ??
@@ -152,28 +278,11 @@ export const supabaseCareRepository: CareRepository = {
       (left, right) =>
         Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
     );
-    const selectedEvents = loadedEvents.slice(0, 1000);
+    const selectedEvents = loadedEvents.slice(0, 20);
     const userIds = [
       ...new Set(selectedEvents.map((event) => event.recordedBy)),
     ];
-    const displayNames = new Map<string, string>();
-
-    if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .in('id', userIds);
-
-      if (profilesError) {
-        throwOperationError(profilesError.code, profilesError.message);
-      }
-
-      for (const profile of profiles ?? []) {
-        if (profile.display_name) {
-          displayNames.set(profile.id, profile.display_name);
-        }
-      }
-    }
+    const displayNames = await loadDisplayNames(userIds);
 
     return {
       baby: {
@@ -182,6 +291,9 @@ export const supabaseCareRepository: CareRepository = {
         lifeStage: baby.life_stage,
         name: baby.name,
       },
+      canManage:
+        membershipResult.data?.role === 'owner' ||
+        membershipResult.data?.role === 'admin',
       canRecord:
         membershipResult.data?.role === 'owner' ||
         membershipResult.data?.role === 'admin' ||
@@ -197,7 +309,6 @@ export const supabaseCareRepository: CareRepository = {
 
         return mapMeasurement(event.row, displayNames);
       }),
-      hasOlderEvents: loadedEvents.length > selectedEvents.length,
     };
   },
 

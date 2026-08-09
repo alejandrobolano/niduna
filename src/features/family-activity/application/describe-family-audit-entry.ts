@@ -83,8 +83,7 @@ function describeMeasurement(details: JsonObject, action: FamilyAuditEntry['acti
     : 'registró nuevas medidas de crecimiento';
 }
 
-export function describeFamilyAuditEntry(entry: FamilyAuditEntry): string {
-  const actor = entry.actorName ?? 'Un miembro de la familia';
+export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
   const details = asObject(entry.details);
   let action: string;
 
@@ -122,5 +121,10 @@ export function describeFamilyAuditEntry(entry: FamilyAuditEntry): string {
         : 'retiró un perfil de bebé';
   }
 
-  return `${actor} ${action}.`;
+  return `${action}.`;
+}
+
+export function describeFamilyAuditEntry(entry: FamilyAuditEntry): string {
+  const actor = entry.actorName ?? 'Un miembro de la familia';
+  return `${actor} ${describeFamilyAuditAction(entry)}`;
 }

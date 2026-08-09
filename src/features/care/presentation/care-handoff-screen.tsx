@@ -21,12 +21,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  filterCareEvents,
-  paginateCareEvents,
-  type CareEventFilter,
-  type CareHistoryPageSize,
-} from '@/features/care/application/care-history';
 import type { CareRepository } from '@/features/care/application/care-repository';
 import {
   getCareSnapshot,
@@ -43,7 +37,6 @@ import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
-import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -80,7 +73,6 @@ const measurementSourceLabels: Record<string, string> = {
 interface CareHandoffScreenProps {
   babyId?: string;
   canCreateBaby: boolean;
-  exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   topContent?: ReactNode;
@@ -329,7 +321,6 @@ function DashboardContent({
   isRefreshing,
   now,
   onAction,
-  onExport,
   onOpenBabyProfile,
   onRefresh,
 }: {
@@ -337,16 +328,9 @@ function DashboardContent({
   isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
-  onExport: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   onRefresh: () => void;
 }) {
-  const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
-  const [selectedDate, setSelectedDate] = useState<string>();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<CareHistoryPageSize>(20);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState(false);
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
     [dashboard.events],
@@ -358,42 +342,6 @@ function DashboardContent({
   const measurement = snapshot.latestMeasurement;
   const isExpected = dashboard.baby.lifeStage === 'expected';
   const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
-  const filteredEvents = useMemo(
-    () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
-    [dashboard.events, eventFilter, selectedDate],
-  );
-  const historyPage = useMemo(
-    () => paginateCareEvents(filteredEvents, page, pageSize),
-    [filteredEvents, page, pageSize],
-  );
-
-  function changeFilter(filter: CareEventFilter) {
-    setEventFilter(filter);
-    setPage(1);
-  }
-
-  function changeDate(date: string | undefined) {
-    setSelectedDate(date);
-    setPage(1);
-  }
-
-  function changePageSize(size: CareHistoryPageSize) {
-    setPageSize(size);
-    setPage(1);
-  }
-
-  async function handleExport() {
-    setIsExporting(true);
-    setExportError(false);
-
-    try {
-      await onExport(filteredEvents, dashboard.baby.name);
-    } catch {
-      setExportError(true);
-    } finally {
-      setIsExporting(false);
-    }
-  }
 
   return (
     <>
@@ -589,38 +537,11 @@ function DashboardContent({
       )}
 
       <View style={styles.section}>
-        <CareHistoryControls
-          eventFilter={eventFilter}
-          events={dashboard.events}
-          exportCount={filteredEvents.length}
-          isExporting={isExporting}
-          onChangeDate={changeDate}
-          onChangeFilter={changeFilter}
-          onChangePage={setPage}
-          onChangePageSize={changePageSize}
-          onExport={() => void handleExport()}
-          page={historyPage.page}
-          pageSize={pageSize}
-          selectedDate={selectedDate}
-          totalPages={historyPage.totalPages}
-        />
-        {exportError ? (
-          <Text accessibilityRole="alert" style={styles.exportError}>
-            No pudimos crear el archivo. Inténtalo de nuevo.
-          </Text>
-        ) : null}
-        {dashboard.hasOlderEvents ? (
-          <Text style={styles.historyLimitNotice}>
-            Se muestran los 1000 registros más recientes. La paginación del
-            historial antiguo se añadirá antes de cerrar el MVP.
-          </Text>
-        ) : null}
         <View style={styles.sectionHeading}>
           <View>
-            <Text style={styles.sectionTitle}>Lo más reciente</Text>
+            <Text style={styles.sectionTitle}>Actividad reciente</Text>
             <Text style={styles.sectionSubtitle}>
-              {filteredEvents.length}{' '}
-              {filteredEvents.length === 1 ? 'registro visible' : 'registros visibles'}.
+              Los últimos cuidados para preparar el relevo.
             </Text>
           </View>
           <View style={styles.sectionActions}>
@@ -646,8 +567,8 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {historyPage.events.length > 0 ? (
-            historyPage.events.map((event) => (
+          {dashboard.events.length > 0 ? (
+            dashboard.events.slice(0, 5).map((event) => (
               <TimelineEvent event={event} key={event.id} now={now} />
             ))
           ) : (
@@ -674,7 +595,6 @@ function DashboardContent({
 export function CareHandoffScreen({
   babyId: selectedBabyId,
   canCreateBaby,
-  exportHistory,
   onOpenBabyProfile,
   repository,
   topContent,
@@ -831,7 +751,6 @@ export function CareHandoffScreen({
             isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
-            onExport={exportHistory}
             onOpenBabyProfile={onOpenBabyProfile}
             onRefresh={handleRefresh}
           />
@@ -1074,16 +993,6 @@ const styles = StyleSheet.create({
     color: colors.primaryPressed,
     fontSize: 12,
     fontWeight: '900',
-  },
-  exportError: {
-    color: colors.error,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  historyLimitNotice: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
   },
   timeline: {
     backgroundColor: colors.surface,

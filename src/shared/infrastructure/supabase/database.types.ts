@@ -389,7 +389,30 @@ export type Database = {
         }
       >;
     };
-    Views: Record<string, never>;
+    Views: {
+      care_timeline: {
+        Row: {
+          amount_milliliters: number | null;
+          baby_id: string;
+          breast_side: string | null;
+          content: string | null;
+          diaper_condition: string | null;
+          ended_at: string | null;
+          event_type: string;
+          feeding_method: string | null;
+          head_circumference_millimeters: number | null;
+          id: string;
+          length_millimeters: number | null;
+          measurement_source: string | null;
+          notes: string | null;
+          occurred_at: string;
+          recorded_by: string;
+          source_type: 'baby_note' | 'care_event' | 'measurement';
+          weight_grams: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       accept_family_invitation: {
         Args: {

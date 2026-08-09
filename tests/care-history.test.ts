@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   buildMonthCalendar,
   filterCareEvents,
-  paginateCareEvents,
   toLocalDateKey,
 } from '../src/features/care/application/care-history';
 import {
@@ -25,7 +24,9 @@ const events: CareEvent[] = [
     method: 'formula',
     notes: '=unsafe formula',
     occurredAt: '2026-07-29T10:30:00',
+    recordedById: 'user-1',
     recordedByName: 'Alex',
+    sourceType: 'care_event',
     type: 'feeding',
   },
   {
@@ -34,6 +35,8 @@ const events: CareEvent[] = [
     icon: BabyIcon,
     id: 'diaper-1',
     occurredAt: '2026-07-30T08:00:00',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
 ];
@@ -57,17 +60,6 @@ describe('care history filters', () => {
     expect(eventDay?.eventTypes).toContain('feeding');
   });
 
-  it('paginates filtered results with a bounded page', () => {
-    const repeatedEvents = Array.from({ length: 45 }, (_, index) => ({
-      ...events[0],
-      id: `feeding-${index}`,
-    }));
-    const result = paginateCareEvents(repeatedEvents, 3, 20);
-
-    expect(result.events).toHaveLength(5);
-    expect(result.page).toBe(3);
-    expect(result.totalPages).toBe(3);
-  });
 });
 
 describe('care history CSV', () => {

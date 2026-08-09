@@ -18,8 +18,9 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { CareHistoryScreen } from '@/features/care/presentation/care-history-screen';
 import { supabaseFamilyAuditRepository } from '@/features/family-activity/infrastructure/supabase-family-audit-repository';
-import { FamilyActivityPanel } from '@/features/family-activity/presentation/family-activity-panel';
+import { FamilyActivityScreen } from '@/features/family-activity/presentation/family-activity-screen';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
 import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
 import {
@@ -122,13 +123,6 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
               userId={user.id}
             />
           ) : null}
-          {activeFamily &&
-          (activeFamily.role === 'owner' || activeFamily.role === 'admin') ? (
-            <FamilyActivityPanel
-              familyId={activeFamily.id}
-              repository={supabaseFamilyAuditRepository}
-            />
-          ) : null}
         </View>
       }
     />
@@ -151,7 +145,13 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     <View style={styles.topContent}>
       <View style={styles.navigationRow}>
         <View style={styles.primaryNavigation}>
-          <AppSectionNavigation onChange={changeSection} value={section} />
+          <AppSectionNavigation
+            canViewActivity={
+              activeFamily.role === 'owner' || activeFamily.role === 'admin'
+            }
+            onChange={changeSection}
+            value={section}
+          />
         </View>
         <FamilyBabySwitcher
           activeBaby={context.activeBaby}
@@ -175,12 +175,37 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
       <CareHandoffScreen
         babyId={context.activeBaby?.id}
         canCreateBaby={canManageBabies}
-        exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
         onOpenBabyProfile={() => setSection('baby')}
         repository={supabaseCareRepository}
         topContent={topContent}
         userId={user.id}
+      />
+    );
+  }
+
+  if (section === 'history') {
+    return (
+      <CareHistoryScreen
+        babyId={context.activeBaby?.id}
+        babyName={context.activeBaby?.name}
+        canManage={canManageBabies}
+        exportHistory={exportCareHistory}
+        key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
+        repository={supabaseCareRepository}
+        topContent={topContent}
+        userId={user.id}
+      />
+    );
+  }
+
+  if (section === 'activity' && canManageBabies) {
+    return (
+      <FamilyActivityScreen
+        familyId={activeFamily.id}
+        familyName={activeFamily.name}
+        repository={supabaseFamilyAuditRepository}
+        topContent={topContent}
       />
     );
   }

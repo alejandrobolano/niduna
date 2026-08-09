@@ -19,7 +19,9 @@ const events: CareEvent[] = [
     icon: Scale,
     id: 'measurement',
     occurredAt: '2026-07-29T13:00:00.000Z',
+    recordedById: 'user-1',
     source: 'pediatrician',
+    sourceType: 'measurement',
     type: 'measurement',
     weightGrams: 4850,
   },
@@ -29,6 +31,8 @@ const events: CareEvent[] = [
     icon: BabyIcon,
     id: 'diaper-old',
     occurredAt: '2026-07-29T08:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
   {
@@ -37,6 +41,8 @@ const events: CareEvent[] = [
     icon: BabyIcon,
     id: 'diaper-new',
     occurredAt: '2026-07-29T11:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
   {
@@ -45,6 +51,8 @@ const events: CareEvent[] = [
     id: 'feeding',
     method: 'breast',
     occurredAt: '2026-07-29T10:30:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'feeding',
   },
   {
@@ -53,6 +61,8 @@ const events: CareEvent[] = [
     icon: Moon,
     id: 'sleep-finished',
     occurredAt: '2026-07-29T09:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'sleep',
   },
   {
@@ -60,6 +70,8 @@ const events: CareEvent[] = [
     icon: Moon,
     id: 'sleep-open',
     occurredAt: '2026-07-29T12:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'sleep',
   },
 ];

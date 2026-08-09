@@ -10,6 +10,8 @@ import { BabyIcon, Milk, Moon, NotebookPen, Scale } from 'lucide-react-native';
 type CareEventRow = Database['public']['Tables']['care_events']['Row'];
 type BabyNoteRow = Database['public']['Tables']['baby_notes']['Row'];
 type MeasurementRow = Database['public']['Tables']['baby_measurements']['Row'];
+export type CareTimelineRow =
+  Database['public']['Views']['care_timeline']['Row'];
 
 export class InvalidCareEventError extends Error {
   constructor() {
@@ -28,7 +30,9 @@ export function mapBabyNote(
     icon: NotebookPen,
     id: row.id,
     occurredAt: row.occurred_at,
+    recordedById: row.recorded_by,
     recordedByName: displayNames.get(row.recorded_by),
+    sourceType: 'baby_note',
     type: 'note',
   };
 }
@@ -46,8 +50,10 @@ export function mapMeasurement(
     lengthMillimeters: row.length_millimeters ?? undefined,
     notes: optionalText(row.notes),
     occurredAt: row.measured_at,
+    recordedById: row.recorded_by,
     recordedByName: displayNames.get(row.recorded_by),
     source: row.source ?? 'other',
+    sourceType: 'measurement',
     type: 'measurement',
     weightGrams: row.weight_grams ?? undefined,
   };
@@ -66,7 +72,9 @@ function baseEvent(
     id: row.id,
     notes: optionalText(row.notes),
     occurredAt: row.occurred_at,
+    recordedById: row.recorded_by,
     recordedByName: displayNames.get(row.recorded_by),
+    sourceType: 'care_event' as const,
   };
 }
 
@@ -110,4 +118,67 @@ export function mapCareEvent(
     icon: Moon,
     type: 'sleep',
   } satisfies SleepEvent;
+}
+
+export function mapCareTimelineRow(
+  row: CareTimelineRow,
+  displayNames: ReadonlyMap<string, string>,
+): CareEvent {
+  if (row.source_type === 'care_event') {
+    return mapCareEvent(
+      {
+        amount_milliliters: row.amount_milliliters,
+        baby_id: row.baby_id,
+        breast_side: row.breast_side as CareEventRow['breast_side'],
+        created_at: row.occurred_at,
+        diaper_condition:
+          row.diaper_condition as CareEventRow['diaper_condition'],
+        ended_at: row.ended_at,
+        event_type: row.event_type as CareEventRow['event_type'],
+        feeding_method: row.feeding_method as CareEventRow['feeding_method'],
+        id: row.id,
+        notes: row.notes,
+        occurred_at: row.occurred_at,
+        recorded_by: row.recorded_by,
+        updated_at: row.occurred_at,
+        updated_by: row.recorded_by,
+      },
+      displayNames,
+    );
+  }
+
+  if (row.source_type === 'baby_note') {
+    if (!row.content) {
+      throw new InvalidCareEventError();
+    }
+
+    return mapBabyNote(
+      {
+        baby_id: row.baby_id,
+        content: row.content,
+        created_at: row.occurred_at,
+        id: row.id,
+        occurred_at: row.occurred_at,
+        recorded_by: row.recorded_by,
+        updated_at: row.occurred_at,
+      },
+      displayNames,
+    );
+  }
+
+  return mapMeasurement(
+    {
+      baby_id: row.baby_id,
+      created_at: row.occurred_at,
+      head_circumference_millimeters: row.head_circumference_millimeters,
+      id: row.id,
+      length_millimeters: row.length_millimeters,
+      measured_at: row.occurred_at,
+      notes: row.notes,
+      recorded_by: row.recorded_by,
+      source: row.measurement_source,
+      weight_grams: row.weight_grams,
+    },
+    displayNames,
+  );
 }

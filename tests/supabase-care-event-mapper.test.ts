@@ -50,7 +50,9 @@ describe('mapCareEvent', () => {
       method: 'breast',
       notes: 'Comió tranquila',
       occurredAt: '2026-07-29T10:00:00.000Z',
+      recordedById: 'user-1',
       recordedByName: 'Alejandro',
+      sourceType: 'care_event',
       type: 'feeding',
     });
   });

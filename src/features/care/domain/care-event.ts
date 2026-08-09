@@ -22,7 +22,9 @@ interface BaseCareEvent {
   id: string;
   notes?: string;
   occurredAt: string;
+  recordedById: string;
   recordedByName?: string;
+  sourceType: 'baby_note' | 'care_event' | 'measurement';
 }
 
 export interface FeedingEvent extends BaseCareEvent {
@@ -76,7 +78,7 @@ export interface CareBaby {
 
 export interface CareDashboard {
   baby: CareBaby;
+  canManage: boolean;
   canRecord: boolean;
   events: CareEvent[];
-  hasOlderEvents: boolean;
 }
