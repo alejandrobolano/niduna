@@ -103,7 +103,12 @@ export function FamilyActivityScreen({
             {hasError ? (
               <Text accessibilityRole="alert" style={styles.error}>No pudimos cargar la actividad.</Text>
             ) : null}
-            <ScrollView horizontal showsHorizontalScrollIndicator>
+            <ScrollView
+              contentContainerStyle={styles.tableScrollContent}
+              horizontal
+              showsHorizontalScrollIndicator
+              style={styles.tableScroll}
+            >
               <View style={styles.table}>
                 <View style={[styles.row, styles.headerRow]}>
                   <Text style={[styles.cell, styles.dateCell, styles.headerText]}>Fecha</Text>
@@ -179,10 +184,12 @@ const styles = StyleSheet.create({
   tableTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   tableSubtitle: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 38, justifyContent: 'center', width: 38 },
-  table: { minWidth: 820 },
+  tableScroll: { width: '100%' },
+  tableScrollContent: { flexGrow: 1 },
+  table: { flex: 1, minWidth: 820, width: '100%' },
   row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', minHeight: 62 },
   headerRow: { backgroundColor: colors.surfaceMuted, borderBottomWidth: 0, borderRadius: radius.sm, minHeight: 42 },
-  cell: { color: colors.text, fontSize: 12, lineHeight: 17, paddingHorizontal: spacing.sm },
+  cell: { color: colors.text, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.sm },
   headerText: { color: colors.textMuted, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
   dateCell: { width: 155 },
   actorCell: { width: 165 },

@@ -240,7 +240,12 @@ export function CareHistoryScreen({
                   </Pressable>
                 </View>
                 {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-                <ScrollView horizontal showsHorizontalScrollIndicator>
+                <ScrollView
+                  contentContainerStyle={styles.tableScrollContent}
+                  horizontal
+                  showsHorizontalScrollIndicator
+                  style={styles.tableScroll}
+                >
                   <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
                       <Text style={[styles.cell, styles.dateCell, styles.headerText]}>Fecha</Text>
@@ -339,10 +344,12 @@ const styles = StyleSheet.create({
   tableTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   tableSubtitle: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 38, justifyContent: 'center', width: 38 },
-  table: { minWidth: 860 },
+  tableScroll: { width: '100%' },
+  tableScrollContent: { flexGrow: 1 },
+  table: { flex: 1, minWidth: 860, width: '100%' },
   row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', minHeight: 64 },
   headerRow: { backgroundColor: colors.surfaceMuted, borderBottomWidth: 0, borderRadius: radius.sm, minHeight: 42 },
-  cell: { color: colors.text, fontSize: 12, lineHeight: 17, paddingHorizontal: spacing.sm },
+  cell: { color: colors.text, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.sm },
   headerText: { color: colors.textMuted, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
   dateCell: { width: 150 },
   typeCell: { width: 130 },
@@ -356,7 +363,7 @@ const styles = StyleSheet.create({
   confirmDelete: { backgroundColor: colors.error, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 6 },
   confirmDeleteText: { color: colors.white, fontSize: 10, fontWeight: '900' },
   cancelText: { color: colors.textMuted, fontSize: 10, fontWeight: '800' },
-  unavailable: { color: colors.textMuted, fontSize: 12 },
+  unavailable: { color: colors.textMuted, fontSize: 14 },
   noRows: { color: colors.textMuted, padding: spacing.xl, textAlign: 'center' },
   empty: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.xxl },
   emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },

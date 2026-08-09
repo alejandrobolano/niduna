@@ -568,7 +568,7 @@ function DashboardContent({
 
         <View style={styles.timeline}>
           {dashboard.events.length > 0 ? (
-            dashboard.events.slice(0, 5).map((event) => (
+            dashboard.events.slice(0, 20).map((event) => (
               <TimelineEvent event={event} key={event.id} now={now} />
             ))
           ) : (
