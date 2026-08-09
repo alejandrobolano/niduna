@@ -1,25 +1,38 @@
-import { BabyIcon, Milk, Moon } from 'lucide-react-native';
+import { BabyIcon, Milk, Moon, Scale } from 'lucide-react-native';
 import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('lucide-react-native', () => ({
-  BabyIcon: 'BabyIcon',
-  Milk: 'Milk',
-  Moon: 'Moon',
-}));
-
 import {
   getCareSnapshot,
   getDurationMinutes,
 } from '../src/features/care/application/care-snapshot';
 import type { CareEvent } from '../src/features/care/domain/care-event';
 
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+  Moon: 'Moon',
+  Scale: 'Scale',
+}));
+
 const events: CareEvent[] = [
+  {
+    babyId: 'baby-1',
+    icon: Scale,
+    id: 'measurement',
+    occurredAt: '2026-07-29T13:00:00.000Z',
+    recordedById: 'user-1',
+    source: 'pediatrician',
+    sourceType: 'measurement',
+    type: 'measurement',
+    weightGrams: 4850,
+  },
   {
     babyId: 'baby-1',
     condition: 'wet',
     icon: BabyIcon,
     id: 'diaper-old',
     occurredAt: '2026-07-29T08:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
   {
@@ -28,6 +41,8 @@ const events: CareEvent[] = [
     icon: BabyIcon,
     id: 'diaper-new',
     occurredAt: '2026-07-29T11:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
   {
@@ -36,6 +51,8 @@ const events: CareEvent[] = [
     id: 'feeding',
     method: 'breast',
     occurredAt: '2026-07-29T10:30:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'feeding',
   },
   {
@@ -44,6 +61,8 @@ const events: CareEvent[] = [
     icon: Moon,
     id: 'sleep-finished',
     occurredAt: '2026-07-29T09:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'sleep',
   },
   {
@@ -51,6 +70,8 @@ const events: CareEvent[] = [
     icon: Moon,
     id: 'sleep-open',
     occurredAt: '2026-07-29T12:00:00.000Z',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'sleep',
   },
 ];
@@ -61,6 +82,7 @@ describe('getCareSnapshot', () => {
 
     expect(snapshot.latestDiaper?.id).toBe('diaper-new');
     expect(snapshot.latestFeeding?.id).toBe('feeding');
+    expect(snapshot.latestMeasurement?.id).toBe('measurement');
     expect(snapshot.latestFinishedSleep?.id).toBe('sleep-finished');
     expect(snapshot.openSleep?.id).toBe('sleep-open');
   });

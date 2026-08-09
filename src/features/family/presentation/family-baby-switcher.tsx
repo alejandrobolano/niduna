@@ -14,6 +14,7 @@ import { colors, radius, spacing } from '@/shared/presentation/theme';
 interface FamilyBabySwitcherProps {
   activeBaby?: FamilyBabySummary;
   activeFamily: FamilyBabyGroup;
+  compact?: boolean;
   families: FamilyBabyGroup[];
   isCreatingBaby: boolean;
   onAddBaby: () => void;
@@ -24,6 +25,7 @@ interface FamilyBabySwitcherProps {
 export function FamilyBabySwitcher({
   activeBaby,
   activeFamily,
+  compact = false,
   families,
   isCreatingBaby,
   onAddBaby,
@@ -71,6 +73,7 @@ export function FamilyBabySwitcher({
         onPress={() => setIsOpen(true)}
         style={({ pressed }) => [
           styles.contextButton,
+          compact && styles.contextButtonCompact,
           pressed && styles.buttonPressed,
         ]}
       >
@@ -243,6 +246,7 @@ const styles = StyleSheet.create({
     width: 34,
   },
   contextAvatarText: { color: colors.coral, fontSize: 13, fontWeight: '900' },
+  contextButtonCompact: { flex: 1, maxWidth: 260, minWidth: 0 },
   contextCopy: { flex: 1 },
   contextName: { color: colors.text, fontSize: 13, fontWeight: '900' },
   contextFamily: { color: colors.textMuted, fontSize: 10, marginTop: 1 },

@@ -1,6 +1,9 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type ReactNode, useState } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { supabaseAppReleaseRepository } from '@/features/app-updates/infrastructure/supabase-app-release-repository';
+import { AppUpdatePanel } from '@/features/app-updates/presentation/app-update-panel';
 import type { AuthenticatedUser } from '@/features/auth/domain/auth';
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
@@ -16,11 +19,13 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { CareHistoryScreen } from '@/features/care/presentation/care-history-screen';
+import { supabaseFamilyAuditRepository } from '@/features/family-activity/infrastructure/supabase-family-audit-repository';
+import { FamilyActivityScreen } from '@/features/family-activity/presentation/family-activity-screen';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
 import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
 import {
   FamilyBabyContextErrorScreen,
-  FamilyBabySwitcher,
 } from '@/features/family/presentation/family-baby-switcher';
 import { FamilyScreen } from '@/features/family/presentation/family-screen';
 import { useFamilyBabyContext } from '@/features/family/presentation/use-family-baby-context';
@@ -28,10 +33,11 @@ import {
   AppSectionNavigation,
   type AppSection,
 } from '@/features/home/presentation/app-section-navigation';
+import { AppHeader } from '@/features/home/presentation/app-header';
 import { expoPushPermissionService } from '@/features/notifications/infrastructure/expo-push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
-import { spacing } from '@/shared/presentation/theme';
+import { colors, spacing } from '@/shared/presentation/theme';
 
 async function exportCareHistory(
   events: CareEvent[],
@@ -58,6 +64,8 @@ export default function IndexRoute() {
 }
 
 function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [section, setSection] = useState<AppSection>('handoff');
   const [isCreatingBaby, setIsCreatingBaby] = useState(false);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
@@ -103,19 +111,27 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   }
 
   const activeFamily = context.activeFamily;
+  const canManageBabies =
+    activeFamily?.role === 'owner' || activeFamily?.role === 'admin';
   const sessionBanner = (
     <SessionBanner
       email={user.email}
+      onOpenFamilyActivity={
+        canManageBabies ? () => changeSection('activity') : undefined
+      }
       settingsContent={
-        activeFamily ? (
-          <NotificationSettingsPanel
-            familyId={activeFamily.id}
-            familyName={activeFamily.name}
-            permissionService={expoPushPermissionService}
-            repository={supabaseNotificationRepository}
-            userId={user.id}
-          />
-        ) : undefined
+        <View style={styles.accountSettings}>
+          <AppUpdatePanel repository={supabaseAppReleaseRepository} />
+          {activeFamily ? (
+            <NotificationSettingsPanel
+              familyId={activeFamily.id}
+              familyName={activeFamily.name}
+              permissionService={expoPushPermissionService}
+              repository={supabaseNotificationRepository}
+              userId={user.id}
+            />
+          ) : null}
+        </View>
       }
     />
   );
@@ -133,46 +149,121 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     );
   }
 
+  const compactNavigation = width < 860;
   const topContent = (
-    <View style={styles.topContent}>
-      <View style={styles.navigationRow}>
-        <View style={styles.primaryNavigation}>
-          <AppSectionNavigation onChange={changeSection} value={section} />
+    <AppHeader
+      accountContent={sessionBanner}
+      activeBaby={context.activeBaby}
+      activeFamily={activeFamily}
+      compact={compactNavigation}
+      families={context.families}
+      isCreatingBaby={isCreatingBaby}
+      onAddBaby={addBaby}
+      onChangeBaby={changeBaby}
+      onChangeFamily={changeFamily}
+      onChangeSection={changeSection}
+      section={section}
+    />
+  );
+  const activeBabyId = context.activeBaby?.id;
+  const renderAppScreen = (screen: ReactNode) => (
+    <View style={styles.appShell}>
+      <View style={styles.appScreen}>{screen}</View>
+      {compactNavigation ? (
+        <View
+          style={[
+            styles.bottomNavigation,
+            { paddingBottom: insets.bottom },
+          ]}
+        >
+          <AppSectionNavigation
+            onChange={changeSection}
+            placement="bottom"
+            value={section}
+          />
         </View>
-        <FamilyBabySwitcher
-          activeBaby={context.activeBaby}
-          activeFamily={activeFamily}
-          families={context.families}
-          isCreatingBaby={isCreatingBaby}
-          onAddBaby={addBaby}
-          onChangeBaby={changeBaby}
-          onChangeFamily={changeFamily}
-        />
-        {sessionBanner}
-      </View>
+      ) : null}
     </View>
   );
-  const canManageBabies =
-    activeFamily.role === 'owner' || activeFamily.role === 'admin';
-  const activeBabyId = context.activeBaby?.id;
 
   if (section === 'handoff') {
-    return (
+    return renderAppScreen(
       <CareHandoffScreen
         babyId={context.activeBaby?.id}
         canCreateBaby={canManageBabies}
-        exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
         onOpenBabyProfile={() => setSection('baby')}
         repository={supabaseCareRepository}
         topContent={topContent}
         userId={user.id}
-      />
+      />,
+    );
+  }
+
+  if (section === 'history') {
+    return renderAppScreen(
+      <CareHistoryScreen
+        babyId={context.activeBaby?.id}
+        babyName={context.activeBaby?.name}
+        canManage={canManageBabies}
+        exportHistory={exportCareHistory}
+        key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
+        repository={supabaseCareRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
+  if (section === 'activity' && canManageBabies) {
+    return renderAppScreen(
+      <FamilyActivityScreen
+        familyId={activeFamily.id}
+        familyName={activeFamily.name}
+        repository={supabaseFamilyAuditRepository}
+        topContent={topContent}
+      />,
     );
   }
 
   if (section === 'baby' && !context.activeBaby && !canManageBabies) {
-    return (
+    return renderAppScreen(
+      <FamilyScreen
+        babyGroups={context.families}
+        onContextChanged={(familyId) =>
+          context.refresh(familyId ? { familyId } : undefined)
+        }
+        onFollowBaby={context.followBaby}
+        onRestoreBaby={context.restoreBaby}
+        repository={supabaseFamilyRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
+  return renderAppScreen(
+    section === 'baby' ? (
+      <BabyProfileScreen
+        babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+        canManageBabies={canManageBabies}
+        familyId={activeFamily.id}
+        key={`${activeFamily.id}:${
+          isCreatingBaby
+            ? `new-${newBabyFormVersion}`
+            : (context.activeBaby?.id ?? 'new')
+        }`}
+        onSaved={(babyId) => {
+          void context
+            .refresh({ babyId, familyId: activeFamily.id })
+            .then(() => setIsCreatingBaby(false));
+        }}
+        onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
+        onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
+        repository={supabaseBabyProfileRepository}
+        topContent={topContent}
+      />
+    ) : (
       <FamilyScreen
         babyGroups={context.families}
         onContextChanged={(familyId) =>
@@ -184,51 +275,22 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         topContent={topContent}
         userId={user.id}
       />
-    );
-  }
-
-  return section === 'baby' ? (
-    <BabyProfileScreen
-      babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
-      canManageBabies={canManageBabies}
-      familyId={activeFamily.id}
-      key={`${activeFamily.id}:${
-        isCreatingBaby
-          ? `new-${newBabyFormVersion}`
-          : (context.activeBaby?.id ?? 'new')
-      }`}
-      onSaved={(babyId) => {
-        void context
-          .refresh({ babyId, familyId: activeFamily.id })
-          .then(() => setIsCreatingBaby(false));
-      }}
-      onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
-      onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
-      repository={supabaseBabyProfileRepository}
-      topContent={topContent}
-    />
-  ) : (
-    <FamilyScreen
-      babyGroups={context.families}
-      onContextChanged={(familyId) =>
-        context.refresh(familyId ? { familyId } : undefined)
-      }
-      onFollowBaby={context.followBaby}
-      onRestoreBaby={context.restoreBaby}
-      repository={supabaseFamilyRepository}
-      topContent={topContent}
-      userId={user.id}
-    />
+    ),
   );
 }
 
 const styles = StyleSheet.create({
-  topContent: { gap: spacing.md },
-  navigationRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+  accountSettings: { gap: spacing.lg },
+  appShell: { flex: 1 },
+  appScreen: { flex: 1 },
+  bottomNavigation: {
+    backgroundColor: colors.surface,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    zIndex: 2,
   },
-  primaryNavigation: { flex: 1, minWidth: 260 },
 });

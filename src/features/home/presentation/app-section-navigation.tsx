@@ -1,29 +1,43 @@
-import { BabyIcon, Heart, House, Moon } from 'lucide-react-native';
+import { BabyIcon, ClipboardList, Heart, House, Moon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
-export type AppSection = 'handoff' | 'baby' | 'family';
+export type AppSection = 'handoff' | 'history' | 'baby' | 'family' | 'activity';
 
 interface AppSectionNavigationProps {
   onChange: (section: AppSection) => void;
+  placement?: 'header' | 'bottom';
   value: AppSection;
 }
 
 const sections = [
   { icon: Moon, label: 'Relevo', value: 'handoff' },
+  { icon: ClipboardList, label: 'Registro', value: 'history' },
   { icon: Heart, label: 'Bebé', value: 'baby' },
   { icon: House, label: 'Familia', value: 'family' },
-] satisfies { icon: typeof BabyIcon | typeof Heart | typeof House; label: string; value: AppSection }[];
+] satisfies {
+  icon: typeof BabyIcon | typeof Heart | typeof House;
+  label: string;
+  value: AppSection;
+}[];
 
 export function AppSectionNavigation({
   onChange,
+  placement = 'header',
   value,
 }: AppSectionNavigationProps) {
+  const isBottom = placement === 'bottom';
+
   return (
-    <View accessibilityRole="tablist" style={styles.container}>
+    <View
+      accessibilityRole="tablist"
+      style={[styles.container, isBottom && styles.containerBottom]}
+    >
       {sections.map((section) => {
-        const selected = value === section.value;
+        const selected =
+          value === section.value ||
+          (value === 'activity' && section.value === 'family');
 
         return (
           <Pressable
@@ -33,7 +47,9 @@ export function AppSectionNavigation({
             onPress={() => onChange(section.value)}
             style={({ pressed }) => [
               styles.item,
+              isBottom && styles.itemBottom,
               selected && styles.itemSelected,
+              selected && isBottom && styles.itemSelectedBottom,
               pressed && styles.itemPressed,
             ]}
           >
@@ -41,7 +57,13 @@ export function AppSectionNavigation({
               color={selected ? colors.coral : colors.textMuted}
               size={18}
             />
-            <Text style={[styles.label, selected && styles.labelSelected]}>
+            <Text
+              style={[
+                styles.label,
+                isBottom && styles.labelBottom,
+                selected && styles.labelSelected,
+              ]}
+            >
               {section.label}
             </Text>
           </Pressable>
@@ -59,36 +81,32 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.xs,
   },
+  containerBottom: {
+    backgroundColor: colors.surface,
+    borderRadius: 0,
+    width: '100%',
+  },
   item: {
     alignItems: 'center',
     borderRadius: radius.md,
-    flex: 1,
+    flexGrow: 1,
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'center',
     minHeight: 48,
+    minWidth: 96,
   },
-  itemSelected: {
-    backgroundColor: colors.surface,
+  itemBottom: {
+    flex: 1,
+    flexDirection: 'column',
+    gap: 2,
+    minHeight: 58,
+    minWidth: 0,
   },
-  itemPressed: {
-    opacity: 0.72,
-    transform: [{ scale: 0.99 }],
-  },
-  glyph: {
-    color: colors.textMuted,
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  glyphSelected: {
-    color: colors.coral,
-  },
-  label: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  labelSelected: {
-    color: colors.text,
-  },
+  itemSelected: { backgroundColor: colors.surface },
+  itemSelectedBottom: { backgroundColor: colors.surface },
+  itemPressed: { opacity: 0.72, transform: [{ scale: 0.99 }] },
+  label: { color: colors.textMuted, fontSize: 14, fontWeight: '800' },
+  labelBottom: { fontSize: 11 },
+  labelSelected: { color: colors.text },
 });

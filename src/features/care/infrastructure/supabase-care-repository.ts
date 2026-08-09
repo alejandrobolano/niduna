@@ -1,9 +1,18 @@
 import {
     CareOperationError,
     type CareOperationErrorReason,
+    type CareHistoryPage,
+    type CareHistoryQuery,
     type CareRepository,
 } from '@/features/care/application/care-repository';
-import { mapCareEvent } from '@/features/care/infrastructure/supabase-care-event-mapper';
+import {
+    mapBabyNote,
+    mapCareEvent,
+    mapCareTimelineRow,
+    mapMeasurement,
+    type CareTimelineRow,
+} from '@/features/care/infrastructure/supabase-care-event-mapper';
+import type { CareEvent } from '@/features/care/domain/care-event';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
 
@@ -66,7 +75,128 @@ async function dispatchCareNotification(eventId: string): Promise<void> {
   }
 }
 
+async function loadDisplayNames(
+  userIds: string[],
+): Promise<ReadonlyMap<string, string>> {
+  const displayNames = new Map<string, string>();
+
+  if (userIds.length === 0) {
+    return displayNames;
+  }
+
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select('id, display_name')
+    .in('id', [...new Set(userIds)]);
+
+  if (error) {
+    throwOperationError(error.code, error.message);
+  }
+
+  for (const profile of profiles ?? []) {
+    if (profile.display_name) {
+      displayNames.set(profile.id, profile.display_name);
+    }
+  }
+
+  return displayNames;
+}
+
+function getDateRange(date: string): { from: string; to: string } {
+  const [year, month, day] = date.split('-').map(Number);
+  const from = new Date(year, month - 1, day);
+  const to = new Date(year, month - 1, day + 1);
+
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
+async function loadHistoryPage(
+  query: CareHistoryQuery,
+): Promise<CareHistoryPage> {
+  const from = (query.page - 1) * query.pageSize;
+  const to = from + query.pageSize - 1;
+  let request = supabase
+    .from('care_timeline')
+    .select('*', { count: 'exact' })
+    .eq('baby_id', query.babyId)
+    .order('occurred_at', { ascending: false })
+    .order('id', { ascending: false });
+
+  if (query.filter !== 'all') {
+    request = request.eq('event_type', query.filter);
+  }
+
+  if (query.date) {
+    const range = getDateRange(query.date);
+    request = request.gte('occurred_at', range.from).lt('occurred_at', range.to);
+  }
+
+  const { count, data, error } = await request.range(from, to);
+
+  if (error) {
+    throwOperationError(error.code, error.message);
+  }
+
+  const rows = (data ?? []) as CareTimelineRow[];
+  const displayNames = await loadDisplayNames(
+    rows.map((row) => row.recorded_by),
+  );
+  const total = count ?? 0;
+
+  return {
+    events: rows.map((row) => mapCareTimelineRow(row, displayNames)),
+    page: query.page,
+    pageSize: query.pageSize,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / query.pageSize)),
+  };
+}
+
 export const supabaseCareRepository: CareRepository = {
+  async deleteEvent(event) {
+    const table =
+      event.sourceType === 'care_event'
+        ? 'care_events'
+        : event.sourceType === 'baby_note'
+          ? 'baby_notes'
+          : 'baby_measurements';
+    const { data, error } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', event.id)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+
+    if (!data) {
+      throw new CareOperationError('not_allowed');
+    }
+  },
+
+  loadHistory: loadHistoryPage,
+
+  async loadHistoryForExport(query) {
+    const events: CareEvent[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    do {
+      const result = await loadHistoryPage({
+        ...query,
+        page,
+        pageSize: 100,
+      });
+      events.push(...result.events);
+      totalPages = result.totalPages;
+      page += 1;
+    } while (page <= totalPages);
+
+    return events;
+  },
+
   async load(userId, babyId) {
     const { data: baby, error: babyError } = await supabase
       .from('babies')
@@ -82,7 +212,12 @@ export const supabaseCareRepository: CareRepository = {
       return null;
     }
 
-    const [membershipResult, eventsResult] = await Promise.all([
+    const [
+      membershipResult,
+      eventsResult,
+      notesResult,
+      measurementsResult,
+    ] = await Promise.all([
       supabase
         .from('family_members')
         .select('role')
@@ -96,35 +231,58 @@ export const supabaseCareRepository: CareRepository = {
         )
         .eq('baby_id', baby.id)
         .order('occurred_at', { ascending: false })
-        .limit(1001),
+        .limit(25),
+      supabase
+        .from('baby_notes')
+        .select('*')
+        .eq('baby_id', baby.id)
+        .order('occurred_at', { ascending: false })
+        .limit(25),
+      supabase
+        .from('baby_measurements')
+        .select('*')
+        .eq('baby_id', baby.id)
+        .order('measured_at', { ascending: false })
+        .limit(25),
     ]);
-    const loadError = membershipResult.error ?? eventsResult.error;
+    const loadError =
+      membershipResult.error ??
+      eventsResult.error ??
+      notesResult.error ??
+      measurementsResult.error;
 
     if (loadError) {
       throwOperationError(loadError.code, loadError.message);
     }
 
-    const loadedRows = eventsResult.data ?? [];
-    const rows = loadedRows.slice(0, 1000);
-    const userIds = [...new Set(rows.map((row) => row.recorded_by))];
-    const displayNames = new Map<string, string>();
-
-    if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .in('id', userIds);
-
-      if (profilesError) {
-        throwOperationError(profilesError.code, profilesError.message);
-      }
-
-      for (const profile of profiles ?? []) {
-        if (profile.display_name) {
-          displayNames.set(profile.id, profile.display_name);
-        }
-      }
-    }
+    const loadedEvents = [
+      ...(eventsResult.data ?? []).map((row) => ({
+        kind: 'care' as const,
+        occurredAt: row.occurred_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+      ...(notesResult.data ?? []).map((row) => ({
+        kind: 'note' as const,
+        occurredAt: row.occurred_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+      ...(measurementsResult.data ?? []).map((row) => ({
+        kind: 'measurement' as const,
+        occurredAt: row.measured_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+    ].sort(
+      (left, right) =>
+        Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
+    );
+    const selectedEvents = loadedEvents.slice(0, 20);
+    const userIds = [
+      ...new Set(selectedEvents.map((event) => event.recordedBy)),
+    ];
+    const displayNames = await loadDisplayNames(userIds);
 
     return {
       baby: {
@@ -133,12 +291,24 @@ export const supabaseCareRepository: CareRepository = {
         lifeStage: baby.life_stage,
         name: baby.name,
       },
+      canManage:
+        membershipResult.data?.role === 'owner' ||
+        membershipResult.data?.role === 'admin',
       canRecord:
         membershipResult.data?.role === 'owner' ||
         membershipResult.data?.role === 'admin' ||
         membershipResult.data?.role === 'caregiver',
-      events: rows.map((row) => mapCareEvent(row, displayNames)),
-      hasOlderEvents: loadedRows.length > rows.length,
+      events: selectedEvents.map((event) => {
+        if (event.kind === 'care') {
+          return mapCareEvent(event.row, displayNames);
+        }
+
+        if (event.kind === 'note') {
+          return mapBabyNote(event.row, displayNames);
+        }
+
+        return mapMeasurement(event.row, displayNames);
+      }),
     };
   },
 
@@ -162,6 +332,35 @@ export const supabaseCareRepository: CareRepository = {
       notes: normalizeNotes(input.notes),
       occurred_at: new Date().toISOString(),
     });
+  },
+
+  async recordNote(input) {
+    const { error } = await supabase.from('baby_notes').insert({
+      baby_id: input.babyId,
+      content: input.content.trim(),
+      occurred_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+  },
+
+  async recordMeasurement(input) {
+    const { error } = await supabase.from('baby_measurements').insert({
+      baby_id: input.babyId,
+      head_circumference_millimeters:
+        input.headCircumferenceMillimeters ?? null,
+      length_millimeters: input.lengthMillimeters ?? null,
+      measured_at: new Date().toISOString(),
+      notes: normalizeNotes(input.notes),
+      source: input.source,
+      weight_grams: input.weightGrams ?? null,
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
   },
 
   async startSleep(input) {
@@ -202,6 +401,26 @@ export const supabaseCareRepository: CareRepository = {
           filter: `baby_id=eq.${babyId}`,
           schema: 'public',
           table: 'care_events',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          filter: `baby_id=eq.${babyId}`,
+          schema: 'public',
+          table: 'baby_notes',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          filter: `baby_id=eq.${babyId}`,
+          schema: 'public',
+          table: 'baby_measurements',
         },
         onChange,
       )

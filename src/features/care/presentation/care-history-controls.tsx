@@ -14,15 +14,11 @@ const filterOptions = [
   { label: 'Alimentación', value: 'feeding' },
   { label: 'Pañales', value: 'diaper' },
   { label: 'Sueño', value: 'sleep' },
+  { label: 'Medidas', value: 'measurement' },
+  { label: 'Notas', value: 'note' },
 ] satisfies { label: string; value: CareEventFilter }[];
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
-const eventColors: Record<CareEvent['type'], string> = {
-  diaper: colors.butter,
-  feeding: colors.coral,
-  sleep: colors.lavender,
-};
 
 interface CareHistoryControlsProps {
   eventFilter: CareEventFilter;
@@ -45,9 +41,7 @@ export function CareHistoryControls({
   onExport,
   selectedDate,
 }: CareHistoryControlsProps) {
-  const initialDate = events[0]
-    ? new Date(events[0].occurredAt)
-    : new Date();
+  const initialDate = events[0] ? new Date(events[0].occurredAt) : new Date();
   const [visibleMonth, setVisibleMonth] = useState(
     () => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
   );
@@ -65,21 +59,12 @@ export function CareHistoryControls({
     year: 'numeric',
   }).format(visibleMonth);
 
-  function changeMonth(offset: number) {
-    setVisibleMonth(
-      (current) =>
-        new Date(current.getFullYear(), current.getMonth() + offset, 1),
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View>
-          <Text style={styles.title}>Consultar historial</Text>
-          <Text style={styles.subtitle}>
-            Filtra por cuidado o elige un día del calendario.
-          </Text>
+          <Text style={styles.title}>Consultar registros</Text>
+          <Text style={styles.subtitle}>Filtra por tipo o selecciona una fecha.</Text>
         </View>
         <Pressable
           accessibilityRole="button"
@@ -96,9 +81,7 @@ export function CareHistoryControls({
             <Text style={styles.exportLabel}>
               {isExporting ? 'Preparando…' : 'Exportar para Excel'}
             </Text>
-            <Text style={styles.exportHint}>
-              {exportCount} {exportCount === 1 ? 'registro' : 'registros'} · CSV
-            </Text>
+            <Text style={styles.exportHint}>{exportCount} registros · CSV</Text>
           </View>
         </Pressable>
       </View>
@@ -106,7 +89,6 @@ export function CareHistoryControls({
       <View accessibilityRole="tablist" style={styles.filters}>
         {filterOptions.map((option) => {
           const selected = option.value === eventFilter;
-
           return (
             <Pressable
               accessibilityRole="tab"
@@ -119,12 +101,7 @@ export function CareHistoryControls({
                 pressed && styles.pressed,
               ]}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  selected && styles.filterTextSelected,
-                ]}
-              >
+              <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
                 {option.label}
               </Text>
             </Pressable>
@@ -136,7 +113,12 @@ export function CareHistoryControls({
         <View style={styles.monthHeader}>
           <Pressable
             accessibilityLabel="Mes anterior"
-            onPress={() => changeMonth(-1)}
+            onPress={() =>
+              setVisibleMonth(
+                (current) =>
+                  new Date(current.getFullYear(), current.getMonth() - 1, 1),
+              )
+            }
             style={styles.monthButton}
           >
             <ChevronLeft color={colors.text} size={20} />
@@ -144,37 +126,31 @@ export function CareHistoryControls({
           <Text style={styles.monthLabel}>{monthLabel}</Text>
           <Pressable
             accessibilityLabel="Mes siguiente"
-            onPress={() => changeMonth(1)}
+            onPress={() =>
+              setVisibleMonth(
+                (current) =>
+                  new Date(current.getFullYear(), current.getMonth() + 1, 1),
+              )
+            }
             style={styles.monthButton}
           >
             <ChevronRight color={colors.text} size={20} />
           </Pressable>
         </View>
-
         <View style={styles.weekRow}>
           {weekDays.map((day) => (
-            <Text key={day} style={styles.weekDay}>
-              {day}
-            </Text>
+            <Text key={day} style={styles.weekDay}>{day}</Text>
           ))}
         </View>
-
         <View style={styles.days}>
           {calendar.map((day) => {
             const selected = day.dateKey === selectedDate;
-
             return (
               <Pressable
-                accessibilityLabel={`Día ${day.day}${
-                  day.eventTypes.length > 0
-                    ? `, ${day.eventTypes.length} tipos de cuidado`
-                    : ', sin registros'
-                }`}
+                accessibilityLabel={`Día ${day.day}`}
                 accessibilityState={{ selected }}
                 key={day.dateKey}
-                onPress={() =>
-                  onChangeDate(selected ? undefined : day.dateKey)
-                }
+                onPress={() => onChangeDate(selected ? undefined : day.dateKey)}
                 style={({ pressed }) => [
                   styles.day,
                   selected && styles.daySelected,
@@ -190,30 +166,13 @@ export function CareHistoryControls({
                 >
                   {day.day}
                 </Text>
-                <View style={styles.eventDots}>
-                  {day.eventTypes.map((type) => (
-                    <View
-                      key={type}
-                      style={[
-                        styles.eventDot,
-                        { backgroundColor: eventColors[type] },
-                      ]}
-                    />
-                  ))}
-                </View>
               </Pressable>
             );
           })}
         </View>
-
         {selectedDate ? (
-          <Pressable
-            onPress={() => onChangeDate(undefined)}
-            style={styles.clearDate}
-          >
-            <Text style={styles.clearDateText}>
-              Ver todos los días
-            </Text>
+          <Pressable onPress={() => onChangeDate(undefined)} style={styles.clearDate}>
+            <Text style={styles.clearDateText}>Ver todos los días</Text>
           </Pressable>
         ) : null}
       </View>
@@ -238,12 +197,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   title: { color: colors.text, fontSize: 18, fontWeight: '900' },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: spacing.xs,
-  },
+  subtitle: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   exportButton: {
     alignItems: 'center',
     backgroundColor: colors.aquaSoft,
@@ -253,11 +207,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: spacing.md,
   },
-  exportLabel: {
-    color: colors.primaryPressed,
-    fontSize: 13,
-    fontWeight: '900',
-  },
+  exportLabel: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
   exportHint: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.68, transform: [{ scale: 0.99 }] },
@@ -308,7 +258,7 @@ const styles = StyleSheet.create({
   day: {
     alignItems: 'center',
     borderRadius: radius.sm,
-    height: 47,
+    height: 42,
     justifyContent: 'center',
     width: '14.2857%',
   },
@@ -316,17 +266,6 @@ const styles = StyleSheet.create({
   dayText: { color: colors.text, fontSize: 12, fontWeight: '800' },
   dayTextOutside: { color: colors.border },
   dayTextSelected: { color: colors.white },
-  eventDots: {
-    flexDirection: 'row',
-    gap: 2,
-    height: 5,
-    marginTop: 3,
-  },
-  eventDot: { borderRadius: radius.pill, height: 4, width: 4 },
   clearDate: { alignSelf: 'center', padding: spacing.sm },
-  clearDateText: {
-    color: colors.primaryPressed,
-    fontSize: 12,
-    fontWeight: '900',
-  },
+  clearDateText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
 });

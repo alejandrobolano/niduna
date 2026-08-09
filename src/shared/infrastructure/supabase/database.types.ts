@@ -128,6 +128,65 @@ export type Database = {
           user_id?: string;
         }
       >;
+      app_releases: Table<
+        {
+          app_build_version: string;
+          app_version: string;
+          artifact_url: string;
+          build_details_url: string;
+          build_profile: string;
+          completed_at: string;
+          created_at: string;
+          distribution: string;
+          eas_build_id: string;
+          git_commit_hash: string | null;
+          platform: 'android' | 'ios';
+        },
+        {
+          app_build_version: string;
+          app_version: string;
+          artifact_url: string;
+          build_details_url: string;
+          build_profile: string;
+          completed_at: string;
+          distribution: string;
+          eas_build_id: string;
+          git_commit_hash?: string | null;
+          platform: 'android' | 'ios';
+        },
+        {
+          app_build_version?: string;
+          app_version?: string;
+          artifact_url?: string;
+          build_details_url?: string;
+          build_profile?: string;
+          completed_at?: string;
+          distribution?: string;
+          git_commit_hash?: string | null;
+          platform?: 'android' | 'ios';
+        }
+      >;
+      app_release_notification_deliveries: Table<
+        {
+          created_at: string;
+          eas_build_id: string;
+          error_code: string | null;
+          expo_receipt_id: string | null;
+          id: string;
+          push_device_id: string;
+          status: 'pending' | 'sent' | 'failed';
+          updated_at: string;
+        },
+        {
+          eas_build_id: string;
+          push_device_id: string;
+        },
+        {
+          error_code?: string | null;
+          expo_receipt_id?: string | null;
+          status?: 'pending' | 'sent' | 'failed';
+        }
+      >;
       notification_preferences: Table<
         {
           created_at: string;
@@ -234,6 +293,7 @@ export type Database = {
           id: string;
           length_millimeters: number | null;
           measured_at: string;
+          notes: string | null;
           recorded_by: string;
           source: string | null;
           weight_grams: number | null;
@@ -243,6 +303,7 @@ export type Database = {
           head_circumference_millimeters?: number | null;
           length_millimeters?: number | null;
           measured_at: string;
+          notes?: string | null;
           source?: string | null;
           weight_grams?: number | null;
         },
@@ -250,9 +311,50 @@ export type Database = {
           head_circumference_millimeters?: number | null;
           length_millimeters?: number | null;
           measured_at?: string;
+          notes?: string | null;
           source?: string | null;
           weight_grams?: number | null;
         }
+      >;
+      baby_notes: Table<
+        {
+          baby_id: string;
+          content: string;
+          created_at: string;
+          id: string;
+          occurred_at: string;
+          recorded_by: string;
+          updated_at: string;
+        },
+        {
+          baby_id: string;
+          content: string;
+          occurred_at?: string;
+        },
+        {
+          content?: string;
+          occurred_at?: string;
+        }
+      >;
+      family_audit_logs: Table<
+        {
+          action: 'created' | 'updated' | 'deleted';
+          actor_user_id: string | null;
+          baby_id: string | null;
+          created_at: string;
+          details: Json;
+          entity_id: string | null;
+          entity_type:
+            | 'baby'
+            | 'baby_note'
+            | 'care_event'
+            | 'family_member'
+            | 'measurement';
+          family_id: string;
+          id: number;
+        },
+        Record<string, never>,
+        Record<string, never>
       >;
       care_events: Table<
         {
@@ -287,7 +389,30 @@ export type Database = {
         }
       >;
     };
-    Views: Record<string, never>;
+    Views: {
+      care_timeline: {
+        Row: {
+          amount_milliliters: number | null;
+          baby_id: string;
+          breast_side: string | null;
+          content: string | null;
+          diaper_condition: string | null;
+          ended_at: string | null;
+          event_type: string;
+          feeding_method: string | null;
+          head_circumference_millimeters: number | null;
+          id: string;
+          length_millimeters: number | null;
+          measurement_source: string | null;
+          notes: string | null;
+          occurred_at: string;
+          recorded_by: string;
+          source_type: 'baby_note' | 'care_event' | 'measurement';
+          weight_grams: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       accept_family_invitation: {
         Args: {

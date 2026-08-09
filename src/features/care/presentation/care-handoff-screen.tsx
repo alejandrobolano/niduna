@@ -4,8 +4,10 @@ import {
   CloudSun,
   Milk,
   Moon,
+  NotebookPen,
   Plus,
   RefreshCw,
+  Scale,
   Star,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -19,10 +21,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  filterCareEvents,
-  type CareEventFilter,
-} from '@/features/care/application/care-history';
 import type { CareRepository } from '@/features/care/application/care-repository';
 import {
   getCareSnapshot,
@@ -33,12 +31,12 @@ import type {
   CareEvent,
   DiaperEvent,
   FeedingEvent,
+  MeasurementEvent,
 } from '@/features/care/domain/care-event';
 import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
-import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -64,10 +62,17 @@ const diaperLabels: Record<DiaperEvent['condition'], string> = {
   wet: 'Pipí',
 };
 
+const measurementSourceLabels: Record<string, string> = {
+  birth: 'Nacimiento',
+  home: 'Casa',
+  hospital: 'Hospital',
+  other: 'Otro',
+  pediatrician: 'Pediatría',
+};
+
 interface CareHandoffScreenProps {
   babyId?: string;
   canCreateBaby: boolean;
-  exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   topContent?: ReactNode;
@@ -191,6 +196,35 @@ function getFeedingDetail(event: FeedingEvent): string {
   return details.join(' · ') || 'Sin detalles adicionales';
 }
 
+function formatWeight(weightGrams: number): string {
+  return `${new Intl.NumberFormat('es-ES', {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 3,
+  }).format(weightGrams / 1000)} kg`;
+}
+
+function getMeasurementDetail(event: MeasurementEvent): string {
+  const values = [
+    event.weightGrams !== undefined
+      ? formatWeight(event.weightGrams)
+      : undefined,
+    event.lengthMillimeters !== undefined
+      ? `${new Intl.NumberFormat('es-ES', {
+          maximumFractionDigits: 1,
+        }).format(event.lengthMillimeters / 10)} cm`
+      : undefined,
+    event.headCircumferenceMillimeters !== undefined
+      ? `PC ${new Intl.NumberFormat('es-ES', {
+          maximumFractionDigits: 1,
+        }).format(event.headCircumferenceMillimeters / 10)} cm`
+      : undefined,
+  ].filter(Boolean);
+
+  return `${values.join(' · ')} · ${
+    measurementSourceLabels[event.source] ?? event.source
+  }`;
+}
+
 function getEventPresentation(event: CareEvent, now: Date) {
   if (event.type === 'feeding') {
     return {
@@ -207,6 +241,24 @@ function getEventPresentation(event: CareEvent, now: Date) {
       description: event.notes || 'Cambio de pañal',
       icon: event.icon ?? BabyIcon,
       title: diaperLabels[event.condition],
+    };
+  }
+
+  if (event.type === 'measurement') {
+    return {
+      accent: colors.aqua,
+      description: getMeasurementDetail(event),
+      icon: event.icon ?? Scale,
+      title: 'Medidas de crecimiento',
+    };
+  }
+
+  if (event.type === 'note') {
+    return {
+      accent: colors.primary,
+      description: event.content,
+      icon: event.icon ?? NotebookPen,
+      title: 'Nota familiar',
     };
   }
 
@@ -269,7 +321,6 @@ function DashboardContent({
   isRefreshing,
   now,
   onAction,
-  onExport,
   onOpenBabyProfile,
   onRefresh,
 }: {
@@ -277,14 +328,9 @@ function DashboardContent({
   isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
-  onExport: (events: CareEvent[], babyName: string) => Promise<void>;
   onOpenBabyProfile: () => void;
   onRefresh: () => void;
 }) {
-  const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
-  const [selectedDate, setSelectedDate] = useState<string>();
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportError, setExportError] = useState(false);
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
     [dashboard.events],
@@ -293,25 +339,9 @@ function DashboardContent({
   const diaper = snapshot.latestDiaper;
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
+  const measurement = snapshot.latestMeasurement;
   const isExpected = dashboard.baby.lifeStage === 'expected';
   const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
-  const filteredEvents = useMemo(
-    () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
-    [dashboard.events, eventFilter, selectedDate],
-  );
-
-  async function handleExport() {
-    setIsExporting(true);
-    setExportError(false);
-
-    try {
-      await onExport(filteredEvents, dashboard.baby.name);
-    } catch {
-      setExportError(true);
-    } finally {
-      setIsExporting(false);
-    }
-  }
 
   return (
     <>
@@ -370,6 +400,23 @@ function DashboardContent({
               ? 'Durmiendo ahora'
               : finishedSleep?.endedAt
                 ? formatWhen(finishedSleep.endedAt, now)
+                : 'Sin datos'
+          }
+        />
+        <SummaryCard
+          accent={colors.aqua}
+          detail={
+            measurement
+              ? getMeasurementDetail(measurement)
+              : 'Todavía sin registros'
+          }
+          icon={Scale}
+          title="Últimas medidas"
+          value={
+            measurement?.weightGrams !== undefined
+              ? formatWeight(measurement.weightGrams)
+              : measurement
+                ? formatWhen(measurement.occurredAt, now)
                 : 'Sin datos'
           }
         />
@@ -456,6 +503,28 @@ function DashboardContent({
               </View>
             </Pressable>
           </View>
+          <View style={styles.secondaryActions}>
+            <Pressable
+              onPress={() => onAction('measurement')}
+              style={({ pressed }) => [
+                styles.secondaryAction,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <Scale color={colors.primaryPressed} size={17} />
+              <Text style={styles.secondaryActionLabel}>Registrar medidas</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onAction('note')}
+              style={({ pressed }) => [
+                styles.secondaryAction,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <NotebookPen color={colors.primaryPressed} size={17} />
+              <Text style={styles.secondaryActionLabel}>Añadir nota</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <View style={styles.readOnlyNotice}>
@@ -468,33 +537,11 @@ function DashboardContent({
       )}
 
       <View style={styles.section}>
-        <CareHistoryControls
-          eventFilter={eventFilter}
-          events={dashboard.events}
-          exportCount={filteredEvents.length}
-          isExporting={isExporting}
-          onChangeDate={setSelectedDate}
-          onChangeFilter={setEventFilter}
-          onExport={() => void handleExport()}
-          selectedDate={selectedDate}
-        />
-        {exportError ? (
-          <Text accessibilityRole="alert" style={styles.exportError}>
-            No pudimos crear el archivo. Inténtalo de nuevo.
-          </Text>
-        ) : null}
-        {dashboard.hasOlderEvents ? (
-          <Text style={styles.historyLimitNotice}>
-            Se muestran los 1000 registros más recientes. La paginación del
-            historial antiguo se añadirá antes de cerrar el MVP.
-          </Text>
-        ) : null}
         <View style={styles.sectionHeading}>
           <View>
-            <Text style={styles.sectionTitle}>Lo más reciente</Text>
+            <Text style={styles.sectionTitle}>Actividad reciente</Text>
             <Text style={styles.sectionSubtitle}>
-              {filteredEvents.length}{' '}
-              {filteredEvents.length === 1 ? 'registro visible' : 'registros visibles'}.
+              Los últimos cuidados para preparar el relevo.
             </Text>
           </View>
           <View style={styles.sectionActions}>
@@ -520,8 +567,8 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
+          {dashboard.events.length > 0 ? (
+            dashboard.events.slice(0, 20).map((event) => (
               <TimelineEvent event={event} key={event.id} now={now} />
             ))
           ) : (
@@ -548,7 +595,6 @@ function DashboardContent({
 export function CareHandoffScreen({
   babyId: selectedBabyId,
   canCreateBaby,
-  exportHistory,
   onOpenBabyProfile,
   repository,
   topContent,
@@ -705,7 +751,6 @@ export function CareHandoffScreen({
             isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
-            onExport={exportHistory}
             onOpenBabyProfile={onOpenBabyProfile}
             onRefresh={handleRefresh}
           />
@@ -848,6 +893,28 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
+  secondaryActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  secondaryAction: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+  },
+  secondaryActionLabel: {
+    color: colors.primaryPressed,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   actionArrow: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -926,16 +993,6 @@ const styles = StyleSheet.create({
     color: colors.primaryPressed,
     fontSize: 12,
     fontWeight: '900',
-  },
-  exportError: {
-    color: colors.error,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  historyLimitNotice: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
   },
   timeline: {
     backgroundColor: colors.surface,

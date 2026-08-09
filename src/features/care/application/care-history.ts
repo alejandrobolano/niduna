@@ -1,6 +1,7 @@
 import type { CareEvent } from '../domain/care-event';
 
 export type CareEventFilter = 'all' | CareEvent['type'];
+export type CareHistoryPageSize = 20 | 50 | 100;
 
 export interface CalendarDay {
   dateKey: string;

@@ -17,7 +17,12 @@
     "android": {
       "package": "com.niduna.app",
       "googleServicesFile": "./google-services.json",
-      "icon": "./assets/images/favicon.png",
+      "icon": "./assets/images/icon.png",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF8E8",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {

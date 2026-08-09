@@ -49,6 +49,10 @@ function getEventColumns(event: CareEvent): (string | number | undefined)[] {
       undefined,
       undefined,
       undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
     ];
   }
 
@@ -61,6 +65,46 @@ function getEventColumns(event: CareEvent): (string | number | undefined)[] {
       undefined,
       undefined,
       undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ];
+  }
+
+  if (event.type === 'note') {
+    return [
+      'Nota',
+      event.content,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ];
+  }
+
+  if (event.type === 'measurement') {
+    return [
+      'Medidas',
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      event.weightGrams !== undefined ? event.weightGrams / 1000 : undefined,
+      event.lengthMillimeters !== undefined
+        ? event.lengthMillimeters / 10
+        : undefined,
+      event.headCircumferenceMillimeters !== undefined
+        ? event.headCircumferenceMillimeters / 10
+        : undefined,
+      event.source,
     ];
   }
 
@@ -74,6 +118,10 @@ function getEventColumns(event: CareEvent): (string | number | undefined)[] {
     event.endedAt
       ? getDurationMinutes(event.occurredAt, event.endedAt)
       : undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
   ];
 }
 
@@ -88,6 +136,10 @@ export function createCareHistoryCsv(events: CareEvent[]): string {
     'Inicio del sueño',
     'Fin del sueño',
     'Duración (min)',
+    'Peso (kg)',
+    'Longitud/altura (cm)',
+    'Perímetro cefálico (cm)',
+    'Origen de la medida',
     'Notas',
     'Registrado por',
   ];

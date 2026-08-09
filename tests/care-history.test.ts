@@ -1,11 +1,5 @@
 import { BabyIcon, Milk } from 'lucide-react-native';
 import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('lucide-react-native', () => ({
-  BabyIcon: 'BabyIcon',
-  Milk: 'Milk',
-}));
-
 import {
   buildMonthCalendar,
   filterCareEvents,
@@ -17,6 +11,11 @@ import {
 } from '../src/features/care/application/care-history-csv';
 import type { CareEvent } from '../src/features/care/domain/care-event';
 
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+}));
+
 const events: CareEvent[] = [
   {
     babyId: 'baby-1',
@@ -25,7 +24,9 @@ const events: CareEvent[] = [
     method: 'formula',
     notes: '=unsafe formula',
     occurredAt: '2026-07-29T10:30:00',
+    recordedById: 'user-1',
     recordedByName: 'Alex',
+    sourceType: 'care_event',
     type: 'feeding',
   },
   {
@@ -34,6 +35,8 @@ const events: CareEvent[] = [
     icon: BabyIcon,
     id: 'diaper-1',
     occurredAt: '2026-07-30T08:00:00',
+    recordedById: 'user-1',
+    sourceType: 'care_event',
     type: 'diaper',
   },
 ];
@@ -56,6 +59,7 @@ describe('care history filters', () => {
     expect(calendar[0].dateKey).toBe('2026-06-29');
     expect(eventDay?.eventTypes).toContain('feeding');
   });
+
 });
 
 describe('care history CSV', () => {

@@ -1,6 +1,4 @@
-import type { CareEvent } from '@/features/care/domain/care-event';
-
-export type NotificationCategory = CareEvent['type'];
+export type NotificationCategory = 'diaper' | 'feeding' | 'sleep';
 
 export interface NotificationPreferences {
   diaperEnabled: boolean;
