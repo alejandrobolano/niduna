@@ -18,6 +18,8 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { supabaseFamilyAuditRepository } from '@/features/family-activity/infrastructure/supabase-family-audit-repository';
+import { FamilyActivityPanel } from '@/features/family-activity/presentation/family-activity-panel';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
 import { supabaseFamilyRepository } from '@/features/family/infrastructure/supabase-family-repository';
 import {
@@ -118,6 +120,13 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
               permissionService={expoPushPermissionService}
               repository={supabaseNotificationRepository}
               userId={user.id}
+            />
+          ) : null}
+          {activeFamily &&
+          (activeFamily.role === 'owner' || activeFamily.role === 'admin') ? (
+            <FamilyActivityPanel
+              familyId={activeFamily.id}
+              repository={supabaseFamilyAuditRepository}
             />
           ) : null}
         </View>

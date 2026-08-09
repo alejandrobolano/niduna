@@ -20,15 +20,26 @@ import {
   CareOperationError,
   type CareRepository,
 } from '@/features/care/application/care-repository';
+import {
+  parseHeadCircumferenceMillimeters,
+  parseLengthMillimeters,
+  parseWeightGrams,
+} from '@/features/care/application/measurement-input';
 import type {
   BreastSide,
   DiaperCondition,
   FeedingMethod,
+  MeasurementSource,
   SleepEvent,
 } from '@/features/care/domain/care-event';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
-export type CareAction = 'diaper' | 'feeding' | 'sleep';
+export type CareAction =
+  | 'diaper'
+  | 'feeding'
+  | 'measurement'
+  | 'note'
+  | 'sleep';
 
 const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
@@ -48,6 +59,13 @@ const diaperOptions = [
   { label: 'Caca', value: 'dirty' },
   { label: 'Ambos', value: 'both' },
 ] satisfies SelectOption<DiaperCondition>[];
+
+const measurementSourceOptions = [
+  { label: 'En casa', value: 'home' },
+  { label: 'Pediatría', value: 'pediatrician' },
+  { label: 'Hospital', value: 'hospital' },
+  { label: 'Otro', value: 'other' },
+] satisfies SelectOption<MeasurementSource>[];
 
 interface CareActionSheetProps {
   action?: CareAction;
@@ -100,9 +118,36 @@ export function CareActionSheet({
     useState<DiaperCondition>('wet');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
+  const [weight, setWeight] = useState('');
+  const [length, setLength] = useState('');
+  const [headCircumference, setHeadCircumference] = useState('');
+  const [measurementSource, setMeasurementSource] =
+    useState<MeasurementSource>('home');
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const amountIsInvalid = Boolean(amount.trim()) && !parseAmount(amount);
+  const weightGrams = parseWeightGrams(weight);
+  const lengthMillimeters = parseLengthMillimeters(length);
+  const headCircumferenceMillimeters =
+    parseHeadCircumferenceMillimeters(headCircumference);
+  const weightIsInvalid = Boolean(weight.trim()) && weightGrams === undefined;
+  const lengthIsInvalid = Boolean(length.trim()) && lengthMillimeters === undefined;
+  const headIsInvalid =
+    Boolean(headCircumference.trim()) &&
+    headCircumferenceMillimeters === undefined;
+  const measurementIsEmpty =
+    weightGrams === undefined &&
+    lengthMillimeters === undefined &&
+    headCircumferenceMillimeters === undefined;
+  const noteIsInvalid = action === 'note' && !notes.trim();
+  const formIsInvalid =
+    amountIsInvalid ||
+    noteIsInvalid ||
+    (action === 'measurement' &&
+      (measurementIsEmpty ||
+        weightIsInvalid ||
+        lengthIsInvalid ||
+        headIsInvalid));
   const showsBreastSide =
     feedingMethod === 'breast' || feedingMethod === 'mixed';
 
@@ -112,6 +157,10 @@ export function CareActionSheet({
     setDiaperCondition('wet');
     setAmount('');
     setNotes('');
+    setWeight('');
+    setLength('');
+    setHeadCircumference('');
+    setMeasurementSource('home');
     setErrorMessage(undefined);
   }
 
@@ -121,7 +170,7 @@ export function CareActionSheet({
   }
 
   async function handleSave() {
-    if (!action || amountIsInvalid) {
+    if (!action || formIsInvalid) {
       return;
     }
 
@@ -143,6 +192,17 @@ export function CareActionSheet({
           condition: diaperCondition,
           notes,
         });
+      } else if (action === 'note') {
+        await repository.recordNote({ babyId, content: notes });
+      } else if (action === 'measurement') {
+        await repository.recordMeasurement({
+          babyId,
+          headCircumferenceMillimeters,
+          lengthMillimeters,
+          notes,
+          source: measurementSource,
+          weightGrams,
+        });
       } else if (openSleep) {
         await repository.finishSleep(openSleep.id);
       } else {
@@ -163,6 +223,10 @@ export function CareActionSheet({
       ? 'Registrar alimentación'
       : action === 'diaper'
         ? 'Registrar pañal'
+        : action === 'note'
+          ? 'Añadir una nota'
+          : action === 'measurement'
+            ? 'Registrar medidas'
         : openSleep
           ? 'Terminar sueño'
           : 'Iniciar sueño';
@@ -254,6 +318,60 @@ export function CareActionSheet({
               />
             ) : null}
 
+            {action === 'measurement' ? (
+              <>
+                <SelectField
+                  label="Dónde se tomaron"
+                  onChange={setMeasurementSource}
+                  options={measurementSourceOptions}
+                  placeholder="Selecciona el origen"
+                  title="Origen de las medidas"
+                  value={measurementSource}
+                />
+                <ProfileField
+                  error={
+                    weightIsInvalid
+                      ? 'Introduce un peso entre 0,3 y 50 kg.'
+                      : undefined
+                  }
+                  keyboardType="decimal-pad"
+                  label="Peso en kg"
+                  onChangeText={setWeight}
+                  placeholder="Ej. 4,850"
+                  value={weight}
+                />
+                <ProfileField
+                  error={
+                    lengthIsInvalid
+                      ? 'Introduce una longitud entre 20 y 150 cm.'
+                      : undefined
+                  }
+                  keyboardType="decimal-pad"
+                  label="Longitud o altura en cm"
+                  onChangeText={setLength}
+                  placeholder="Ej. 54,2"
+                  value={length}
+                />
+                <ProfileField
+                  error={
+                    headIsInvalid
+                      ? 'Introduce un perímetro entre 15 y 80 cm.'
+                      : undefined
+                  }
+                  keyboardType="decimal-pad"
+                  label="Perímetro cefálico en cm"
+                  onChangeText={setHeadCircumference}
+                  placeholder="Ej. 37,5"
+                  value={headCircumference}
+                />
+                {measurementIsEmpty ? (
+                  <Text style={styles.fieldHint}>
+                    Introduce al menos una medida.
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
+
             {action === 'sleep' && openSleep ? (
               <View style={styles.sleepNotice}>
                 <MoonStar color={colors.lavender} size={24} />
@@ -264,6 +382,16 @@ export function CareActionSheet({
                   </Text>
                 </View>
               </View>
+            ) : action === 'note' ? (
+              <ProfileField
+                error={noteIsInvalid ? 'Escribe la nota antes de guardar.' : undefined}
+                label="Nota para la familia"
+                maxLength={1000}
+                multiline
+                onChangeText={setNotes}
+                placeholder="Algo importante para el siguiente relevo"
+                value={notes}
+              />
             ) : (
               <ProfileField
                 label="Nota, opcional"
@@ -282,12 +410,12 @@ export function CareActionSheet({
             ) : null}
 
             <Pressable
-              disabled={isSaving || amountIsInvalid}
+              disabled={isSaving || formIsInvalid}
               onPress={() => void handleSave()}
               style={({ pressed }) => [
                 styles.saveButton,
                 pressed && styles.saveButtonPressed,
-                (isSaving || amountIsInvalid) && styles.saveButtonDisabled,
+                (isSaving || formIsInvalid) && styles.saveButtonDisabled,
               ]}
             >
               <Text style={styles.saveButtonText}>
@@ -380,6 +508,11 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 14,
     fontWeight: '700',
+  },
+  fieldHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
   },
   saveButton: {
     alignItems: 'center',

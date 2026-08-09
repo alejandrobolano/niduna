@@ -1,19 +1,28 @@
-import { BabyIcon, Milk, Moon } from 'lucide-react-native';
+import { BabyIcon, Milk, Moon, Scale } from 'lucide-react-native';
 import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('lucide-react-native', () => ({
-  BabyIcon: 'BabyIcon',
-  Milk: 'Milk',
-  Moon: 'Moon',
-}));
-
 import {
   getCareSnapshot,
   getDurationMinutes,
 } from '../src/features/care/application/care-snapshot';
 import type { CareEvent } from '../src/features/care/domain/care-event';
 
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+  Moon: 'Moon',
+  Scale: 'Scale',
+}));
+
 const events: CareEvent[] = [
+  {
+    babyId: 'baby-1',
+    icon: Scale,
+    id: 'measurement',
+    occurredAt: '2026-07-29T13:00:00.000Z',
+    source: 'pediatrician',
+    type: 'measurement',
+    weightGrams: 4850,
+  },
   {
     babyId: 'baby-1',
     condition: 'wet',
@@ -61,6 +70,7 @@ describe('getCareSnapshot', () => {
 
     expect(snapshot.latestDiaper?.id).toBe('diaper-new');
     expect(snapshot.latestFeeding?.id).toBe('feeding');
+    expect(snapshot.latestMeasurement?.id).toBe('measurement');
     expect(snapshot.latestFinishedSleep?.id).toBe('sleep-finished');
     expect(snapshot.openSleep?.id).toBe('sleep-open');
   });

@@ -4,8 +4,10 @@ import {
   CloudSun,
   Milk,
   Moon,
+  NotebookPen,
   Plus,
   RefreshCw,
+  Scale,
   Star,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -21,7 +23,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   filterCareEvents,
+  paginateCareEvents,
   type CareEventFilter,
+  type CareHistoryPageSize,
 } from '@/features/care/application/care-history';
 import type { CareRepository } from '@/features/care/application/care-repository';
 import {
@@ -33,6 +37,7 @@ import type {
   CareEvent,
   DiaperEvent,
   FeedingEvent,
+  MeasurementEvent,
 } from '@/features/care/domain/care-event';
 import {
   CareActionSheet,
@@ -62,6 +67,14 @@ const diaperLabels: Record<DiaperEvent['condition'], string> = {
   both: 'Pipí y caca',
   dirty: 'Caca',
   wet: 'Pipí',
+};
+
+const measurementSourceLabels: Record<string, string> = {
+  birth: 'Nacimiento',
+  home: 'Casa',
+  hospital: 'Hospital',
+  other: 'Otro',
+  pediatrician: 'Pediatría',
 };
 
 interface CareHandoffScreenProps {
@@ -191,6 +204,35 @@ function getFeedingDetail(event: FeedingEvent): string {
   return details.join(' · ') || 'Sin detalles adicionales';
 }
 
+function formatWeight(weightGrams: number): string {
+  return `${new Intl.NumberFormat('es-ES', {
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 3,
+  }).format(weightGrams / 1000)} kg`;
+}
+
+function getMeasurementDetail(event: MeasurementEvent): string {
+  const values = [
+    event.weightGrams !== undefined
+      ? formatWeight(event.weightGrams)
+      : undefined,
+    event.lengthMillimeters !== undefined
+      ? `${new Intl.NumberFormat('es-ES', {
+          maximumFractionDigits: 1,
+        }).format(event.lengthMillimeters / 10)} cm`
+      : undefined,
+    event.headCircumferenceMillimeters !== undefined
+      ? `PC ${new Intl.NumberFormat('es-ES', {
+          maximumFractionDigits: 1,
+        }).format(event.headCircumferenceMillimeters / 10)} cm`
+      : undefined,
+  ].filter(Boolean);
+
+  return `${values.join(' · ')} · ${
+    measurementSourceLabels[event.source] ?? event.source
+  }`;
+}
+
 function getEventPresentation(event: CareEvent, now: Date) {
   if (event.type === 'feeding') {
     return {
@@ -207,6 +249,24 @@ function getEventPresentation(event: CareEvent, now: Date) {
       description: event.notes || 'Cambio de pañal',
       icon: event.icon ?? BabyIcon,
       title: diaperLabels[event.condition],
+    };
+  }
+
+  if (event.type === 'measurement') {
+    return {
+      accent: colors.aqua,
+      description: getMeasurementDetail(event),
+      icon: event.icon ?? Scale,
+      title: 'Medidas de crecimiento',
+    };
+  }
+
+  if (event.type === 'note') {
+    return {
+      accent: colors.primary,
+      description: event.content,
+      icon: event.icon ?? NotebookPen,
+      title: 'Nota familiar',
     };
   }
 
@@ -283,6 +343,8 @@ function DashboardContent({
 }) {
   const [eventFilter, setEventFilter] = useState<CareEventFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string>();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<CareHistoryPageSize>(20);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
   const snapshot = useMemo(
@@ -293,12 +355,32 @@ function DashboardContent({
   const diaper = snapshot.latestDiaper;
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
+  const measurement = snapshot.latestMeasurement;
   const isExpected = dashboard.baby.lifeStage === 'expected';
   const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
   const filteredEvents = useMemo(
     () => filterCareEvents(dashboard.events, eventFilter, selectedDate),
     [dashboard.events, eventFilter, selectedDate],
   );
+  const historyPage = useMemo(
+    () => paginateCareEvents(filteredEvents, page, pageSize),
+    [filteredEvents, page, pageSize],
+  );
+
+  function changeFilter(filter: CareEventFilter) {
+    setEventFilter(filter);
+    setPage(1);
+  }
+
+  function changeDate(date: string | undefined) {
+    setSelectedDate(date);
+    setPage(1);
+  }
+
+  function changePageSize(size: CareHistoryPageSize) {
+    setPageSize(size);
+    setPage(1);
+  }
 
   async function handleExport() {
     setIsExporting(true);
@@ -370,6 +452,23 @@ function DashboardContent({
               ? 'Durmiendo ahora'
               : finishedSleep?.endedAt
                 ? formatWhen(finishedSleep.endedAt, now)
+                : 'Sin datos'
+          }
+        />
+        <SummaryCard
+          accent={colors.aqua}
+          detail={
+            measurement
+              ? getMeasurementDetail(measurement)
+              : 'Todavía sin registros'
+          }
+          icon={Scale}
+          title="Últimas medidas"
+          value={
+            measurement?.weightGrams !== undefined
+              ? formatWeight(measurement.weightGrams)
+              : measurement
+                ? formatWhen(measurement.occurredAt, now)
                 : 'Sin datos'
           }
         />
@@ -456,6 +555,28 @@ function DashboardContent({
               </View>
             </Pressable>
           </View>
+          <View style={styles.secondaryActions}>
+            <Pressable
+              onPress={() => onAction('measurement')}
+              style={({ pressed }) => [
+                styles.secondaryAction,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <Scale color={colors.primaryPressed} size={17} />
+              <Text style={styles.secondaryActionLabel}>Registrar medidas</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onAction('note')}
+              style={({ pressed }) => [
+                styles.secondaryAction,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <NotebookPen color={colors.primaryPressed} size={17} />
+              <Text style={styles.secondaryActionLabel}>Añadir nota</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <View style={styles.readOnlyNotice}>
@@ -473,10 +594,15 @@ function DashboardContent({
           events={dashboard.events}
           exportCount={filteredEvents.length}
           isExporting={isExporting}
-          onChangeDate={setSelectedDate}
-          onChangeFilter={setEventFilter}
+          onChangeDate={changeDate}
+          onChangeFilter={changeFilter}
+          onChangePage={setPage}
+          onChangePageSize={changePageSize}
           onExport={() => void handleExport()}
+          page={historyPage.page}
+          pageSize={pageSize}
           selectedDate={selectedDate}
+          totalPages={historyPage.totalPages}
         />
         {exportError ? (
           <Text accessibilityRole="alert" style={styles.exportError}>
@@ -520,8 +646,8 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
+          {historyPage.events.length > 0 ? (
+            historyPage.events.map((event) => (
               <TimelineEvent event={event} key={event.id} now={now} />
             ))
           ) : (
@@ -846,6 +972,28 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
     fontSize: 15,
+    fontWeight: '900',
+  },
+  secondaryActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  secondaryAction: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 40,
+    paddingHorizontal: spacing.md,
+  },
+  secondaryActionLabel: {
+    color: colors.primaryPressed,
+    fontSize: 12,
     fontWeight: '900',
   },
   actionArrow: {

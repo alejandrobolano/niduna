@@ -1,14 +1,9 @@
 import { BabyIcon, Milk } from 'lucide-react-native';
 import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('lucide-react-native', () => ({
-  BabyIcon: 'BabyIcon',
-  Milk: 'Milk',
-}));
-
 import {
   buildMonthCalendar,
   filterCareEvents,
+  paginateCareEvents,
   toLocalDateKey,
 } from '../src/features/care/application/care-history';
 import {
@@ -16,6 +11,11 @@ import {
   createCareHistoryFileName,
 } from '../src/features/care/application/care-history-csv';
 import type { CareEvent } from '../src/features/care/domain/care-event';
+
+vi.mock('lucide-react-native', () => ({
+  BabyIcon: 'BabyIcon',
+  Milk: 'Milk',
+}));
 
 const events: CareEvent[] = [
   {
@@ -55,6 +55,18 @@ describe('care history filters', () => {
     expect(calendar).toHaveLength(42);
     expect(calendar[0].dateKey).toBe('2026-06-29');
     expect(eventDay?.eventTypes).toContain('feeding');
+  });
+
+  it('paginates filtered results with a bounded page', () => {
+    const repeatedEvents = Array.from({ length: 45 }, (_, index) => ({
+      ...events[0],
+      id: `feeding-${index}`,
+    }));
+    const result = paginateCareEvents(repeatedEvents, 3, 20);
+
+    expect(result.events).toHaveLength(5);
+    expect(result.page).toBe(3);
+    expect(result.totalPages).toBe(3);
   });
 });
 

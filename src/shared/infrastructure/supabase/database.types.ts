@@ -293,6 +293,7 @@ export type Database = {
           id: string;
           length_millimeters: number | null;
           measured_at: string;
+          notes: string | null;
           recorded_by: string;
           source: string | null;
           weight_grams: number | null;
@@ -302,6 +303,7 @@ export type Database = {
           head_circumference_millimeters?: number | null;
           length_millimeters?: number | null;
           measured_at: string;
+          notes?: string | null;
           source?: string | null;
           weight_grams?: number | null;
         },
@@ -309,9 +311,50 @@ export type Database = {
           head_circumference_millimeters?: number | null;
           length_millimeters?: number | null;
           measured_at?: string;
+          notes?: string | null;
           source?: string | null;
           weight_grams?: number | null;
         }
+      >;
+      baby_notes: Table<
+        {
+          baby_id: string;
+          content: string;
+          created_at: string;
+          id: string;
+          occurred_at: string;
+          recorded_by: string;
+          updated_at: string;
+        },
+        {
+          baby_id: string;
+          content: string;
+          occurred_at?: string;
+        },
+        {
+          content?: string;
+          occurred_at?: string;
+        }
+      >;
+      family_audit_logs: Table<
+        {
+          action: 'created' | 'updated' | 'deleted';
+          actor_user_id: string | null;
+          baby_id: string | null;
+          created_at: string;
+          details: Json;
+          entity_id: string | null;
+          entity_type:
+            | 'baby'
+            | 'baby_note'
+            | 'care_event'
+            | 'family_member'
+            | 'measurement';
+          family_id: string;
+          id: number;
+        },
+        Record<string, never>,
+        Record<string, never>
       >;
       care_events: Table<
         {

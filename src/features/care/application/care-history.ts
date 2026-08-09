@@ -1,6 +1,13 @@
 import type { CareEvent } from '../domain/care-event';
 
 export type CareEventFilter = 'all' | CareEvent['type'];
+export type CareHistoryPageSize = 20 | 50 | 100;
+
+export interface CareHistoryPage {
+  events: CareEvent[];
+  page: number;
+  totalPages: number;
+}
 
 export interface CalendarDay {
   dateKey: string;
@@ -28,6 +35,22 @@ export function filterCareEvents(
       (filter === 'all' || event.type === filter) &&
       (!dateKey || toLocalDateKey(event.occurredAt) === dateKey),
   );
+}
+
+export function paginateCareEvents(
+  events: CareEvent[],
+  requestedPage: number,
+  pageSize: CareHistoryPageSize,
+): CareHistoryPage {
+  const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
+  const page = Math.min(Math.max(1, requestedPage), totalPages);
+  const start = (page - 1) * pageSize;
+
+  return {
+    events: events.slice(start, start + pageSize),
+    page,
+    totalPages,
+  };
 }
 
 export function buildMonthCalendar(

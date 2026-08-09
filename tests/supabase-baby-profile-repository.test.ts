@@ -35,6 +35,7 @@ describe('Supabase baby profile mapping', () => {
         id: 'measurement-id',
         length_millimeters: 505,
         measured_at: '2026-07-29T00:00:00Z',
+        notes: null,
         recorded_by: 'user-id',
         source: 'birth',
         weight_grams: 3250,

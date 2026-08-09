@@ -3,7 +3,11 @@ import {
     type CareOperationErrorReason,
     type CareRepository,
 } from '@/features/care/application/care-repository';
-import { mapCareEvent } from '@/features/care/infrastructure/supabase-care-event-mapper';
+import {
+    mapBabyNote,
+    mapCareEvent,
+    mapMeasurement,
+} from '@/features/care/infrastructure/supabase-care-event-mapper';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
 
@@ -82,7 +86,12 @@ export const supabaseCareRepository: CareRepository = {
       return null;
     }
 
-    const [membershipResult, eventsResult] = await Promise.all([
+    const [
+      membershipResult,
+      eventsResult,
+      notesResult,
+      measurementsResult,
+    ] = await Promise.all([
       supabase
         .from('family_members')
         .select('role')
@@ -97,16 +106,56 @@ export const supabaseCareRepository: CareRepository = {
         .eq('baby_id', baby.id)
         .order('occurred_at', { ascending: false })
         .limit(1001),
+      supabase
+        .from('baby_notes')
+        .select('*')
+        .eq('baby_id', baby.id)
+        .order('occurred_at', { ascending: false })
+        .limit(1001),
+      supabase
+        .from('baby_measurements')
+        .select('*')
+        .eq('baby_id', baby.id)
+        .order('measured_at', { ascending: false })
+        .limit(1001),
     ]);
-    const loadError = membershipResult.error ?? eventsResult.error;
+    const loadError =
+      membershipResult.error ??
+      eventsResult.error ??
+      notesResult.error ??
+      measurementsResult.error;
 
     if (loadError) {
       throwOperationError(loadError.code, loadError.message);
     }
 
-    const loadedRows = eventsResult.data ?? [];
-    const rows = loadedRows.slice(0, 1000);
-    const userIds = [...new Set(rows.map((row) => row.recorded_by))];
+    const loadedEvents = [
+      ...(eventsResult.data ?? []).map((row) => ({
+        kind: 'care' as const,
+        occurredAt: row.occurred_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+      ...(notesResult.data ?? []).map((row) => ({
+        kind: 'note' as const,
+        occurredAt: row.occurred_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+      ...(measurementsResult.data ?? []).map((row) => ({
+        kind: 'measurement' as const,
+        occurredAt: row.measured_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+    ].sort(
+      (left, right) =>
+        Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
+    );
+    const selectedEvents = loadedEvents.slice(0, 1000);
+    const userIds = [
+      ...new Set(selectedEvents.map((event) => event.recordedBy)),
+    ];
     const displayNames = new Map<string, string>();
 
     if (userIds.length > 0) {
@@ -137,8 +186,18 @@ export const supabaseCareRepository: CareRepository = {
         membershipResult.data?.role === 'owner' ||
         membershipResult.data?.role === 'admin' ||
         membershipResult.data?.role === 'caregiver',
-      events: rows.map((row) => mapCareEvent(row, displayNames)),
-      hasOlderEvents: loadedRows.length > rows.length,
+      events: selectedEvents.map((event) => {
+        if (event.kind === 'care') {
+          return mapCareEvent(event.row, displayNames);
+        }
+
+        if (event.kind === 'note') {
+          return mapBabyNote(event.row, displayNames);
+        }
+
+        return mapMeasurement(event.row, displayNames);
+      }),
+      hasOlderEvents: loadedEvents.length > selectedEvents.length,
     };
   },
 
@@ -162,6 +221,35 @@ export const supabaseCareRepository: CareRepository = {
       notes: normalizeNotes(input.notes),
       occurred_at: new Date().toISOString(),
     });
+  },
+
+  async recordNote(input) {
+    const { error } = await supabase.from('baby_notes').insert({
+      baby_id: input.babyId,
+      content: input.content.trim(),
+      occurred_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+  },
+
+  async recordMeasurement(input) {
+    const { error } = await supabase.from('baby_measurements').insert({
+      baby_id: input.babyId,
+      head_circumference_millimeters:
+        input.headCircumferenceMillimeters ?? null,
+      length_millimeters: input.lengthMillimeters ?? null,
+      measured_at: new Date().toISOString(),
+      notes: normalizeNotes(input.notes),
+      source: input.source,
+      weight_grams: input.weightGrams ?? null,
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
   },
 
   async startSleep(input) {
@@ -202,6 +290,26 @@ export const supabaseCareRepository: CareRepository = {
           filter: `baby_id=eq.${babyId}`,
           schema: 'public',
           table: 'care_events',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          filter: `baby_id=eq.${babyId}`,
+          schema: 'public',
+          table: 'baby_notes',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          filter: `baby_id=eq.${babyId}`,
+          schema: 'public',
+          table: 'baby_measurements',
         },
         onChange,
       )

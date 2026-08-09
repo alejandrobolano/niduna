@@ -11,6 +11,12 @@ export type BreastSide = 'left' | 'right' | 'both';
 
 export type DiaperCondition = 'wet' | 'dirty' | 'both';
 
+export type MeasurementSource =
+  | 'home'
+  | 'hospital'
+  | 'other'
+  | 'pediatrician';
+
 interface BaseCareEvent {
   babyId: string;
   id: string;
@@ -39,7 +45,27 @@ export interface SleepEvent extends BaseCareEvent {
   type: 'sleep';
 }
 
-export type CareEvent = FeedingEvent | DiaperEvent | SleepEvent;
+export interface NoteEvent extends BaseCareEvent {
+  content: string;
+  icon: LucideIcon;
+  type: 'note';
+}
+
+export interface MeasurementEvent extends BaseCareEvent {
+  headCircumferenceMillimeters?: number;
+  icon: LucideIcon;
+  lengthMillimeters?: number;
+  source: string;
+  type: 'measurement';
+  weightGrams?: number;
+}
+
+export type CareEvent =
+  | FeedingEvent
+  | DiaperEvent
+  | SleepEvent
+  | NoteEvent
+  | MeasurementEvent;
 
 export interface CareBaby {
   birthDate?: string;

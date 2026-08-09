@@ -1,19 +1,24 @@
-import { Milk } from 'lucide-react-native';
+import { Milk, NotebookPen, Scale } from 'lucide-react-native';
 import { describe, expect, it, vi } from 'vitest';
+import {
+  InvalidCareEventError,
+  mapBabyNote,
+  mapCareEvent,
+  mapMeasurement,
+} from '../src/features/care/infrastructure/supabase-care-event-mapper';
+import type { Database } from '../src/shared/infrastructure/supabase/database.types';
 
 vi.mock('lucide-react-native', () => ({
   BabyIcon: 'BabyIcon',
   Milk: 'Milk',
   Moon: 'Moon',
+  NotebookPen: 'NotebookPen',
+  Scale: 'Scale',
 }));
 
-import {
-  InvalidCareEventError,
-  mapCareEvent,
-} from '../src/features/care/infrastructure/supabase-care-event-mapper';
-import type { Database } from '../src/shared/infrastructure/supabase/database.types';
-
 type CareEventRow = Database['public']['Tables']['care_events']['Row'];
+type BabyNoteRow = Database['public']['Tables']['baby_notes']['Row'];
+type MeasurementRow = Database['public']['Tables']['baby_measurements']['Row'];
 
 const baseRow: CareEventRow = {
   amount_milliliters: null,
@@ -57,5 +62,50 @@ describe('mapCareEvent', () => {
         new Map<string, string>(),
       ),
     ).toThrow(InvalidCareEventError);
+  });
+});
+
+describe('additional timeline mappers', () => {
+  it('maps a family note', () => {
+    const row: BabyNoteRow = {
+      baby_id: 'baby-1',
+      content: 'Llamar a pediatría',
+      created_at: '2026-08-09T10:00:00.000Z',
+      id: 'note-1',
+      occurred_at: '2026-08-09T10:00:00.000Z',
+      recorded_by: 'user-1',
+      updated_at: '2026-08-09T10:00:00.000Z',
+    };
+
+    expect(mapBabyNote(row, new Map([['user-1', 'Marta']]))).toMatchObject({
+      content: 'Llamar a pediatría',
+      icon: NotebookPen,
+      recordedByName: 'Marta',
+      type: 'note',
+    });
+  });
+
+  it('maps pediatric measurements using storage units', () => {
+    const row: MeasurementRow = {
+      baby_id: 'baby-1',
+      created_at: '2026-08-09T10:00:00.000Z',
+      head_circumference_millimeters: 375,
+      id: 'measurement-1',
+      length_millimeters: 542,
+      measured_at: '2026-08-09T10:00:00.000Z',
+      notes: 'Control rutinario',
+      recorded_by: 'user-1',
+      source: 'pediatrician',
+      weight_grams: 4850,
+    };
+
+    expect(mapMeasurement(row, new Map())).toMatchObject({
+      headCircumferenceMillimeters: 375,
+      icon: Scale,
+      lengthMillimeters: 542,
+      source: 'pediatrician',
+      type: 'measurement',
+      weightGrams: 4850,
+    });
   });
 });

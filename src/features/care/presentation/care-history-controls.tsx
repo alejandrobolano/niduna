@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   buildMonthCalendar,
   type CareEventFilter,
+  type CareHistoryPageSize,
 } from '@/features/care/application/care-history';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
@@ -14,6 +15,8 @@ const filterOptions = [
   { label: 'Alimentación', value: 'feeding' },
   { label: 'Pañales', value: 'diaper' },
   { label: 'Sueño', value: 'sleep' },
+  { label: 'Medidas', value: 'measurement' },
+  { label: 'Notas', value: 'note' },
 ] satisfies { label: string; value: CareEventFilter }[];
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -22,7 +25,11 @@ const eventColors: Record<CareEvent['type'], string> = {
   diaper: colors.butter,
   feeding: colors.coral,
   sleep: colors.lavender,
+  measurement: colors.aqua,
+  note: colors.primary,
 };
+
+const pageSizes = [20, 50, 100] as const;
 
 interface CareHistoryControlsProps {
   eventFilter: CareEventFilter;
@@ -31,8 +38,13 @@ interface CareHistoryControlsProps {
   isExporting: boolean;
   onChangeDate: (dateKey: string | undefined) => void;
   onChangeFilter: (filter: CareEventFilter) => void;
+  onChangePage: (page: number) => void;
+  onChangePageSize: (pageSize: CareHistoryPageSize) => void;
   onExport: () => void;
+  page: number;
+  pageSize: CareHistoryPageSize;
   selectedDate?: string;
+  totalPages: number;
 }
 
 export function CareHistoryControls({
@@ -42,8 +54,13 @@ export function CareHistoryControls({
   isExporting,
   onChangeDate,
   onChangeFilter,
+  onChangePage,
+  onChangePageSize,
   onExport,
+  page,
+  pageSize,
   selectedDate,
+  totalPages,
 }: CareHistoryControlsProps) {
   const initialDate = events[0]
     ? new Date(events[0].occurredAt)
@@ -130,6 +147,58 @@ export function CareHistoryControls({
             </Pressable>
           );
         })}
+      </View>
+
+      <View style={styles.paginationRow}>
+        <View style={styles.pageSizes}>
+          <Text style={styles.pageSizeLabel}>Mostrar</Text>
+          {pageSizes.map((size) => {
+            const selected = size === pageSize;
+
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                key={size}
+                onPress={() => onChangePageSize(size)}
+                style={[
+                  styles.pageSize,
+                  selected && styles.pageSizeSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pageSizeText,
+                    selected && styles.pageSizeTextSelected,
+                  ]}
+                >
+                  {size}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <View style={styles.pageNavigation}>
+          <Pressable
+            accessibilityLabel="Página anterior"
+            disabled={page <= 1}
+            onPress={() => onChangePage(page - 1)}
+            style={[styles.pageButton, page <= 1 && styles.disabled]}
+          >
+            <ChevronLeft color={colors.text} size={18} />
+          </Pressable>
+          <Text style={styles.pageLabel}>
+            {page} de {totalPages}
+          </Text>
+          <Pressable
+            accessibilityLabel="Página siguiente"
+            disabled={page >= totalPages}
+            onPress={() => onChangePage(page + 1)}
+            style={[styles.pageButton, page >= totalPages && styles.disabled]}
+          >
+            <ChevronRight color={colors.text} size={18} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.calendar}>
@@ -262,6 +331,34 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.68, transform: [{ scale: 0.99 }] },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  paginationRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  pageSizes: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs },
+  pageSizeLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  pageSize: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  pageSizeSelected: { backgroundColor: colors.text },
+  pageSizeText: { color: colors.textMuted, fontSize: 11, fontWeight: '900' },
+  pageSizeTextSelected: { color: colors.white },
+  pageNavigation: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
+  pageButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  pageLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
   filter: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,

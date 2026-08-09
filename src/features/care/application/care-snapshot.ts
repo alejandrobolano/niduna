@@ -2,6 +2,7 @@ import type {
   CareEvent,
   DiaperEvent,
   FeedingEvent,
+  MeasurementEvent,
   SleepEvent,
 } from '@/features/care/domain/care-event';
 
@@ -9,6 +10,7 @@ export interface CareSnapshot {
   latestDiaper?: DiaperEvent;
   latestFeeding?: FeedingEvent;
   latestFinishedSleep?: SleepEvent;
+  latestMeasurement?: MeasurementEvent;
   openSleep?: SleepEvent;
 }
 
@@ -37,6 +39,11 @@ export function getCareSnapshot(events: CareEvent[]): CareSnapshot {
     latestFeeding: latest(
       events.filter(
         (event): event is FeedingEvent => event.type === 'feeding',
+      ),
+    ),
+    latestMeasurement: latest(
+      events.filter(
+        (event): event is MeasurementEvent => event.type === 'measurement',
       ),
     ),
     latestFinishedSleep: latest(
