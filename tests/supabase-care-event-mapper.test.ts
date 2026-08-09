@@ -4,6 +4,7 @@ import {
   InvalidCareEventError,
   mapBabyNote,
   mapCareEvent,
+  mapCareTimelineRow,
   mapMeasurement,
 } from '../src/features/care/infrastructure/supabase-care-event-mapper';
 import type { Database } from '../src/shared/infrastructure/supabase/database.types';
@@ -68,6 +69,39 @@ describe('mapCareEvent', () => {
 });
 
 describe('additional timeline mappers', () => {
+  it('maps a unified timeline row for server pagination', () => {
+    expect(
+      mapCareTimelineRow(
+        {
+          amount_milliliters: 90,
+          baby_id: 'baby-1',
+          breast_side: null,
+          content: null,
+          diaper_condition: null,
+          ended_at: null,
+          event_type: 'feeding',
+          feeding_method: 'formula',
+          head_circumference_millimeters: null,
+          id: 'timeline-1',
+          length_millimeters: null,
+          measurement_source: null,
+          notes: null,
+          occurred_at: '2026-08-09T10:00:00.000Z',
+          recorded_by: 'user-1',
+          source_type: 'care_event',
+          weight_grams: null,
+        },
+        new Map([['user-1', 'Marta']]),
+      ),
+    ).toMatchObject({
+      amountMilliliters: 90,
+      recordedById: 'user-1',
+      recordedByName: 'Marta',
+      sourceType: 'care_event',
+      type: 'feeding',
+    });
+  });
+
   it('maps a family note', () => {
     const row: BabyNoteRow = {
       baby_id: 'baby-1',
