@@ -128,6 +128,65 @@ export type Database = {
           user_id?: string;
         }
       >;
+      app_releases: Table<
+        {
+          app_build_version: string;
+          app_version: string;
+          artifact_url: string;
+          build_details_url: string;
+          build_profile: string;
+          completed_at: string;
+          created_at: string;
+          distribution: string;
+          eas_build_id: string;
+          git_commit_hash: string | null;
+          platform: 'android' | 'ios';
+        },
+        {
+          app_build_version: string;
+          app_version: string;
+          artifact_url: string;
+          build_details_url: string;
+          build_profile: string;
+          completed_at: string;
+          distribution: string;
+          eas_build_id: string;
+          git_commit_hash?: string | null;
+          platform: 'android' | 'ios';
+        },
+        {
+          app_build_version?: string;
+          app_version?: string;
+          artifact_url?: string;
+          build_details_url?: string;
+          build_profile?: string;
+          completed_at?: string;
+          distribution?: string;
+          git_commit_hash?: string | null;
+          platform?: 'android' | 'ios';
+        }
+      >;
+      app_release_notification_deliveries: Table<
+        {
+          created_at: string;
+          eas_build_id: string;
+          error_code: string | null;
+          expo_receipt_id: string | null;
+          id: string;
+          push_device_id: string;
+          status: 'pending' | 'sent' | 'failed';
+          updated_at: string;
+        },
+        {
+          eas_build_id: string;
+          push_device_id: string;
+        },
+        {
+          error_code?: string | null;
+          expo_receipt_id?: string | null;
+          status?: 'pending' | 'sent' | 'failed';
+        }
+      >;
       notification_preferences: Table<
         {
           created_at: string;

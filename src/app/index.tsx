@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { supabaseAppReleaseRepository } from '@/features/app-updates/infrastructure/supabase-app-release-repository';
+import { AppUpdatePanel } from '@/features/app-updates/presentation/app-update-panel';
 import type { AuthenticatedUser } from '@/features/auth/domain/auth';
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
@@ -107,15 +109,18 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     <SessionBanner
       email={user.email}
       settingsContent={
-        activeFamily ? (
-          <NotificationSettingsPanel
-            familyId={activeFamily.id}
-            familyName={activeFamily.name}
-            permissionService={expoPushPermissionService}
-            repository={supabaseNotificationRepository}
-            userId={user.id}
-          />
-        ) : undefined
+        <View style={styles.accountSettings}>
+          <AppUpdatePanel repository={supabaseAppReleaseRepository} />
+          {activeFamily ? (
+            <NotificationSettingsPanel
+              familyId={activeFamily.id}
+              familyName={activeFamily.name}
+              permissionService={expoPushPermissionService}
+              repository={supabaseNotificationRepository}
+              userId={user.id}
+            />
+          ) : null}
+        </View>
       }
     />
   );
@@ -223,6 +228,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
 }
 
 const styles = StyleSheet.create({
+  accountSettings: { gap: spacing.lg },
   topContent: { gap: spacing.md },
   navigationRow: {
     alignItems: 'center',
