@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Ellipse, Rect } from 'react-native-svg';
 
 import { colors, spacing } from '@/shared/presentation/theme';
 
@@ -21,21 +21,23 @@ export function NidunaMark({
       accessibilityLabel={accessibilityLabel}
       accessible={Boolean(accessibilityLabel)}
       height={size}
-      viewBox="0 0 72 64"
-      width={size * 1.125}
+      viewBox="0 0 100 100"
+      width={size}
     >
-      <Path
-        d="M36 11.5c-5.5-6.8-12.5 1.1-6.2 6.5L36 23l6.2-5c6.3-5.4-.7-13.3-6.2-6.5Z"
-        fill={colors.coral}
-      />
-      <Circle cx="27" cy="29" fill={colors.surface} r="10.5" stroke={colors.text} strokeWidth="2.5" />
-      <Circle cx="45" cy="29" fill={colors.surface} r="10.5" stroke={colors.text} strokeWidth="2.5" />
-      <Circle cx="24" cy="28" fill={colors.text} r="1.4" />
-      <Circle cx="42" cy="28" fill={colors.text} r="1.4" />
-      <Path d="M28 33c1.4 1.5 3.2 1.5 4.6 0M46 33c1.4 1.5 3.2 1.5 4.6 0" fill="none" stroke={colors.text} strokeLinecap="round" strokeWidth="1.7" />
-      <Path d="M17.5 31.5c-6.2 1.8-10 6.2-9.5 11.7.8 8.7 12.8 14.8 28 14.8s27.2-6.1 28-14.8c.5-5.5-3.3-9.9-9.5-11.7" fill="none" stroke={colors.text} strokeLinecap="round" strokeWidth="2.8" />
-      <Path d="M11 40.5c6.2 6.7 14.6 10 25 10s18.8-3.3 25-10M15.5 48c5.5 7.2 12.3 10.8 20.5 10.8S51 55.2 56.5 48" fill="none" stroke={colors.text} strokeLinecap="round" strokeWidth="2.8" />
-      <Path d="M21 38c3.7 5.4 8.7 8.1 15 8.1S47.3 43.4 51 38M25 39.5l4.5 7M47 39.5l-4.5 7" fill="none" stroke={colors.text} strokeLinecap="round" strokeWidth="2.3" />
+      <Rect fill="#DFF5F6" height="100" rx="24" width="100" />
+      <Rect fill="#FFD86B" height="40" rx="13" transform="rotate(24 19 68)" width="26" x="6" y="48" />
+      <Rect fill="#FFD86B" height="40" rx="13" transform="rotate(-24 81 68)" width="26" x="68" y="48" />
+      <Rect fill="#48C9C4" height="72" rx="40" width="64" x="18" y="18" />
+      <Ellipse cx="50" cy="72" fill="#DDF7F3" opacity={0.74} rx="16" ry="18" />
+      <Rect fill="#FF756B" height="22" rx="5.5" transform="rotate(-24 45.5 24)" width="10" x="47" y="2" />
+      <Rect fill="#FF756B" height="20" rx="5" transform="rotate(28 55 23)" width="10" x="49" y="3" />
+      <Rect fill="#FF756B" height="7" opacity={0.72} rx="3.5" width="11" x="26" y="60" />
+      <Rect fill="#FF756B" height="7" opacity={0.72} rx="3.5" width="11" x="63" y="60" />
+      <Rect fill="#18234B" height="13" rx="5" width="10" x="33" y="40" />
+      <Rect fill="#18234B" height="13" rx="5" width="10" x="57" y="40" />
+      <Circle cx="36" cy="43" fill="#FFFFFF" r="2" />
+      <Circle cx="60" cy="43" fill="#FFFFFF" r="2" />
+      <Rect fill="#FF756B" height="8" rx="4" transform="rotate(45 49.5 60)" width="11" x="44" y="56" />
     </Svg>
   );
 }

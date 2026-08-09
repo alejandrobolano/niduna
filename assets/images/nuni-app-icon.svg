@@ -1,23 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="24" fill="#DFF5F6" />
-  <!-- Wings -->
+  <rect width="100" height="100" fill="#DFF5F6" />
   <rect x="6" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(24 19 68)" />
   <rect x="68" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(-24 81 68)" />
-  <!-- Body -->
   <rect x="18" y="18" width="64" height="72" rx="40" fill="#48C9C4" />
-  <!-- Belly -->
   <ellipse cx="50" cy="72" rx="16" ry="18" fill="#DDF7F3" opacity="0.74" />
-  <!-- Feather tufts -->
   <rect x="47" y="2" width="10" height="22" rx="5.5" fill="#FF756B" transform="rotate(-24 45.5 24)" />
   <rect x="49" y="3" width="10" height="20" rx="5" fill="#FF756B" transform="rotate(28 55 23)" />
-  <!-- Cheeks -->
   <rect x="26" y="60" width="11" height="7" rx="3.5" fill="#FF756B" opacity="0.72" />
   <rect x="63" y="60" width="11" height="7" rx="3.5" fill="#FF756B" opacity="0.72" />
-  <!-- Eyes -->
   <rect x="33" y="40" width="10" height="13" rx="5" fill="#18234B" />
   <rect x="57" y="40" width="10" height="13" rx="5" fill="#18234B" />
   <circle cx="36" cy="43" r="2" fill="#FFFFFF" />
   <circle cx="60" cy="43" r="2" fill="#FFFFFF" />
-  <!-- Beak -->
   <rect x="44" y="56" width="11" height="8" rx="4" fill="#FF756B" transform="rotate(45 49.5 60)" />
 </svg>

@@ -165,7 +165,7 @@ export function FamilyActivityScreen({
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
-  content: { gap: spacing.xl, maxWidth: 1080, width: '100%' },
+  content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   hero: {
     alignItems: 'center',
     backgroundColor: colors.lavenderSoft,

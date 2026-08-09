@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   content: {
     alignSelf: 'center',
     gap: spacing.xl,
-    maxWidth: 720,
+    maxWidth: 920,
     paddingBottom: 64,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
