@@ -207,11 +207,14 @@ export const supabaseCareRepository: CareRepository = {
       return null;
     }
 
+    const dashboardLoadedAt = new Date().toISOString();
     const [
       membershipResult,
       eventsResult,
       notesResult,
       measurementsResult,
+      birthWeightResult,
+      latestWeightResult,
     ] = await Promise.all([
       supabase
         .from('family_members')
@@ -242,12 +245,32 @@ export const supabaseCareRepository: CareRepository = {
         .is('deleted_at', null)
         .order('measured_at', { ascending: false })
         .limit(25),
+      supabase
+        .from('baby_measurements')
+        .select('id, measured_at, source, weight_grams')
+        .eq('baby_id', baby.id)
+        .eq('source', 'birth')
+        .is('deleted_at', null)
+        .not('weight_grams', 'is', null)
+        .maybeSingle(),
+      supabase
+        .from('baby_measurements')
+        .select('id, measured_at, source, weight_grams')
+        .eq('baby_id', baby.id)
+        .is('deleted_at', null)
+        .not('weight_grams', 'is', null)
+        .lte('measured_at', dashboardLoadedAt)
+        .order('measured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     const loadError =
       membershipResult.error ??
       eventsResult.error ??
       notesResult.error ??
-      measurementsResult.error;
+      measurementsResult.error ??
+      birthWeightResult.error ??
+      latestWeightResult.error;
 
     if (loadError) {
       throwOperationError(loadError.code, loadError.message);
@@ -281,6 +304,17 @@ export const supabaseCareRepository: CareRepository = {
       ...new Set(selectedEvents.map((event) => event.recordedBy)),
     ];
     const displayNames = await loadDisplayNames(userIds);
+    const weightMeasurements = new Map(
+      [birthWeightResult.data, latestWeightResult.data].flatMap((row) =>
+        row && row.weight_grams !== null
+          ? [[row.id, {
+              occurredAt: row.measured_at,
+              source: row.source ?? 'other',
+              weightGrams: row.weight_grams,
+            }] as const]
+          : [],
+      ),
+    );
 
     return {
       baby: {
@@ -307,6 +341,7 @@ export const supabaseCareRepository: CareRepository = {
 
         return mapMeasurement(event.row, displayNames);
       }),
+      weightMeasurements: [...weightMeasurements.values()],
     };
   },
 
