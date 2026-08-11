@@ -1,11 +1,11 @@
 import { Check, ChevronDown, Clock, X } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  FlatList,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -29,8 +29,12 @@ interface WheelColumnProps {
 }
 
 function WheelColumn({ accessibilityLabel, onChange, options, value }: WheelColumnProps) {
-  const listRef = useRef<FlatList<string>>(null);
+  const listRef = useRef<ScrollView>(null);
   const selectedIndex = Math.max(0, options.indexOf(value));
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ animated: false, y: selectedIndex * itemHeight });
+  }, [selectedIndex]);
 
   function selectFromOffset(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const index = Math.max(
@@ -42,42 +46,40 @@ function WheelColumn({ accessibilityLabel, onChange, options, value }: WheelColu
 
   function select(valueToSelect: string, index: number) {
     onChange(valueToSelect);
-    listRef.current?.scrollToIndex({ animated: true, index });
+    listRef.current?.scrollTo({ animated: true, y: index * itemHeight });
   }
 
   return (
     <View accessibilityLabel={accessibilityLabel} style={styles.wheel}>
       <View pointerEvents="none" style={styles.selection} />
-      <FlatList
+      <ScrollView
         contentContainerStyle={styles.wheelContent}
-        data={options}
         decelerationRate="fast"
-        getItemLayout={(_, index) => ({ index, length: itemHeight, offset: itemHeight * index })}
-        initialScrollIndex={selectedIndex}
-        keyExtractor={(option) => option}
         onMomentumScrollEnd={selectFromOffset}
         onScrollEndDrag={selectFromOffset}
         ref={listRef}
-        renderItem={({ index, item }) => {
-          const selected = item === value;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => select(item, index)}
-              style={styles.wheelItem}
-            >
-              <Text style={[styles.wheelValue, selected && styles.wheelValueSelected]}>
-                {item}
-              </Text>
-            </Pressable>
-          );
-        }}
         showsVerticalScrollIndicator={false}
         snapToAlignment="start"
         snapToInterval={itemHeight}
         style={styles.wheelList}
-      />
+      >
+        {options.map((option, index) => {
+          const selected = option === value;
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              key={option}
+              onPress={() => select(option, index)}
+              style={styles.wheelItem}
+            >
+              <Text style={[styles.wheelValue, selected && styles.wheelValueSelected]}>
+                {option}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
     </View>
   );
 }
