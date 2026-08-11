@@ -31,6 +31,8 @@ describe('Supabase baby profile mapping', () => {
       {
         baby_id: 'baby-id',
         created_at: '2026-07-29T12:00:00Z',
+        deleted_at: null,
+        deleted_by: null,
         head_circumference_millimeters: 350,
         id: 'measurement-id',
         length_millimeters: 505,
@@ -38,6 +40,8 @@ describe('Supabase baby profile mapping', () => {
         notes: null,
         recorded_by: 'user-id',
         source: 'birth',
+        updated_at: '2026-07-29T12:00:00Z',
+        updated_by: 'user-id',
         weight_grams: 3250,
       },
     );

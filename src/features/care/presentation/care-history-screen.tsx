@@ -1,25 +1,28 @@
-import { RefreshCw, Star, Trash2 } from 'lucide-react-native';
-import { useEffect, useState, type ReactNode } from 'react';
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+  Archive,
+  CheckSquare2,
+  Pencil,
+  RefreshCw,
+  RotateCcw,
+  Square,
+  Star,
+} from 'lucide-react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type {
-  CareHistoryPage,
-  CareRepository,
-} from '@/features/care/application/care-repository';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
-import type {
-  CareEventFilter,
-  CareHistoryPageSize,
-} from '@/features/care/application/care-history';
+import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/application/care-history';
+import {
+  canEditCareRecord,
+  getCareRecordKey,
+  getSelectableCareRecordKeys,
+  reconcileCareRecordSelection,
+} from '@/features/care/application/care-record-management';
+import type { CareHistoryPage, CareRepository } from '@/features/care/application/care-repository';
 import { getDurationMinutes } from '@/features/care/application/care-snapshot';
 import type { CareEvent } from '@/features/care/domain/care-event';
+import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
 import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
@@ -29,6 +32,7 @@ interface CareHistoryScreenProps {
   babyId?: string;
   babyName?: string;
   canManage: boolean;
+  canRecord: boolean;
   exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
   repository: CareRepository;
   topContent?: ReactNode;
@@ -45,63 +49,30 @@ const eventLabels: Record<CareEvent['type'], string> = {
 
 function describeEvent(event: CareEvent): string {
   if (event.type === 'feeding') {
-    const detail = [
-      event.method === 'breast'
-        ? 'Pecho'
-        : event.method === 'formula'
-          ? 'Fórmula'
-          : event.method === 'mixed'
-            ? 'Mixta'
-            : 'Leche extraída',
-      event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined,
-      event.notes,
-    ].filter(Boolean);
-    return detail.join(' · ');
+    const method = event.method === 'breast' ? 'Pecho' : event.method === 'formula' ? 'Fórmula' : event.method === 'mixed' ? 'Mixta' : 'Leche extraída';
+    return [method, event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined, event.notes].filter(Boolean).join(' · ');
   }
-
   if (event.type === 'diaper') {
-    const condition =
-      event.condition === 'wet'
-        ? 'Pipí'
-        : event.condition === 'dirty'
-          ? 'Caca'
-          : 'Pipí y caca';
+    const condition = event.condition === 'wet' ? 'Pipí' : event.condition === 'dirty' ? 'Caca' : 'Pipí y caca';
     return [condition, event.notes].filter(Boolean).join(' · ');
   }
-
   if (event.type === 'sleep') {
-    if (!event.endedAt) {
-      return 'Sueño en curso';
-    }
-    return `${getDurationMinutes(event.occurredAt, event.endedAt)} min`;
+    return event.endedAt ? `${getDurationMinutes(event.occurredAt, event.endedAt)} min` : 'Sueño en curso';
   }
-
-  if (event.type === 'note') {
-    return event.content;
-  }
-
+  if (event.type === 'note') return event.content;
   return [
-    event.weightGrams !== undefined
-      ? `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 3 }).format(
-          event.weightGrams / 1000,
-        )} kg`
-      : undefined,
-    event.lengthMillimeters !== undefined
-      ? `${event.lengthMillimeters / 10} cm`
-      : undefined,
-    event.headCircumferenceMillimeters !== undefined
-      ? `PC ${event.headCircumferenceMillimeters / 10} cm`
-      : undefined,
+    event.weightGrams !== undefined ? `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 3 }).format(event.weightGrams / 1000)} kg` : undefined,
+    event.lengthMillimeters !== undefined ? `${event.lengthMillimeters / 10} cm` : undefined,
+    event.headCircumferenceMillimeters !== undefined ? `PC ${event.headCircumferenceMillimeters / 10} cm` : undefined,
     event.notes,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  ].filter(Boolean).join(' · ');
 }
 
 export function CareHistoryScreen({
   babyId,
   babyName,
   canManage,
+  canRecord,
   exportHistory,
   repository,
   topContent,
@@ -116,45 +87,37 @@ export function CareHistoryScreen({
   const [isLoading, setIsLoading] = useState(Boolean(babyId));
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string>();
-  const [pendingDeleteId, setPendingDeleteId] = useState<string>();
+  const [editingEvent, setEditingEvent] = useState<CareEvent>();
+  const [pendingRetireId, setPendingRetireId] = useState<string>();
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [showBulkConfirmation, setShowBulkConfirmation] = useState(false);
+  const [showRetired, setShowRetired] = useState(false);
 
   useEffect(() => {
     let active = true;
-    if (!babyId) {
-      return () => {
-        active = false;
-      };
-    }
-
-    void repository
-      .loadHistory({ babyId, date: selectedDate, filter, page, pageSize })
+    if (!babyId) return () => { active = false; };
+    const request = showRetired ? repository.loadRetiredHistory : repository.loadHistory;
+    void request({ babyId, date: selectedDate, filter, page, pageSize })
       .then((result) => {
         if (!active) return;
-        if (page > result.totalPages) {
-          setPage(result.totalPages);
-          return;
+        if (page > result.totalPages) setPage(result.totalPages);
+        else {
+          setHistory(result);
+          setSelectedKeys((current) => reconcileCareRecordSelection(current, result.events));
+          setShowBulkConfirmation(false);
         }
-        setHistory(result);
       })
       .catch(() => active && setError('No pudimos cargar los registros.'))
       .finally(() => active && setIsLoading(false));
-
-    return () => {
-      active = false;
-    };
-  }, [babyId, filter, loadVersion, page, pageSize, repository, selectedDate]);
+    return () => { active = false; };
+  }, [babyId, filter, loadVersion, page, pageSize, repository, selectedDate, showRetired]);
 
   useEffect(() => {
     if (!babyId) return;
-
     const reload = () => setLoadVersion((value) => value + 1);
     const unsubscribeRepository = repository.subscribe(babyId, reload);
     const unsubscribeNotifications = subscribeToCareDataChanges(reload);
-
-    return () => {
-      unsubscribeRepository();
-      unsubscribeNotifications();
-    };
+    return () => { unsubscribeRepository(); unsubscribeNotifications(); };
   }, [babyId, repository]);
 
   function resetPage(action: () => void) {
@@ -162,18 +125,43 @@ export function CareHistoryScreen({
     setError(undefined);
     action();
     setPage(1);
-    setPendingDeleteId(undefined);
+    setPendingRetireId(undefined);
+    setSelectedKeys(new Set());
+    setShowBulkConfirmation(false);
   }
 
-  async function handleDelete(event: CareEvent) {
+  async function handleRetire(events: CareEvent[]) {
     setError(undefined);
     try {
-      await repository.deleteEvent(event);
-      setPendingDeleteId(undefined);
+      await repository.retireEvents(events);
+      setPendingRetireId(undefined);
+      setSelectedKeys(new Set());
+      setShowBulkConfirmation(false);
       setLoadVersion((value) => value + 1);
     } catch {
-      setError('No pudimos eliminar el registro. Comprueba tus permisos.');
+      setError('No pudimos quitar los registros del relevo. No se aplicó ningún cambio.');
     }
+  }
+
+  async function handleRestore(event: CareEvent) {
+    setError(undefined);
+    try {
+      await repository.restoreEvent(event);
+      setLoadVersion((value) => value + 1);
+    } catch {
+      setError('No pudimos restaurar el registro. Comprueba tus permisos.');
+    }
+  }
+
+  function toggleSelection(event: CareEvent) {
+    const key = getCareRecordKey(event);
+    setSelectedKeys((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setShowBulkConfirmation(false);
   }
 
   async function handleExport() {
@@ -181,11 +169,7 @@ export function CareHistoryScreen({
     setIsExporting(true);
     setError(undefined);
     try {
-      const events = await repository.loadHistoryForExport({
-        babyId,
-        date: selectedDate,
-        filter,
-      });
+      const events = await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       await exportHistory(events, babyName);
     } catch {
       setError('No pudimos preparar el archivo para Excel.');
@@ -193,6 +177,9 @@ export function CareHistoryScreen({
       setIsExporting(false);
     }
   }
+
+  const visibleEvents = history?.events ?? [];
+  const selectedEvents = visibleEvents.filter((event) => selectedKeys.has(getCareRecordKey(event)));
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -203,9 +190,7 @@ export function CareHistoryScreen({
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>Registro completo</Text>
               <Text style={styles.title}>Historial de {babyName ?? 'la familia'}</Text>
-              <Text style={styles.subtitle}>
-                Consulta todos los cuidados con paginación real, filtros y exportación.
-              </Text>
+              <Text style={styles.subtitle}>Consulta todos los cuidados con paginación real, filtros y exportación.</Text>
             </View>
             <NuniMascot size={116} />
           </View>
@@ -218,104 +203,119 @@ export function CareHistoryScreen({
             </View>
           ) : (
             <>
-              <CareHistoryControls
-                eventFilter={filter}
-                events={history?.events ?? []}
-                exportCount={history?.total ?? 0}
-                isExporting={isExporting}
-                onChangeDate={(date) => resetPage(() => setSelectedDate(date))}
-                onChangeFilter={(value) => resetPage(() => setFilter(value))}
-                onExport={() => void handleExport()}
-                selectedDate={selectedDate}
-              />
+              {!showRetired ? (
+                <CareHistoryControls
+                  eventFilter={filter}
+                  events={visibleEvents}
+                  exportCount={history?.total ?? 0}
+                  isExporting={isExporting}
+                  onChangeDate={(date) => resetPage(() => setSelectedDate(date))}
+                  onChangeFilter={(value) => resetPage(() => setFilter(value))}
+                  onExport={() => void handleExport()}
+                  selectedDate={selectedDate}
+                />
+              ) : null}
               <View style={styles.tableCard}>
                 <View style={styles.tableHeading}>
                   <View>
-                    <Text style={styles.tableTitle}>Registros</Text>
-                    <Text style={styles.tableSubtitle}>
-                      {isLoading ? 'Actualizando…' : `${history?.total ?? 0} resultados`}
-                    </Text>
+                    <Text style={styles.tableTitle}>{showRetired ? 'Registros retirados' : 'Registros'}</Text>
+                    <Text style={styles.tableSubtitle}>{isLoading ? 'Actualizando…' : `${history?.total ?? 0} resultados`}</Text>
                   </View>
-                  <Pressable
-                    accessibilityLabel="Actualizar registros"
-                    onPress={() => {
-                      setIsLoading(true);
-                      setError(undefined);
-                      setLoadVersion((value) => value + 1);
-                    }}
-                    style={styles.refresh}
-                  >
-                    <RefreshCw color={colors.primaryPressed} size={17} />
-                  </Pressable>
+                  <View style={styles.headingActions}>
+                    {canManage ? (
+                      <Pressable onPress={() => resetPage(() => { setFilter('all'); setSelectedDate(undefined); setShowRetired((value) => !value); })} style={styles.secondaryButton}>
+                        <Text style={styles.secondaryButtonText}>{showRetired ? 'Volver al relevo' : 'Ver retirados'}</Text>
+                      </Pressable>
+                    ) : null}
+                    <Pressable accessibilityLabel="Actualizar registros" onPress={() => { setIsLoading(true); setError(undefined); setLoadVersion((value) => value + 1); }} style={styles.refresh}>
+                      <RefreshCw color={colors.primaryPressed} size={17} />
+                    </Pressable>
+                  </View>
                 </View>
                 {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-                <ScrollView
-                  contentContainerStyle={styles.tableScrollContent}
-                  horizontal
-                  showsHorizontalScrollIndicator
-                  style={styles.tableScroll}
-                >
+                {canManage && !showRetired && visibleEvents.length > 0 ? (
+                  <View style={styles.selectionBar}>
+                    <Pressable
+                      onPress={() => {
+                        const selectable = getSelectableCareRecordKeys(visibleEvents);
+                        const allSelected = selectable.size > 0 && [...selectable].every((key) => selectedKeys.has(key));
+                        setSelectedKeys(allSelected ? new Set() : selectable);
+                        setShowBulkConfirmation(false);
+                      }}
+                      style={styles.selectionLink}
+                    >
+                      <CheckSquare2 color={colors.primaryPressed} size={16} />
+                      <Text style={styles.selectionLinkText}>Seleccionar todos los visibles</Text>
+                    </Pressable>
+                    <Text style={styles.selectionCount}>{selectedKeys.size} seleccionados</Text>
+                    {selectedKeys.size > 0 ? (
+                      <Pressable onPress={() => setShowBulkConfirmation(true)} style={styles.bulkButton}>
+                        <Archive color={colors.white} size={15} />
+                        <Text style={styles.bulkButtonText}>Quitar del relevo</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
+                {showBulkConfirmation ? (
+                  <View style={styles.bulkConfirmation}>
+                    <Text style={styles.bulkConfirmationText}>Se quitarán {selectedKeys.size} registros visibles del relevo de {babyName}. Podrás restaurarlos después.</Text>
+                    <View style={styles.confirmActionsRow}>
+                      <Pressable onPress={() => void handleRetire(selectedEvents)} style={styles.confirmRetire}>
+                        <Text style={styles.confirmRetireText}>Confirmar retirada</Text>
+                      </Pressable>
+                      <Pressable onPress={() => setShowBulkConfirmation(false)}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
+                    </View>
+                  </View>
+                ) : null}
+                <ScrollView contentContainerStyle={styles.tableScrollContent} horizontal showsHorizontalScrollIndicator style={styles.tableScroll}>
                   <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
+                      {canManage && !showRetired ? <View style={styles.selectCell} /> : null}
                       <Text style={[styles.cell, styles.dateCell, styles.headerText]}>Fecha</Text>
                       <Text style={[styles.cell, styles.typeCell, styles.headerText]}>Tipo</Text>
                       <Text style={[styles.cell, styles.detailCell, styles.headerText]}>Detalle</Text>
                       <Text style={[styles.cell, styles.authorCell, styles.headerText]}>Registrado por</Text>
                       <Text style={[styles.cell, styles.actionCell, styles.headerText]}>Acciones</Text>
                     </View>
-                    {(history?.events ?? []).map((event) => {
-                      const canDelete = canManage || event.recordedById === userId;
-                      const confirming = pendingDeleteId === `${event.sourceType}:${event.id}`;
+                    {visibleEvents.map((event) => {
+                      const canModify = canEditCareRecord(event, userId, canManage, canRecord);
+                      const key = getCareRecordKey(event);
+                      const confirming = pendingRetireId === key;
                       return (
-                        <View key={`${event.sourceType}:${event.id}`} style={styles.row}>
-                          <Text style={[styles.cell, styles.dateCell]}>
-                            {new Intl.DateTimeFormat('es-ES', {
-                              dateStyle: 'short',
-                              timeStyle: 'short',
-                            }).format(new Date(event.occurredAt))}
-                          </Text>
+                        <View key={key} style={styles.row}>
+                          {canManage && !showRetired ? (
+                            <Pressable accessibilityLabel={selectedKeys.has(key) ? 'Quitar de la selección' : 'Seleccionar registro'} disabled={!canModify} onPress={() => toggleSelection(event)} style={styles.selectCell}>
+                              {selectedKeys.has(key) ? <CheckSquare2 color={colors.primaryPressed} size={19} /> : <Square color={canModify ? colors.textMuted : colors.border} size={19} />}
+                            </Pressable>
+                          ) : null}
+                          <Text style={[styles.cell, styles.dateCell]}>{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(event.occurredAt))}</Text>
                           <Text style={[styles.cell, styles.typeCell, styles.typeText]}>{eventLabels[event.type]}</Text>
                           <Text numberOfLines={3} style={[styles.cell, styles.detailCell]}>{describeEvent(event)}</Text>
                           <Text style={[styles.cell, styles.authorCell]}>{event.recordedByName ?? 'Un familiar'}</Text>
                           <View style={[styles.cell, styles.actionCell]}>
-                            {canDelete ? (
-                              confirming ? (
-                                <View style={styles.confirmActions}>
-                                  <Pressable onPress={() => void handleDelete(event)} style={styles.confirmDelete}>
-                                    <Text style={styles.confirmDeleteText}>Confirmar</Text>
-                                  </Pressable>
-                                  <Pressable onPress={() => setPendingDeleteId(undefined)}>
-                                    <Text style={styles.cancelText}>Cancelar</Text>
-                                  </Pressable>
-                                </View>
-                              ) : (
-                                <Pressable
-                                  accessibilityLabel={`Eliminar registro de ${eventLabels[event.type]}`}
-                                  onPress={() => setPendingDeleteId(`${event.sourceType}:${event.id}`)}
-                                  style={styles.deleteLink}
-                                >
-                                  <Trash2 color={colors.error} size={15} />
-                                  <Text style={styles.deleteText}>Eliminar</Text>
-                                </Pressable>
-                              )
+                            {showRetired && canManage ? (
+                              <Pressable onPress={() => void handleRestore(event)} style={styles.actionLink}><RotateCcw color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Restaurar</Text></Pressable>
+                            ) : canModify ? confirming ? (
+                              <View style={styles.confirmActions}>
+                                <Text style={styles.confirmHint}>Podrás restaurarlo después</Text>
+                                <Pressable onPress={() => void handleRetire([event])} style={styles.confirmRetire}><Text style={styles.confirmRetireText}>Confirmar</Text></Pressable>
+                                <Pressable onPress={() => setPendingRetireId(undefined)}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
+                              </View>
                             ) : (
-                              <Text style={styles.unavailable}>—</Text>
-                            )}
+                              <View style={styles.rowActions}>
+                                <Pressable onPress={() => setEditingEvent(event)} style={styles.actionLink}><Pencil color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Editar</Text></Pressable>
+                                <Pressable accessibilityLabel={`Quitar registro de ${eventLabels[event.type]} del relevo`} onPress={() => setPendingRetireId(key)} style={styles.actionLink}><Archive color={colors.error} size={15} /><Text style={styles.retireText}>Quitar</Text></Pressable>
+                              </View>
+                            ) : <Text style={styles.unavailable}>—</Text>}
                           </View>
                         </View>
                       );
                     })}
-                    {!isLoading && (history?.events.length ?? 0) === 0 ? (
-                      <Text style={styles.noRows}>No hay registros con estos filtros.</Text>
-                    ) : null}
+                    {!isLoading && visibleEvents.length === 0 ? <Text style={styles.noRows}>{showRetired ? 'No hay registros retirados.' : 'No hay registros con estos filtros.'}</Text> : null}
                   </View>
                 </ScrollView>
                 <DataPagination
-                  onChangePage={(value) => {
-                    setIsLoading(true);
-                    setError(undefined);
-                    setPage(value);
-                  }}
+                  onChangePage={(value) => { setIsLoading(true); setError(undefined); setSelectedKeys(new Set()); setShowBulkConfirmation(false); setPage(value); }}
                   onChangePageSize={(value) => resetPage(() => setPageSize(value))}
                   page={history?.page ?? page}
                   pageSize={pageSize}
@@ -323,6 +323,9 @@ export function CareHistoryScreen({
                   totalPages={history?.totalPages ?? 1}
                 />
               </View>
+              {editingEvent ? (
+                <CareEditSheet key={getCareRecordKey(editingEvent)} event={editingEvent} onClose={() => setEditingEvent(undefined)} onSaved={() => setLoadVersion((value) => value + 1)} repository={repository} />
+              ) : null}
             </>
           )}
         </View>
@@ -335,42 +338,50 @@ const styles = StyleSheet.create({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
-  hero: {
-    alignItems: 'center',
-    backgroundColor: colors.sky,
-    borderRadius: radius.lg,
-    flexDirection: 'row',
-    minHeight: 160,
-    overflow: 'hidden',
-    padding: spacing.xl,
-  },
+  hero: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', minHeight: 160, overflow: 'hidden', padding: spacing.xl },
   heroCopy: { flex: 1, gap: spacing.sm },
   eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
   subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 600 },
   tableCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   tableHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  headingActions: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   tableTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   tableSubtitle: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 38, justifyContent: 'center', width: 38 },
+  secondaryButton: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  secondaryButtonText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900' },
+  selectionBar: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, padding: spacing.md },
+  selectionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs },
+  selectionLinkText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
+  selectionCount: { color: colors.textMuted, fontSize: 12 },
+  bulkButton: { alignItems: 'center', backgroundColor: colors.error, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.xs, marginLeft: 'auto', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  bulkButtonText: { color: colors.white, fontSize: 11, fontWeight: '900' },
+  bulkConfirmation: { backgroundColor: colors.peach, borderRadius: radius.md, gap: spacing.md, padding: spacing.md },
+  bulkConfirmationText: { color: colors.text, fontSize: 13, fontWeight: '700', lineHeight: 19 },
+  confirmActionsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   tableScroll: { width: '100%' },
   tableScrollContent: { flexGrow: 1 },
-  table: { flex: 1, minWidth: 860, width: '100%' },
+  table: { flex: 1, minWidth: 920, width: '100%' },
   row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', minHeight: 64 },
   headerRow: { backgroundColor: colors.surfaceMuted, borderBottomWidth: 0, borderRadius: radius.sm, minHeight: 42 },
   cell: { color: colors.text, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.sm },
   headerText: { color: colors.textMuted, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
-  dateCell: { width: 150 },
-  typeCell: { width: 130 },
+  selectCell: { alignItems: 'center', justifyContent: 'center', width: 42 },
+  dateCell: { width: 145 },
+  typeCell: { width: 120 },
   typeText: { fontWeight: '900' },
-  detailCell: { flex: 1, minWidth: 280 },
-  authorCell: { width: 145 },
-  actionCell: { width: 145 },
-  deleteLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.sm },
-  deleteText: { color: colors.error, fontSize: 11, fontWeight: '900' },
+  detailCell: { flex: 1, minWidth: 250 },
+  authorCell: { width: 135 },
+  actionCell: { width: 180 },
+  rowActions: { alignItems: 'flex-start', gap: 4 },
+  actionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, paddingVertical: 3 },
+  actionText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900' },
+  retireText: { color: colors.error, fontSize: 11, fontWeight: '900' },
   confirmActions: { alignItems: 'flex-start', gap: spacing.xs },
-  confirmDelete: { backgroundColor: colors.error, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 6 },
-  confirmDeleteText: { color: colors.white, fontSize: 10, fontWeight: '900' },
+  confirmHint: { color: colors.textMuted, fontSize: 9 },
+  confirmRetire: { backgroundColor: colors.error, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 6 },
+  confirmRetireText: { color: colors.white, fontSize: 10, fontWeight: '900' },
   cancelText: { color: colors.textMuted, fontSize: 10, fontWeight: '800' },
   unavailable: { color: colors.textMuted, fontSize: 14 },
   noRows: { color: colors.textMuted, padding: spacing.xl, textAlign: 'center' },

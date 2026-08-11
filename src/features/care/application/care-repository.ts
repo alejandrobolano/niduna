@@ -57,9 +57,9 @@ export interface CareHistoryPage {
 }
 
 export interface CareRepository {
-  deleteEvent(event: CareEvent): Promise<void>;
   finishSleep(eventId: string): Promise<void>;
   loadHistory(query: CareHistoryQuery): Promise<CareHistoryPage>;
+  loadRetiredHistory(query: CareHistoryQuery): Promise<CareHistoryPage>;
   loadHistoryForExport(
     query: Omit<CareHistoryQuery, 'page' | 'pageSize'>,
   ): Promise<CareEvent[]>;
@@ -68,8 +68,11 @@ export interface CareRepository {
   recordFeeding(input: FeedingInput): Promise<void>;
   recordMeasurement(input: MeasurementInput): Promise<void>;
   recordNote(input: NoteInput): Promise<void>;
+  restoreEvent(event: CareEvent): Promise<void>;
+  retireEvents(events: CareEvent[]): Promise<void>;
   startSleep(input: SleepInput): Promise<void>;
   subscribe(babyId: string, onChange: () => void): () => void;
+  updateEvent(event: CareEvent): Promise<void>;
 }
 
 export type CareOperationErrorReason =

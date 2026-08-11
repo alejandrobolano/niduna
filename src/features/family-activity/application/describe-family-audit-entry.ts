@@ -63,6 +63,9 @@ function describeBabyUpdate(details: JsonObject): string | undefined {
 }
 
 function describeMeasurement(details: JsonObject, action: FamilyAuditEntry['action']) {
+  const changeKind = asText(details.change_kind);
+  if (changeKind === 'retired') return 'quitó un registro de medidas del relevo';
+  if (changeKind === 'restored') return 'restauró un registro de medidas';
   if (action !== 'created') {
     return action === 'deleted'
       ? 'eliminó un registro de medidas'
@@ -85,20 +88,29 @@ function describeMeasurement(details: JsonObject, action: FamilyAuditEntry['acti
 
 export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
   const details = asObject(entry.details);
+  const changeKind = asText(details.change_kind);
   let action: string;
 
   if (entry.entityType === 'care_event') {
     const eventType = asText(details.event_type);
     const label = eventType ? careEventLabels[eventType] ?? 'cuidado' : 'cuidado';
     action =
-      entry.action === 'created'
+      changeKind === 'retired'
+        ? `quitó un registro de ${label} del relevo`
+        : changeKind === 'restored'
+          ? `restauró un registro de ${label}`
+          : entry.action === 'created'
         ? `añadió un registro de ${label}`
         : entry.action === 'deleted'
           ? `eliminó un registro de ${label}`
           : `actualizó un registro de ${label}`;
   } else if (entry.entityType === 'baby_note') {
     action =
-      entry.action === 'created'
+      changeKind === 'retired'
+        ? 'quitó una nota familiar del relevo'
+        : changeKind === 'restored'
+          ? 'restauró una nota familiar'
+          : entry.action === 'created'
         ? 'añadió una nota familiar'
         : entry.action === 'deleted'
           ? 'eliminó una nota familiar'
