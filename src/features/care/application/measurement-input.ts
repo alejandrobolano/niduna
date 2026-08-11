@@ -1,3 +1,5 @@
+import { parseKilogramsToGrams } from '../../../shared/domain/weight';
+
 function parseDecimal(value: string): number | undefined {
   const normalized = value.trim().replace(',', '.');
 
@@ -30,7 +32,7 @@ function parseScaledValue(
 }
 
 export function parseWeightGrams(value: string): number | undefined {
-  return parseScaledValue(value, 1000, 0.3, 50);
+  return parseKilogramsToGrams(value);
 }
 
 export function parseLengthMillimeters(value: string): number | undefined {

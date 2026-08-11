@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareRepository } from '@/features/care/application/care-repository';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
+import { getBabyWeightProgress } from '@/features/care/application/baby-weight-progress';
 import {
   getCareSnapshot,
   getDurationMinutes,
@@ -205,6 +206,22 @@ function formatWeight(weightGrams: number): string {
   }).format(weightGrams / 1000)} kg`;
 }
 
+function getWeightProgressDescription(differenceGrams: number): string {
+  const formattedDifference = new Intl.NumberFormat('es-ES').format(
+    Math.abs(differenceGrams),
+  );
+
+  if (differenceGrams > 0) {
+    return `Ha ganado ${formattedDifference} g desde el nacimiento.`;
+  }
+
+  if (differenceGrams < 0) {
+    return `Está ${formattedDifference} g por debajo de su peso al nacer.`;
+  }
+
+  return 'Mantiene su peso de nacimiento.';
+}
+
 function getMeasurementDetail(event: MeasurementEvent): string {
   const values = [
     event.weightGrams !== undefined
@@ -346,6 +363,10 @@ function DashboardContent({
   const measurement = snapshot.latestMeasurement;
   const isExpected = dashboard.baby.lifeStage === 'expected';
   const ageLabel = formatBabyAgeLabel(dashboard.baby.birthDate, now);
+  const weightProgress = getBabyWeightProgress(
+    dashboard.weightMeasurements,
+    now,
+  );
 
   return (
     <>
@@ -364,6 +385,22 @@ function DashboardContent({
                 ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
                 : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
           </Text>
+          {!isExpected && weightProgress ? (
+            <View style={styles.weightProgress}>
+              <View style={styles.weightProgressIcon}>
+                <Scale color={colors.primaryPressed} size={17} />
+              </View>
+              <View style={styles.weightProgressCopy}>
+                <Text style={styles.weightProgressWeight}>
+                  {dashboard.baby.name} pesa ahora{' '}
+                  {formatWeight(weightProgress.currentWeightGrams)}.
+                </Text>
+                <Text style={styles.weightProgressChange}>
+                  {getWeightProgressDescription(weightProgress.differenceGrams)}
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </View>
         <NuniMascot size={138} />
       </View>
@@ -826,6 +863,42 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     maxWidth: 470,
+  },
+  weightProgress: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    borderColor: `${colors.aqua}55`,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    maxWidth: 470,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  weightProgressChange: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  weightProgressCopy: {
+    flex: 1,
+  },
+  weightProgressIcon: {
+    alignItems: 'center',
+    backgroundColor: `${colors.aqua}26`,
+    borderRadius: 999,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  weightProgressWeight: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 18,
   },
   summaryGrid: {
     flexDirection: 'row',

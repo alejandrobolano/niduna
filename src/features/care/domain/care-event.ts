@@ -81,4 +81,10 @@ export interface CareDashboard {
   canManage: boolean;
   canRecord: boolean;
   events: CareEvent[];
+  weightMeasurements: WeightMeasurement[];
 }
+
+export type WeightMeasurement = Pick<
+  MeasurementEvent,
+  'occurredAt' | 'source' | 'weightGrams'
+>;
