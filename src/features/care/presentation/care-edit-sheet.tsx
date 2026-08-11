@@ -18,6 +18,7 @@ import {
   type SelectOption,
 } from '@/features/baby-profile/presentation/select-field';
 import { replaceCareRecordOccurrence } from '@/features/care/application/care-record-management';
+import { TimePickerField } from '@/features/care/presentation/time-picker-field';
 import {
   parseHeadCircumferenceMillimeters,
   parseLengthMillimeters,
@@ -33,16 +34,6 @@ import type {
 } from '@/features/care/domain/care-event';
 import { dateToIso } from '@/shared/presentation/date';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
-
-const hourOptions = Array.from({ length: 24 }, (_, hour) => {
-  const value = String(hour).padStart(2, '0');
-  return { label: value, value };
-}) satisfies SelectOption<string>[];
-
-const minuteOptions = Array.from({ length: 60 }, (_, minute) => {
-  const value = String(minute).padStart(2, '0');
-  return { label: value, value };
-}) satisfies SelectOption<string>[];
 
 const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
@@ -180,15 +171,12 @@ export function CareEditSheet({
           </View>
           <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
             <DatePickerField label="Fecha" maximumDate={dateToIso(new Date())} onChange={setDate} value={date} />
-            <View style={styles.timeFields}>
-              <View style={styles.timeField}>
-                <SelectField label="Hora" onChange={setHour} options={hourOptions} placeholder="Hora" title="Hora" value={hour} />
-              </View>
-              <Text style={styles.timeSeparator}>:</Text>
-              <View style={styles.timeField}>
-                <SelectField label="Minuto" onChange={setMinute} options={minuteOptions} placeholder="Minuto" title="Minuto" value={minute} />
-              </View>
-            </View>
+            <TimePickerField
+              hour={hour}
+              minute={minute}
+              onHourChange={setHour}
+              onMinuteChange={setMinute}
+            />
             {event.type === 'feeding' ? (
               <>
                 <SelectField label="Tipo de alimentación" onChange={setFeedingMethod} options={feedingOptions} placeholder="Selecciona el tipo" title="Tipo de alimentación" value={feedingMethod} />
@@ -240,9 +228,6 @@ const styles = StyleSheet.create({
   title: { color: colors.text, fontSize: 24, fontWeight: '900', marginTop: spacing.xs },
   closeButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 40, justifyContent: 'center', width: 40 },
   form: { gap: spacing.lg, padding: spacing.xl },
-  timeFields: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.sm },
-  timeField: { flex: 1 },
-  timeSeparator: { color: colors.text, fontSize: 24, fontWeight: '900', paddingBottom: 22 },
   error: { color: colors.error, fontSize: 12, fontWeight: '700' },
   saveButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, minHeight: 54, justifyContent: 'center' },
   disabled: { opacity: 0.48 },
