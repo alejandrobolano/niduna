@@ -19,6 +19,8 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { supabaseFamilyStoryRepository } from '@/features/family-stories/infrastructure/supabase-family-story-repository';
+import { FamilyStoriesStrip } from '@/features/family-stories/presentation/family-stories-strip';
 import { CareHistoryScreen } from '@/features/care/presentation/care-history-screen';
 import { supabaseFamilyAuditRepository } from '@/features/family-activity/infrastructure/supabase-family-audit-repository';
 import { FamilyActivityScreen } from '@/features/family-activity/presentation/family-activity-screen';
@@ -198,6 +200,17 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
         onOpenBabyProfile={() => setSection('baby')}
         repository={supabaseCareRepository}
+        storiesContent={
+          context.activeBaby ? (
+            <FamilyStoriesStrip
+              babyId={context.activeBaby.id}
+              canPublish={canRecordCare}
+              key={context.activeBaby.id}
+              repository={supabaseFamilyStoryRepository}
+              userId={user.id}
+            />
+          ) : undefined
+        }
         topContent={topContent}
         userId={user.id}
       />,

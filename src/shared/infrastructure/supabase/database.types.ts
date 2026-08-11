@@ -91,6 +91,41 @@ export type Database = {
           role?: FamilyRole;
         }
       >;
+      family_stories: Table<
+        {
+          author_user_id: string;
+          baby_id: string;
+          cleanup_attempts: number;
+          cleanup_claimed_at: string | null;
+          cleanup_last_error: string | null;
+          cleanup_status: 'not_due' | 'pending' | 'processing' | 'failed';
+          created_at: string;
+          expires_at: string;
+          family_id: string;
+          file_size_bytes: number;
+          id: string;
+          mime_type: 'image/jpeg' | 'image/png' | 'image/webp';
+          published_at: string | null;
+          removed_at: string | null;
+          storage_path: string;
+        },
+        Record<string, never>,
+        {
+          cleanup_claimed_at?: string | null;
+          cleanup_last_error?: string | null;
+          cleanup_status?: 'not_due' | 'pending' | 'processing' | 'failed';
+          removed_at?: string | null;
+        }
+      >;
+      family_story_views: Table<
+        {
+          story_id: string;
+          user_id: string;
+          viewed_at: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       baby_followers: Table<
         {
           baby_id: string;
@@ -526,6 +561,30 @@ export type Database = {
       };
     };
     Functions: {
+      prepare_family_story: {
+        Args: {
+          target_baby_id: string;
+          target_file_size_bytes: number;
+          target_mime_type: string;
+        };
+        Returns: {
+          expires_at: string;
+          id: string;
+          storage_path: string;
+        }[];
+      };
+      publish_family_story: {
+        Args: { target_story_id: string };
+        Returns: undefined;
+      };
+      mark_family_story_viewed: {
+        Args: { target_story_id: string };
+        Returns: undefined;
+      };
+      retire_family_story: {
+        Args: { target_story_id: string };
+        Returns: undefined;
+      };
       restore_care_record: {
         Args: {
           target_baby_id: string;

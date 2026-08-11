@@ -76,6 +76,7 @@ interface CareHandoffScreenProps {
   canCreateBaby: boolean;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
+  storiesContent?: ReactNode;
   topContent?: ReactNode;
   userId: string;
 }
@@ -324,6 +325,7 @@ function DashboardContent({
   onAction,
   onOpenBabyProfile,
   onRefresh,
+  storiesContent,
 }: {
   dashboard: CareDashboard;
   isRefreshing: boolean;
@@ -331,6 +333,7 @@ function DashboardContent({
   onAction: (action: CareAction) => void;
   onOpenBabyProfile: () => void;
   onRefresh: () => void;
+  storiesContent?: ReactNode;
 }) {
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
@@ -364,6 +367,8 @@ function DashboardContent({
         </View>
         <NuniMascot size={138} />
       </View>
+
+      {storiesContent}
 
       <View style={styles.summaryGrid}>
         <SummaryCard
@@ -562,7 +567,9 @@ function DashboardContent({
             </Pressable>
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>En directo</Text>
+              <Text numberOfLines={1} style={styles.liveText}>
+                En directo
+              </Text>
             </View>
           </View>
         </View>
@@ -598,6 +605,7 @@ export function CareHandoffScreen({
   canCreateBaby,
   onOpenBabyProfile,
   repository,
+  storiesContent,
   topContent,
   userId,
 }: CareHandoffScreenProps) {
@@ -761,6 +769,7 @@ export function CareHandoffScreen({
             onAction={setAction}
             onOpenBabyProfile={onOpenBabyProfile}
             onRefresh={handleRefresh}
+            storiesContent={storiesContent}
           />
         </View>
       </ScrollView>
@@ -863,6 +872,8 @@ const styles = StyleSheet.create({
   sectionHeading: {
     alignItems: 'flex-end',
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
     justifyContent: 'space-between',
   },
   sectionTitle: {
@@ -969,6 +980,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
+    marginLeft: 'auto',
   },
   refreshButton: {
     alignItems: 'center',
