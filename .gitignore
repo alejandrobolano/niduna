@@ -38,6 +38,7 @@ yarn-error.*
 .env.*
 !.env.example
 .env*.local
+google-services.json
 
 # Cloudflare
 .wrangler/
