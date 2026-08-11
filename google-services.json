@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "63947935490",
+    "project_id": "niduna-app",
+    "storage_bucket": "niduna-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:63947935490:android:2ff2e15dd302de6baf3c1b",
+        "android_client_info": {
+          "package_name": "com.niduna.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBY6XQMGT6okbdXu3Fqz6bkM7To-tHxsfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
