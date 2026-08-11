@@ -45,7 +45,6 @@ export function mapStoredProfile(
       lifeStage: baby.life_stage,
       name: baby.name,
       notes: baby.notes ?? undefined,
-      photoUri: baby.photo_path ?? undefined,
       rhesusFactor: baby.rhesus_factor ?? undefined,
       sexAtBirth: baby.sex_at_birth ?? undefined,
     },

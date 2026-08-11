@@ -34,7 +34,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Niduna necesita acceso a tus fotos para compartir una historia privada con tu familia.",
+          "photosPermission": "Niduna necesita acceso a tus fotos para añadir imágenes privadas del bebé y compartir historias con tu familia.",
           "microphonePermission": false
         }
       ],

@@ -1,14 +1,19 @@
 import {
+  Camera,
   Heart,
   HeartHandshake,
   MoveVertical,
   Plus,
   Sparkles,
-  Sun
+  Sun,
+  Trash2,
+  X,
 } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -20,11 +25,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
+  BabyPhotoError,
+  type BabyPhotoRepository,
+} from '@/features/baby-profile/application/baby-photo-repository';
+import {
   formatBloodType,
   parseBloodType,
   type BloodTypeSelection,
 } from '@/features/baby-profile/application/parse-blood-type';
 import { validateBabyProfile } from '@/features/baby-profile/application/validate-baby-profile';
+import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
 import type {
   BabyLifeStage,
   BabyProfile,
@@ -105,6 +115,7 @@ function parseOptionalNumber(value: string): number | undefined {
 
 interface BabyProfileScreenProps {
   babyId?: string;
+  babyPhotoRepository: BabyPhotoRepository;
   canManageBabies?: boolean;
   familyId: string;
   onArchive?: () => Promise<void>;
@@ -116,6 +127,7 @@ interface BabyProfileScreenProps {
 
 export function BabyProfileScreen({
   babyId: selectedBabyId,
+  babyPhotoRepository,
   canManageBabies = false,
   familyId,
   onArchive,
@@ -148,6 +160,12 @@ export function BabyProfileScreen({
   >();
   const [isChangingAccess, setIsChangingAccess] = useState(false);
   const [accessError, setAccessError] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string>();
+  const [isPhotoLoading, setIsPhotoLoading] = useState(Boolean(selectedBabyId));
+  const [isPhotoSaving, setIsPhotoSaving] = useState(false);
+  const [photoError, setPhotoError] = useState<string>();
+  const [isConfirmingPhotoRemoval, setIsConfirmingPhotoRemoval] = useState(false);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const isReadOnly = !canManageBabies;
   const parsedWeightGrams = parseKilogramsToGrams(
     weightKilograms,
@@ -216,6 +234,92 @@ export function BabyProfileScreen({
       active = false;
     };
   }, [loadAttempt, repository, selectedBabyId]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!selectedBabyId) {
+      return () => {
+        active = false;
+      };
+    }
+
+    void babyPhotoRepository
+      .load(selectedBabyId)
+      .then((url) => {
+        if (active) {
+          setPhotoUrl(url);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setPhotoError('No pudimos cargar la foto. Inténtalo de nuevo.');
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsPhotoLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [babyPhotoRepository, selectedBabyId]);
+
+  async function handlePickPhoto() {
+    if (!storedBabyId) {
+      setPhotoError('Guarda primero el perfil para poder añadir la foto.');
+      return;
+    }
+
+    setIsPhotoSaving(true);
+    setPhotoError(undefined);
+
+    try {
+      const image = await pickAndPrepareBabyPhoto();
+
+      if (!image) {
+        return;
+      }
+
+      const url = await babyPhotoRepository.replace({
+        babyId: storedBabyId,
+        familyId,
+        image,
+      });
+      setPhotoUrl(url);
+    } catch (error) {
+      const message =
+        error instanceof BabyPhotoError && error.code === 'not_allowed'
+          ? 'Necesitamos permiso para acceder a tus fotos.'
+          : error instanceof BabyPhotoError && error.code === 'invalid_image'
+            ? 'Elige una imagen JPG, PNG o WebP de hasta 10 MB.'
+            : 'No pudimos guardar la foto. Comprueba la conexión e inténtalo de nuevo.';
+      setPhotoError(message);
+    } finally {
+      setIsPhotoSaving(false);
+    }
+  }
+
+  async function handleRemovePhoto() {
+    if (!storedBabyId) {
+      return;
+    }
+
+    setIsPhotoSaving(true);
+    setPhotoError(undefined);
+
+    try {
+      await babyPhotoRepository.remove(storedBabyId);
+      setPhotoUrl(undefined);
+      setIsConfirmingPhotoRemoval(false);
+    } catch {
+      setPhotoError('No pudimos retirar la foto. Inténtalo de nuevo.');
+    } finally {
+      setIsPhotoSaving(false);
+    }
+  }
 
   async function handleAccessAction() {
     const action =
@@ -401,18 +505,115 @@ export function BabyProfileScreen({
           </View>
 
           <View style={styles.photoCard}>
-            <View style={styles.photoPlaceholder}>
-              <Heart color={colors.coral} size={24} />
+            <View style={styles.photoMain}>
+              <Pressable
+                accessibilityLabel={photoUrl ? `Ampliar foto de ${name || 'bebé'}` : undefined}
+                accessibilityRole={photoUrl ? 'button' : undefined}
+                disabled={!photoUrl}
+                onPress={() => setIsPhotoViewerOpen(true)}
+                style={({ pressed }) => [
+                  styles.photoPlaceholder,
+                  pressed && photoUrl && styles.photoActionPressed,
+                ]}
+              >
+                {photoUrl ? (
+                  <Image
+                    contentFit="cover"
+                    source={{ uri: photoUrl }}
+                    style={styles.photoImage}
+                    transition={180}
+                  />
+                ) : (
+                  <Heart color={colors.coral} size={24} />
+                )}
+              </Pressable>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Foto del bebé</Text>
+                <Text style={styles.photoHint}>
+                  {isPhotoLoading
+                    ? 'Cargando la foto privada…'
+                    : 'Solo las personas autorizadas de la familia pueden verla.'}
+                </Text>
+                {canManageBabies ? (
+                  <View style={styles.photoActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={isPhotoSaving || !storedBabyId}
+                      onPress={() => void handlePickPhoto()}
+                      style={({ pressed }) => [
+                        styles.photoAction,
+                        pressed && styles.photoActionPressed,
+                        (isPhotoSaving || !storedBabyId) && styles.photoActionDisabled,
+                      ]}
+                    >
+                      <Camera color={colors.primaryPressed} size={16} />
+                      <Text style={styles.photoActionText}>
+                        {isPhotoSaving
+                          ? 'Actualizando…'
+                          : photoUrl
+                            ? 'Cambiar foto'
+                            : 'Añadir foto'}
+                      </Text>
+                    </Pressable>
+                    {photoUrl ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={isPhotoSaving}
+                        onPress={() => setIsConfirmingPhotoRemoval(true)}
+                        style={({ pressed }) => [
+                          styles.photoRemoveAction,
+                          pressed && styles.photoActionPressed,
+                        ]}
+                      >
+                        <Trash2 color={colors.error} size={15} />
+                        <Text style={styles.photoRemoveText}>Retirar foto</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ) : null}
+                {canManageBabies && !storedBabyId ? (
+                  <Text style={styles.photoSaveFirst}>
+                    Guarda el perfil antes de añadir una foto.
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.privateBadge}>
+                <Text style={styles.privateBadgeText}>PRIVADA</Text>
+              </View>
             </View>
-            <View style={styles.photoCopy}>
-              <Text style={styles.photoTitle}>Foto del bebé</Text>
-              <Text style={styles.photoHint}>
-                Será privada y visible solo para la familia autorizada.
+            {isConfirmingPhotoRemoval ? (
+              <View style={styles.photoConfirmation}>
+                <Text style={styles.confirmationTitle}>¿Retirar esta foto?</Text>
+                <Text style={styles.confirmationText}>
+                  Dejará de estar disponible para toda la familia. Podrás añadir otra cuando quieras.
+                </Text>
+                <View style={styles.confirmationActions}>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isPhotoSaving}
+                    onPress={() => setIsConfirmingPhotoRemoval(false)}
+                    style={styles.confirmationCancel}
+                  >
+                    <Text style={styles.confirmationCancelText}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={isPhotoSaving}
+                    onPress={() => void handleRemovePhoto()}
+                    style={styles.confirmationAccept}
+                  >
+                    <Text style={styles.confirmationAcceptText}>
+                      {isPhotoSaving ? 'Retirando…' : 'Retirar foto'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
+            {photoError ? (
+              <Text accessibilityLiveRegion="polite" style={styles.photoError}>
+                {photoError}
               </Text>
-            </View>
-            <View style={styles.privateBadge}>
-              <Text style={styles.privateBadgeText}>PRIVADA</Text>
-            </View>
+            ) : null}
           </View>
 
           <View style={[styles.section, styles.momentSection]}>
@@ -740,6 +941,52 @@ export function BabyProfileScreen({
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setIsPhotoViewerOpen(false)}
+        transparent
+        visible={isPhotoViewerOpen && Boolean(photoUrl)}
+      >
+        <View style={styles.photoViewerRoot}>
+          <Pressable
+            accessibilityLabel="Cerrar foto ampliada"
+            accessibilityRole="button"
+            onPress={() => setIsPhotoViewerOpen(false)}
+            style={styles.photoViewerBackdrop}
+          />
+          <SafeAreaView pointerEvents="box-none" style={styles.photoViewerSafeArea}>
+            <View style={styles.photoViewerHeader}>
+              <View>
+                <Text style={styles.photoViewerEyebrow}>FOTO PRIVADA</Text>
+                <Text style={styles.photoViewerTitle}>{name || 'Bebé'}</Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Cerrar"
+                accessibilityRole="button"
+                onPress={() => setIsPhotoViewerOpen(false)}
+                style={({ pressed }) => [
+                  styles.photoViewerClose,
+                  pressed && styles.photoViewerClosePressed,
+                ]}
+              >
+                <X color={colors.white} size={25} />
+              </Pressable>
+            </View>
+            {photoUrl ? (
+              <Image
+                accessibilityLabel={`Foto ampliada de ${name || 'bebé'}`}
+                contentFit="contain"
+                source={{ uri: photoUrl }}
+                style={styles.photoViewerImage}
+                transition={180}
+              />
+            ) : null}
+            <Text style={styles.photoViewerPrivacy}>
+              Solo las personas autorizadas de la familia pueden verla.
+            </Text>
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -781,14 +1028,17 @@ const styles = StyleSheet.create({
   },
   mascot: { alignSelf: 'flex-end', marginBottom: -14, marginRight: -10, marginTop: -15 },
   photoCard: {
-    alignItems: 'center',
     backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.lg,
     borderWidth: 1,
-    flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.lg,
+  },
+  photoMain: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
   },
   photoPlaceholder: {
     alignItems: 'center',
@@ -796,8 +1046,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     height: 56,
     justifyContent: 'center',
+    overflow: 'hidden',
     width: 56,
   },
+  photoImage: { height: '100%', width: '100%' },
   photoCopy: { flex: 1 },
   photoTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
   photoHint: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 2 },
@@ -808,6 +1060,91 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   privateBadgeText: { color: colors.primaryPressed, fontSize: 10, fontWeight: '900' },
+  photoActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  photoAction: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: radius.pill,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 36,
+    paddingHorizontal: spacing.md,
+  },
+  photoActionPressed: { opacity: 0.7 },
+  photoActionDisabled: { opacity: 0.5 },
+  photoActionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
+  photoRemoveAction: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 36,
+    paddingHorizontal: spacing.xs,
+  },
+  photoRemoveText: { color: colors.error, fontSize: 12, fontWeight: '800' },
+  photoSaveFirst: { color: colors.textMuted, fontSize: 11, marginTop: spacing.sm },
+  photoConfirmation: {
+    backgroundColor: colors.peach,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+    padding: spacing.lg,
+  },
+  photoError: { color: colors.error, fontSize: 12, lineHeight: 17 },
+  photoViewerRoot: {
+    backgroundColor: 'rgba(12, 18, 40, 0.96)',
+    flex: 1,
+  },
+  photoViewerBackdrop: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  photoViewerSafeArea: {
+    flex: 1,
+    gap: spacing.lg,
+    padding: spacing.lg,
+  },
+  photoViewerHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  photoViewerEyebrow: {
+    color: colors.aqua,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.8,
+  },
+  photoViewerTitle: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: spacing.xs,
+  },
+  photoViewerClose: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: radius.pill,
+    height: 46,
+    justifyContent: 'center',
+    width: 46,
+  },
+  photoViewerClosePressed: { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
+  photoViewerImage: { flex: 1, width: '100%' },
+  photoViewerPrivacy: {
+    color: colors.white,
+    fontSize: 12,
+    opacity: 0.76,
+    paddingBottom: spacing.sm,
+    textAlign: 'center',
+  },
   section: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
