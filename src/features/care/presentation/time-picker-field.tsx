@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   wheelList: { backgroundColor: colors.background, flexGrow: 0, height: wheelHeight },
   wheelContent: { paddingVertical: wheelPadding },
   selection: {
-    backgroundColor: colors.peach,
+    backgroundColor: 'rgba(255, 117, 107, 0.12)',
     borderColor: colors.coral,
     borderRadius: radius.md,
     borderWidth: 1,
