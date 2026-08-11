@@ -567,7 +567,9 @@ function DashboardContent({
             </Pressable>
             <View style={styles.liveBadge}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>En directo</Text>
+              <Text numberOfLines={1} style={styles.liveText}>
+                En directo
+              </Text>
             </View>
           </View>
         </View>
@@ -870,6 +872,8 @@ const styles = StyleSheet.create({
   sectionHeading: {
     alignItems: 'flex-end',
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
     justifyContent: 'space-between',
   },
   sectionTitle: {
@@ -976,6 +980,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
+    marginLeft: 'auto',
   },
   refreshButton: {
     alignItems: 'center',
