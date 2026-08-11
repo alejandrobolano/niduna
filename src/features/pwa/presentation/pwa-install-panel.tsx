@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { isPwaStandalone } from '@/features/pwa/application/pwa-installation';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 interface InstallPromptEvent extends Event {
@@ -8,18 +9,28 @@ interface InstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-function isStandalone(): boolean {
-  if (typeof window === 'undefined') {
+function getInitialInstallationState(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') {
     return false;
   }
 
-  return window.matchMedia('(display-mode: standalone)').matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+  return isPwaStandalone(Platform.OS, {
+    matchDisplayMode:
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia.bind(window)
+        : undefined,
+    navigatorStandalone:
+      typeof navigator === 'undefined'
+        ? false
+        : Boolean(
+            (navigator as Navigator & { standalone?: boolean }).standalone,
+          ),
+  });
 }
 
 export function PwaInstallPanel() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent>();
-  const [installed, setInstalled] = useState(isStandalone);
+  const [installed, setInstalled] = useState(getInitialInstallationState);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') {
