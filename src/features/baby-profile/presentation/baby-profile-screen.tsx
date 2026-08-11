@@ -37,6 +37,10 @@ import {
   SelectField,
   type SelectOption,
 } from '@/features/baby-profile/presentation/select-field';
+import {
+  formatGramsAsKilogramsInput,
+  parseKilogramsToGrams,
+} from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
@@ -126,7 +130,7 @@ export function BabyProfileScreen({
   const [sexAtBirth, setSexAtBirth] = useState<SexAtBirth>('unknown');
   const [gestationalWeeks, setGestationalWeeks] = useState('');
   const [gestationalDays, setGestationalDays] = useState('');
-  const [weightGrams, setWeightGrams] = useState('');
+  const [weightKilograms, setWeightKilograms] = useState('');
   const [lengthCentimeters, setLengthCentimeters] = useState('');
   const [headCircumference, setHeadCircumference] = useState('');
   const [bloodType, setBloodType] = useState<BloodTypeSelection>();
@@ -145,6 +149,13 @@ export function BabyProfileScreen({
   const [isChangingAccess, setIsChangingAccess] = useState(false);
   const [accessError, setAccessError] = useState(false);
   const isReadOnly = !canManageBabies;
+  const parsedWeightGrams = parseKilogramsToGrams(
+    weightKilograms,
+    0.3,
+    7,
+  );
+  const weightInputIsInvalid =
+    Boolean(weightKilograms.trim()) && parsedWeightGrams === undefined;
 
   useEffect(() => {
     let active = true;
@@ -172,7 +183,9 @@ export function BabyProfileScreen({
           loadedProfile.gestationalAgeWeeks?.toString() ?? '',
         );
         setGestationalDays(loadedProfile.gestationalAgeDays?.toString() ?? '');
-        setWeightGrams(measurement?.weightGrams?.toString() ?? '');
+        setWeightKilograms(
+          formatGramsAsKilogramsInput(measurement?.weightGrams),
+        );
         setLengthCentimeters(
           measurement?.lengthCentimeters?.toString() ?? '',
         );
@@ -239,7 +252,7 @@ export function BabyProfileScreen({
         birthMeasurement:
           lifeStage === 'born'
             ? {
-                weightGrams: parseOptionalNumber(weightGrams),
+                weightGrams: parsedWeightGrams,
                 lengthCentimeters: parseOptionalNumber(lengthCentimeters),
                 headCircumferenceCentimeters: parseOptionalNumber(headCircumference),
               }
@@ -257,14 +270,29 @@ export function BabyProfileScreen({
       lifeStage,
       name,
       notes,
+      parsedWeightGrams,
       sexAtBirth,
-      weightGrams,
     ],
   );
 
   const validationErrors = useMemo(
-    () => (hasReviewed ? validateBabyProfile(profile) : []),
-    [hasReviewed, profile],
+    () => {
+      if (!hasReviewed) {
+        return [];
+      }
+
+      const errors = validateBabyProfile(profile);
+
+      if (weightInputIsInvalid) {
+        errors.push({
+          field: 'birthMeasurement',
+          message: 'El peso debe estar entre 0,3 y 7 kg.',
+        });
+      }
+
+      return errors;
+    },
+    [hasReviewed, profile, weightInputIsInvalid],
   );
   const isValid = hasReviewed && validationErrors.length === 0;
   const hasUnsavedChanges =
@@ -481,10 +509,10 @@ export function BabyProfileScreen({
                 error={getError('birthMeasurement')}
                 keyboardType="decimal-pad"
                 label="Peso"
-                onChangeText={setWeightGrams}
-                placeholder="Ej. 3250"
-                trailing={<Text style={styles.unit}>g</Text>}
-                value={weightGrams}
+                onChangeText={setWeightKilograms}
+                placeholder="Ej. 3,250"
+                trailing={<Text style={styles.unit}>kg</Text>}
+                value={weightKilograms}
               />
               <View style={styles.inlineFields}>
                 <ProfileField

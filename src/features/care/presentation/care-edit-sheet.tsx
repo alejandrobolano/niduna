@@ -32,6 +32,7 @@ import type {
   FeedingMethod,
   MeasurementSource,
 } from '@/features/care/domain/care-event';
+import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -88,7 +89,7 @@ export function CareEditSheet({
   const [amount, setAmount] = useState(() => event.type === 'feeding' ? decimalValue(event.amountMilliliters) : '');
   const [diaperCondition, setDiaperCondition] = useState<DiaperCondition>(() => event.type === 'diaper' ? event.condition : 'wet');
   const [measurementSource, setMeasurementSource] = useState<MeasurementSource>(() => event.type === 'measurement' ? event.source as MeasurementSource : 'home');
-  const [weight, setWeight] = useState(() => event.type === 'measurement' ? decimalValue(event.weightGrams, 1000) : '');
+  const [weight, setWeight] = useState(() => event.type === 'measurement' ? formatGramsAsKilogramsInput(event.weightGrams) : '');
   const [length, setLength] = useState(() => event.type === 'measurement' ? decimalValue(event.lengthMillimeters, 10) : '');
   const [headCircumference, setHeadCircumference] = useState(() => event.type === 'measurement' ? decimalValue(event.headCircumferenceMillimeters, 10) : '');
   const [isSaving, setIsSaving] = useState(false);
