@@ -18,6 +18,7 @@ import type { Database } from '@/shared/infrastructure/supabase/database.types';
 
 type CareEventInsert =
   Database['public']['Tables']['care_events']['Insert'];
+type NotifiableActivityType = 'measurement' | 'note';
 
 function mapErrorReason(
   code: string | undefined,
@@ -72,6 +73,17 @@ async function dispatchCareNotifications(eventId: string): Promise<void> {
     }),
     supabase.functions.invoke('dispatch-web-care-notification', {
       body: { eventId },
+    }),
+  ]);
+}
+
+async function dispatchActivityNotifications(
+  activityId: string,
+  activityType: NotifiableActivityType,
+): Promise<void> {
+  await Promise.allSettled([
+    supabase.functions.invoke('dispatch-activity-notification', {
+      body: { activityId, activityType },
     }),
   ]);
 }
@@ -336,32 +348,44 @@ export const supabaseCareRepository: CareRepository = {
   },
 
   async recordNote(input) {
-    const { error } = await supabase.from('baby_notes').insert({
-      baby_id: input.babyId,
-      content: input.content.trim(),
-      occurred_at: new Date().toISOString(),
-    });
+    const { data, error } = await supabase
+      .from('baby_notes')
+      .insert({
+        baby_id: input.babyId,
+        content: input.content.trim(),
+        occurred_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
 
     if (error) {
       throwOperationError(error.code, error.message);
     }
+
+    void dispatchActivityNotifications(data.id, 'note');
   },
 
   async recordMeasurement(input) {
-    const { error } = await supabase.from('baby_measurements').insert({
-      baby_id: input.babyId,
-      head_circumference_millimeters:
-        input.headCircumferenceMillimeters ?? null,
-      length_millimeters: input.lengthMillimeters ?? null,
-      measured_at: new Date().toISOString(),
-      notes: normalizeNotes(input.notes),
-      source: input.source,
-      weight_grams: input.weightGrams ?? null,
-    });
+    const { data, error } = await supabase
+      .from('baby_measurements')
+      .insert({
+        baby_id: input.babyId,
+        head_circumference_millimeters:
+          input.headCircumferenceMillimeters ?? null,
+        length_millimeters: input.lengthMillimeters ?? null,
+        measured_at: new Date().toISOString(),
+        notes: normalizeNotes(input.notes),
+        source: input.source,
+        weight_grams: input.weightGrams ?? null,
+      })
+      .select('id')
+      .single();
 
     if (error) {
       throwOperationError(error.code, error.message);
     }
+
+    void dispatchActivityNotifications(data.id, 'measurement');
   },
 
   async startSleep(input) {

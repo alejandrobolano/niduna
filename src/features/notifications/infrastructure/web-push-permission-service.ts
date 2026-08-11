@@ -10,6 +10,7 @@ import {
 } from 'firebase/messaging';
 import { Platform } from 'react-native';
 
+import { publishCareDataChanged } from '@/features/care/application/care-data-events';
 import type {
   PushDeviceRegistration,
   PushPermissionResult,
@@ -72,6 +73,7 @@ function configureForegroundNotifications(
   }
 
   onMessage(messaging, (payload) => {
+    publishCareDataChanged();
     const notification = mapForegroundNotification(payload);
 
     if (notification) {

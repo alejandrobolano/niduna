@@ -22,6 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareRepository } from '@/features/care/application/care-repository';
+import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import {
   getCareSnapshot,
   getDurationMinutes,
@@ -654,9 +655,16 @@ export function CareHandoffScreen({
       return;
     }
 
-    return repository.subscribe(babyId, () => {
+    const reload = () => {
       setLoadAttempt((current) => current + 1);
-    });
+    };
+    const unsubscribeRepository = repository.subscribe(babyId, reload);
+    const unsubscribeNotifications = subscribeToCareDataChanges(reload);
+
+    return () => {
+      unsubscribeRepository();
+      unsubscribeNotifications();
+    };
   }, [babyId, repository]);
 
   const snapshot = dashboard ? getCareSnapshot(dashboard.events) : undefined;

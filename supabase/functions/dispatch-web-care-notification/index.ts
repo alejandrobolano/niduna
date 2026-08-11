@@ -223,7 +223,7 @@ async function sendWebNotification(
         message: {
           fid: installationId,
           notification: {
-            body: 'Alguien de tu familia actualizó el relevo.',
+            body: 'Alguien de tu familia actualiz\u00f3 el relevo.',
             title: 'Nuevo cuidado registrado',
           },
           webpush: {
