@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatGramsAsKilogramsInput,
   parseKilogramsToGrams,
-} from '@/shared/domain/weight';
+} from '../src/shared/domain/weight';
 
 describe('weight units', () => {
   it('converts kilograms entered with Spanish or decimal separators to grams', () => {

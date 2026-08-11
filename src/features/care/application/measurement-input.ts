@@ -1,4 +1,4 @@
-import { parseKilogramsToGrams } from '@/shared/domain/weight';
+import { parseKilogramsToGrams } from '../../../shared/domain/weight';
 
 function parseDecimal(value: string): number | undefined {
   const normalized = value.trim().replace(',', '.');
