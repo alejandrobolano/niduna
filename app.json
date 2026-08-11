@@ -32,6 +32,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Niduna necesita acceso a tus fotos para compartir una historia privada con tu familia.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-notifications",
         {
           "color": "#FF6F61",

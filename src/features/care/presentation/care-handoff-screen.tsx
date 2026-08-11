@@ -76,6 +76,7 @@ interface CareHandoffScreenProps {
   canCreateBaby: boolean;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
+  storiesContent?: ReactNode;
   topContent?: ReactNode;
   userId: string;
 }
@@ -324,6 +325,7 @@ function DashboardContent({
   onAction,
   onOpenBabyProfile,
   onRefresh,
+  storiesContent,
 }: {
   dashboard: CareDashboard;
   isRefreshing: boolean;
@@ -331,6 +333,7 @@ function DashboardContent({
   onAction: (action: CareAction) => void;
   onOpenBabyProfile: () => void;
   onRefresh: () => void;
+  storiesContent?: ReactNode;
 }) {
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
@@ -364,6 +367,8 @@ function DashboardContent({
         </View>
         <NuniMascot size={138} />
       </View>
+
+      {storiesContent}
 
       <View style={styles.summaryGrid}>
         <SummaryCard
@@ -598,6 +603,7 @@ export function CareHandoffScreen({
   canCreateBaby,
   onOpenBabyProfile,
   repository,
+  storiesContent,
   topContent,
   userId,
 }: CareHandoffScreenProps) {
@@ -761,6 +767,7 @@ export function CareHandoffScreen({
             onAction={setAction}
             onOpenBabyProfile={onOpenBabyProfile}
             onRefresh={handleRefresh}
+            storiesContent={storiesContent}
           />
         </View>
       </ScrollView>
