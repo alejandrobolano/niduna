@@ -26,6 +26,8 @@ const baseRow: CareEventRow = {
   baby_id: 'baby-1',
   breast_side: null,
   created_at: '2026-07-29T10:00:00.000Z',
+  deleted_at: null,
+  deleted_by: null,
   diaper_condition: null,
   ended_at: null,
   event_type: 'feeding',
@@ -78,6 +80,8 @@ describe('additional timeline mappers', () => {
           breast_side: null,
           content: null,
           diaper_condition: null,
+          deleted_at: null,
+          deleted_by: null,
           ended_at: null,
           event_type: 'feeding',
           feeding_method: 'formula',
@@ -89,6 +93,8 @@ describe('additional timeline mappers', () => {
           occurred_at: '2026-08-09T10:00:00.000Z',
           recorded_by: 'user-1',
           source_type: 'care_event',
+          updated_at: '2026-08-09T10:00:00.000Z',
+          updated_by: 'user-1',
           weight_grams: null,
         },
         new Map([['user-1', 'Marta']]),
@@ -107,10 +113,13 @@ describe('additional timeline mappers', () => {
       baby_id: 'baby-1',
       content: 'Llamar a pediatría',
       created_at: '2026-08-09T10:00:00.000Z',
+      deleted_at: null,
+      deleted_by: null,
       id: 'note-1',
       occurred_at: '2026-08-09T10:00:00.000Z',
       recorded_by: 'user-1',
       updated_at: '2026-08-09T10:00:00.000Z',
+      updated_by: 'user-1',
     };
 
     expect(mapBabyNote(row, new Map([['user-1', 'Marta']]))).toMatchObject({
@@ -125,6 +134,8 @@ describe('additional timeline mappers', () => {
     const row: MeasurementRow = {
       baby_id: 'baby-1',
       created_at: '2026-08-09T10:00:00.000Z',
+      deleted_at: null,
+      deleted_by: null,
       head_circumference_millimeters: 375,
       id: 'measurement-1',
       length_millimeters: 542,
@@ -132,6 +143,8 @@ describe('additional timeline mappers', () => {
       notes: 'Control rutinario',
       recorded_by: 'user-1',
       source: 'pediatrician',
+      updated_at: '2026-08-09T10:00:00.000Z',
+      updated_by: 'user-1',
       weight_grams: 4850,
     };
 

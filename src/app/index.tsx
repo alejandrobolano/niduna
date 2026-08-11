@@ -114,6 +114,8 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   const activeFamily = context.activeFamily;
   const canManageBabies =
     activeFamily?.role === 'owner' || activeFamily?.role === 'admin';
+  const canRecordCare =
+    canManageBabies || activeFamily?.role === 'caregiver';
   const sessionBanner = (
     <SessionBanner
       email={user.email}
@@ -208,6 +210,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
         babyId={context.activeBaby?.id}
         babyName={context.activeBaby?.name}
         canManage={canManageBabies}
+        canRecord={canRecordCare}
         exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
         repository={supabaseCareRepository}

@@ -362,6 +362,8 @@ export type Database = {
         {
           baby_id: string;
           created_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
           head_circumference_millimeters: number | null;
           id: string;
           length_millimeters: number | null;
@@ -369,6 +371,8 @@ export type Database = {
           notes: string | null;
           recorded_by: string;
           source: string | null;
+          updated_at: string;
+          updated_by: string;
           weight_grams: number | null;
         },
         {
@@ -394,10 +398,13 @@ export type Database = {
           baby_id: string;
           content: string;
           created_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
           id: string;
           occurred_at: string;
           recorded_by: string;
           updated_at: string;
+          updated_by: string;
         },
         {
           baby_id: string;
@@ -435,6 +442,8 @@ export type Database = {
           baby_id: string;
           breast_side: BreastSide | null;
           created_at: string;
+          deleted_at: string | null;
+          deleted_by: string | null;
           diaper_condition: DiaperCondition | null;
           ended_at: string | null;
           event_type: CareEventType;
@@ -470,6 +479,8 @@ export type Database = {
           breast_side: string | null;
           content: string | null;
           diaper_condition: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
           ended_at: string | null;
           event_type: string;
           feeding_method: string | null;
@@ -481,12 +492,64 @@ export type Database = {
           occurred_at: string;
           recorded_by: string;
           source_type: 'baby_note' | 'care_event' | 'measurement';
+          updated_at: string;
+          updated_by: string;
+          weight_grams: number | null;
+        };
+        Relationships: [];
+      };
+      retired_care_timeline: {
+        Row: {
+          amount_milliliters: number | null;
+          baby_id: string;
+          breast_side: string | null;
+          content: string | null;
+          deleted_at: string | null;
+          deleted_by: string | null;
+          diaper_condition: string | null;
+          ended_at: string | null;
+          event_type: string;
+          feeding_method: string | null;
+          head_circumference_millimeters: number | null;
+          id: string;
+          length_millimeters: number | null;
+          measurement_source: string | null;
+          notes: string | null;
+          occurred_at: string;
+          recorded_by: string;
+          source_type: 'baby_note' | 'care_event' | 'measurement';
+          updated_at: string;
+          updated_by: string;
           weight_grams: number | null;
         };
         Relationships: [];
       };
     };
     Functions: {
+      restore_care_record: {
+        Args: {
+          target_baby_id: string;
+          target_record_id: string;
+          target_source_type: string;
+        };
+        Returns: undefined;
+      };
+      retire_care_records: {
+        Args: {
+          target_baby_id: string;
+          target_records: Json;
+        };
+        Returns: number;
+      };
+      update_care_record: {
+        Args: {
+          target_baby_id: string;
+          target_payload: Json;
+          target_record_id: string;
+          target_source_type: string;
+        };
+        Returns: undefined;
+      };
       accept_family_invitation: {
         Args: {
           target_code: string;
