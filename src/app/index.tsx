@@ -204,7 +204,6 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
           context.activeBaby ? (
             <FamilyStoriesStrip
               babyId={context.activeBaby.id}
-              canManage={canManageBabies}
               canPublish={canRecordCare}
               key={context.activeBaby.id}
               repository={supabaseFamilyStoryRepository}

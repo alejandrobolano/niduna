@@ -245,7 +245,7 @@ begin
   insert into public.family_story_views (story_id, user_id, viewed_at)
   values (target_story_id, (select auth.uid()), now())
   on conflict (story_id, user_id)
-  do update set viewed_at = excluded.viewed_at;
+  do nothing;
 end;
 $$;
 
@@ -266,11 +266,7 @@ begin
     raise exception 'family_story_not_found' using errcode = 'P0002';
   end if;
 
-  if selected_story.author_user_id <> (select auth.uid())
-    and not private.has_family_role(
-      selected_story.family_id,
-      array['owner', 'admin']::public.family_role[]
-    ) then
+  if selected_story.author_user_id <> (select auth.uid()) then
     raise exception 'family_story_not_allowed' using errcode = '42501';
   end if;
 

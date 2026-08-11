@@ -1,9 +1,8 @@
 import { Image } from 'expo-image';
 import { Camera, Plus, RefreshCw, ShieldCheck, Trash2, X } from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -30,7 +29,6 @@ const storyDurationMilliseconds = 5_000;
 
 interface FamilyStoriesStripProps {
   babyId: string;
-  canManage: boolean;
   canPublish: boolean;
   repository: FamilyStoryRepository;
   userId: string;
@@ -51,14 +49,12 @@ function getErrorMessage(error: unknown): string {
 }
 
 function StoryViewer({
-  canManage,
   group,
   onClose,
   onRetire,
   onViewed,
   userId,
 }: {
-  canManage: boolean;
   group: FamilyStoryGroup;
   onClose: () => void;
   onRetire: (storyId: string) => Promise<void>;
@@ -67,10 +63,21 @@ function StoryViewer({
 }) {
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isConfirmingRetire, setIsConfirmingRetire] = useState(false);
+  const [isRetiring, setIsRetiring] = useState(false);
   const story = group.stories[storyIndex];
 
   useEffect(() => {
-    void onViewed(story.id);
+    if (!story.isViewed) {
+      void onViewed(story.id);
+    }
+  }, [onViewed, story.id, story.isViewed]);
+
+  useEffect(() => {
+    if (isConfirmingRetire) {
+      return;
+    }
+
     const startedAt = Date.now();
     const timer = setInterval(() => {
       const nextProgress = Math.min(
@@ -91,7 +98,7 @@ function StoryViewer({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [group.stories.length, onClose, onViewed, story.id, storyIndex]);
+  }, [group.stories.length, isConfirmingRetire, onClose, storyIndex]);
 
   function goBack() {
     if (storyIndex > 0) {
@@ -109,19 +116,17 @@ function StoryViewer({
     }
   }
 
-  function confirmRetire() {
-    Alert.alert(
-      'Retirar historia',
-      'La foto dejará de estar visible para toda la familia.',
-      [
-        { style: 'cancel', text: 'Cancelar' },
-        {
-          onPress: () => void onRetire(story.id),
-          style: 'destructive',
-          text: 'Retirar',
-        },
-      ],
-    );
+  async function retireStory() {
+    setIsRetiring(true);
+
+    try {
+      await onRetire(story.id);
+      setIsConfirmingRetire(false);
+    } catch {
+      return;
+    } finally {
+      setIsRetiring(false);
+    }
   }
 
   return (
@@ -150,8 +155,12 @@ function StoryViewer({
             <Text style={styles.viewerAuthorName}>{group.author.displayName}</Text>
             <Text style={styles.viewerTime}>{formatStoryElapsedTime(story.createdAt)}</Text>
           </View>
-          {(group.author.id === userId || canManage) ? (
-            <Pressable accessibilityLabel="Retirar historia" onPress={confirmRetire} style={styles.viewerIconButton}>
+          {group.author.id === userId ? (
+            <Pressable
+              accessibilityLabel="Retirar historia"
+              onPress={() => setIsConfirmingRetire(true)}
+              style={styles.viewerIconButton}
+            >
               <Trash2 color={colors.white} size={20} />
             </Pressable>
           ) : null}
@@ -167,6 +176,39 @@ function StoryViewer({
           <ShieldCheck color={colors.white} size={15} />
           <Text style={styles.screenshotNoticeText}>Solo tu familia puede verla, pero no podemos impedir capturas de pantalla.</Text>
         </View>
+        {isConfirmingRetire ? (
+          <View accessibilityViewIsModal style={styles.confirmationOverlay}>
+            <View style={styles.confirmationCard}>
+              <View style={styles.confirmationIcon}>
+                <Trash2 color={colors.error} size={23} />
+              </View>
+              <Text style={styles.confirmationTitle}>¿Retirar esta historia?</Text>
+              <Text style={styles.confirmationCopy}>
+                La foto dejará de estar visible inmediatamente para toda la familia.
+              </Text>
+              <View style={styles.confirmationActions}>
+                <Pressable
+                  disabled={isRetiring}
+                  onPress={() => setIsConfirmingRetire(false)}
+                  style={[styles.confirmationButton, styles.confirmationCancelButton]}
+                >
+                  <Text style={styles.confirmationCancelText}>Cancelar</Text>
+                </Pressable>
+                <Pressable
+                  disabled={isRetiring}
+                  onPress={() => void retireStory()}
+                  style={[styles.confirmationButton, styles.confirmationRetireButton]}
+                >
+                  {isRetiring ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.confirmationRetireText}>Retirar</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
       </SafeAreaView>
     </Modal>
   );
@@ -174,7 +216,6 @@ function StoryViewer({
 
 export function FamilyStoriesStrip({
   babyId,
-  canManage,
   canPublish,
   repository,
   userId,
@@ -185,27 +226,49 @@ export function FamilyStoriesStrip({
   const [isUploading, setIsUploading] = useState(false);
   const [pendingImage, setPendingImage] = useState<PreparedStoryImage>();
   const [error, setError] = useState<string>();
+  const loadPromiseRef = useRef<Promise<void> | undefined>(undefined);
+  const viewedStoryIdsRef = useRef(new Set<string>());
   const groups = useMemo(() => groupFamilyStories(stories), [stories]);
 
-  const loadStories = useCallback(async () => {
-    try {
-      const loaded = await repository.load(babyId, userId);
-      setStories(loaded);
-      setError(undefined);
-    } catch {
-      setError('No pudimos cargar las historias familiares.');
-    } finally {
-      setIsLoading(false);
+  const loadStories = useCallback(() => {
+    if (loadPromiseRef.current) {
+      return loadPromiseRef.current;
     }
+
+    const request = repository.load(babyId, userId)
+      .then((loaded) => {
+        loaded.forEach((story) => {
+          if (story.isViewed) {
+            viewedStoryIdsRef.current.add(story.id);
+          }
+        });
+        setStories(loaded);
+        setError(undefined);
+      })
+      .catch(() => {
+        setError('No pudimos cargar las historias familiares.');
+      })
+      .finally(() => {
+        loadPromiseRef.current = undefined;
+        setIsLoading(false);
+      });
+
+    loadPromiseRef.current = request;
+    return request;
   }, [babyId, repository, userId]);
 
   useEffect(() => {
     const initialLoadTimer = setTimeout(() => void loadStories(), 0);
-    const unsubscribe = repository.subscribe(babyId, () => void loadStories());
-    const expiryTimer = setInterval(() => void loadStories(), 60_000);
+    let realtimeTimer: ReturnType<typeof setTimeout> | undefined;
+    const unsubscribe = repository.subscribe(babyId, () => {
+      clearTimeout(realtimeTimer);
+      realtimeTimer = setTimeout(() => void loadStories(), 150);
+    });
+    const signedUrlRefreshTimer = setInterval(() => void loadStories(), 4 * 60_000);
 
     return () => {
-      clearInterval(expiryTimer);
+      clearInterval(signedUrlRefreshTimer);
+      clearTimeout(realtimeTimer);
       clearTimeout(initialLoadTimer);
       unsubscribe();
     };
@@ -263,23 +326,33 @@ export function FamilyStoriesStrip({
   }
 
   const markViewed = useCallback(async (storyId: string) => {
+    if (viewedStoryIdsRef.current.has(storyId)) {
+      return;
+    }
+
+    viewedStoryIdsRef.current.add(storyId);
+
     try {
       await repository.markViewed(storyId);
       setStories((current) =>
         current.map((story) => story.id === storyId ? { ...story, isViewed: true } : story),
       );
     } catch {
+      viewedStoryIdsRef.current.delete(storyId);
       setError('No pudimos guardar que ya viste esta historia.');
     }
   }, [repository]);
+
+  const closeViewer = useCallback(() => setSelectedGroup(undefined), []);
 
   async function retire(storyId: string) {
     try {
       await repository.retire(storyId);
       setSelectedGroup(undefined);
       await loadStories();
-    } catch {
+    } catch (caughtError) {
       setError('No pudimos retirar la historia.');
+      throw caughtError;
     }
   }
 
@@ -332,9 +405,8 @@ export function FamilyStoriesStrip({
       ) : null}
       {selectedGroup ? (
         <StoryViewer
-          canManage={canManage}
           group={selectedGroup}
-          onClose={() => setSelectedGroup(undefined)}
+          onClose={closeViewer}
           onRetire={retire}
           onViewed={markViewed}
           userId={userId}
@@ -376,5 +448,16 @@ const styles = StyleSheet.create({
   viewerHalf: { flex: 1 },
   screenshotNotice: { alignItems: 'center', backgroundColor: '#00000088', borderRadius: radius.pill, bottom: spacing.lg, flexDirection: 'row', gap: spacing.sm, left: spacing.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, position: 'absolute', right: spacing.lg },
   screenshotNoticeText: { color: colors.white, flex: 1, fontSize: 10, lineHeight: 14 },
+  confirmationOverlay: { alignItems: 'center', backgroundColor: '#070A12CC', bottom: 0, justifyContent: 'center', left: 0, padding: spacing.xl, position: 'absolute', right: 0, top: 0 },
+  confirmationCard: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.md, maxWidth: 420, padding: spacing.xl, width: '100%' },
+  confirmationIcon: { alignItems: 'center', backgroundColor: '#FCE8E8', borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
+  confirmationTitle: { color: colors.text, fontSize: 21, fontWeight: '900', textAlign: 'center' },
+  confirmationCopy: { color: colors.textMuted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  confirmationActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, width: '100%' },
+  confirmationButton: { alignItems: 'center', borderRadius: radius.md, flex: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md },
+  confirmationCancelButton: { backgroundColor: colors.background },
+  confirmationRetireButton: { backgroundColor: colors.error },
+  confirmationCancelText: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  confirmationRetireText: { color: colors.white, fontSize: 14, fontWeight: '900' },
   avatarImage: { borderRadius: radius.pill, height: '100%', width: '100%' },
 });

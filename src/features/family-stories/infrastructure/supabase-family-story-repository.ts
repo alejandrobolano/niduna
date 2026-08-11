@@ -82,18 +82,18 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         .select('story_id')
         .eq('user_id', userId)
         .in('story_id', storyIds),
-      Promise.all(
-        rows.map((row) =>
-          supabase.storage
-            .from('family-stories')
-            .createSignedUrl(row.storage_path, signedUrlLifetimeSeconds),
+      supabase.storage
+        .from('family-stories')
+        .createSignedUrls(
+          rows.map((row) => row.storage_path),
+          signedUrlLifetimeSeconds,
         ),
-      ),
     ]);
-    const relatedError = profilesResult.error ?? viewsResult.error;
+    const relatedError =
+      profilesResult.error ?? viewsResult.error ?? urlsResult.error;
 
     if (relatedError) {
-      throw mapError(relatedError.code);
+      throw mapError('code' in relatedError ? relatedError.code : undefined);
     }
 
     const names = new Map(
@@ -107,9 +107,9 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
     );
 
     return rows.flatMap((row, index): FamilyStory[] => {
-      const signedUrl = urlsResult[index];
+      const signedUrl = urlsResult.data?.[index];
 
-      if (signedUrl.error || !signedUrl.data.signedUrl) {
+      if (!signedUrl || signedUrl.error || !signedUrl.signedUrl) {
         return [];
       }
 
@@ -121,7 +121,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         createdAt: row.created_at,
         expiresAt: row.expires_at,
         id: row.id,
-        imageUrl: signedUrl.data.signedUrl,
+        imageUrl: signedUrl.signedUrl,
         isViewed: viewedIds.has(row.id),
       }];
     });
@@ -157,15 +157,6 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
           filter: `baby_id=eq.${babyId}`,
           schema: 'public',
           table: 'family_stories',
-        },
-        onChange,
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'family_story_views',
         },
         onChange,
       )
