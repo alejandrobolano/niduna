@@ -17,6 +17,7 @@ function mapPreferences(
         note_enabled: boolean;
         paused_until: string | null;
         sleep_enabled: boolean;
+        story_enabled: boolean;
       }
     | null,
 ): NotificationPreferences {
@@ -31,6 +32,7 @@ function mapPreferences(
     noteEnabled: row.note_enabled,
     pausedUntil: row.paused_until ?? undefined,
     sleepEnabled: row.sleep_enabled,
+    storyEnabled: row.story_enabled,
   };
 }
 
@@ -60,7 +62,7 @@ export const supabaseNotificationRepository: NotificationRepository = {
       supabase
         .from('notification_preferences')
         .select(
-          'feeding_enabled, diaper_enabled, sleep_enabled, note_enabled, measurement_enabled, paused_until',
+          'feeding_enabled, diaper_enabled, sleep_enabled, note_enabled, measurement_enabled, story_enabled, paused_until',
         )
         .eq('family_id', familyId)
         .eq('user_id', userId)
@@ -103,6 +105,7 @@ export const supabaseNotificationRepository: NotificationRepository = {
         note_enabled: preferences.noteEnabled,
         paused_until: preferences.pausedUntil ?? null,
         sleep_enabled: preferences.sleepEnabled,
+        story_enabled: preferences.storyEnabled,
         user_id: userId,
       },
       { onConflict: 'family_id,user_id' },

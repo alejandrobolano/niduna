@@ -3,7 +3,8 @@ export type NotificationCategory =
   | 'feeding'
   | 'measurement'
   | 'note'
-  | 'sleep';
+  | 'sleep'
+  | 'story';
 
 export interface NotificationPreferences {
   diaperEnabled: boolean;
@@ -12,6 +13,7 @@ export interface NotificationPreferences {
   noteEnabled: boolean;
   pausedUntil?: string;
   sleepEnabled: boolean;
+  storyEnabled: boolean;
 }
 
 export const defaultNotificationPreferences: NotificationPreferences = {
@@ -20,6 +22,7 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   measurementEnabled: true,
   noteEnabled: true,
   sleepEnabled: true,
+  storyEnabled: true,
 };
 
 export function isNotificationCategoryEnabled(
@@ -40,6 +43,10 @@ export function isNotificationCategoryEnabled(
 
   if (category === 'measurement') {
     return preferences.measurementEnabled;
+  }
+
+  if (category === 'story') {
+    return preferences.storyEnabled;
   }
 
   return preferences.sleepEnabled;

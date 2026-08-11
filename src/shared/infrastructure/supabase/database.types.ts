@@ -214,7 +214,7 @@ export type Database = {
           id: string;
           provider_message_id: string | null;
           source_id: string;
-          source_type: 'note' | 'measurement';
+          source_type: 'note' | 'measurement' | 'story';
           status: 'pending' | 'sent' | 'delivered' | 'failed';
           updated_at: string;
         },
@@ -222,7 +222,7 @@ export type Database = {
           channel: 'native' | 'web';
           device_id: string;
           source_id: string;
-          source_type: 'note' | 'measurement';
+          source_type: 'note' | 'measurement' | 'story';
         },
         {
           error_code?: string | null;
@@ -299,6 +299,7 @@ export type Database = {
           note_enabled: boolean;
           paused_until: string | null;
           sleep_enabled: boolean;
+          story_enabled: boolean;
           updated_at: string;
           user_id: string;
         },
@@ -310,6 +311,7 @@ export type Database = {
           note_enabled?: boolean;
           paused_until?: string | null;
           sleep_enabled?: boolean;
+          story_enabled?: boolean;
           user_id: string;
         },
         {
@@ -319,6 +321,7 @@ export type Database = {
           note_enabled?: boolean;
           paused_until?: string | null;
           sleep_enabled?: boolean;
+          story_enabled?: boolean;
         }
       >;
       family_invitations: Table<

@@ -55,3 +55,29 @@ export function shouldNotifyCareFollower({
 
   return preference.sleep_enabled;
 }
+
+export function selectEligibleCareDevices<
+  Device extends { user_id: string },
+>({
+  actorUserId,
+  devices,
+  eventType,
+  now,
+  preferencesByUser,
+}: {
+  actorUserId: string;
+  devices: Device[];
+  eventType: CareNotificationCategory;
+  now: Date;
+  preferencesByUser: ReadonlyMap<string, RecipientPreference>;
+}): Device[] {
+  return devices.filter((device) => shouldNotifyCareFollower({
+    actorUserId,
+    eventType,
+    hasActiveDevice: true,
+    isActiveFollower: true,
+    now,
+    preference: preferencesByUser.get(device.user_id),
+    recipientUserId: device.user_id,
+  }));
+}
