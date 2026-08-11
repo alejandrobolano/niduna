@@ -18,7 +18,6 @@ export interface BabyProfile {
   expectedDueDate?: string;
   birthDate?: string;
   sexAtBirth?: SexAtBirth;
-  photoUri?: string;
   bloodGroup?: BloodGroup;
   rhesusFactor?: RhesusFactor;
   gestationalAgeWeeks?: number;

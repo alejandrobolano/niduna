@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { AuthScreen } from '@/features/auth/presentation/auth-screen';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
+import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
 import {
   createCareHistoryCsv,
@@ -264,6 +265,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     section === 'baby' ? (
       <BabyProfileScreen
         babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+        babyPhotoRepository={supabaseBabyPhotoRepository}
         canManageBabies={canManageBabies}
         familyId={activeFamily.id}
         key={`${activeFamily.id}:${
