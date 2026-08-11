@@ -11,6 +11,14 @@ function mapError(code: string | undefined): FamilyStoryError {
   return new FamilyStoryError(code === '42501' ? 'not_allowed' : 'unknown');
 }
 
+async function dispatchStoryNotification(storyId: string): Promise<void> {
+  await Promise.allSettled([
+    supabase.functions.invoke('dispatch-activity-notification', {
+      body: { activityId: storyId, activityType: 'story' },
+    }),
+  ]);
+}
+
 export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
   async create(babyId, image) {
     const { data: preparedRows, error: prepareError } = await supabase.rpc(
@@ -53,6 +61,8 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
       });
       throw mapError(publishError.code);
     }
+
+    await dispatchStoryNotification(prepared.id);
   },
 
   async load(babyId, userId) {

@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { shouldNotifyActivityFollower } from '../supabase/functions/_shared/activity-notification-rules';
+import {
+  selectEligibleActivityDevices,
+  shouldNotifyActivityFollower,
+} from '../supabase/functions/_shared/activity-notification-rules';
 
 const enabledPreference = {
   measurement_enabled: true,
   note_enabled: true,
   paused_until: null,
+  story_enabled: true,
 };
 
 describe('activity notification recipient rules', () => {
@@ -40,6 +44,38 @@ describe('activity notification recipient rules', () => {
     expect(
       shouldNotifyActivityFollower({ ...input, category: 'measurement' }),
     ).toBe(true);
+  });
+
+  it('enables stories by category and keeps every device for each recipient', () => {
+    const devices = [
+      { id: 'author-phone', user_id: 'author' },
+      { id: 'recipient-phone', user_id: 'recipient' },
+      { id: 'recipient-browser', user_id: 'recipient' },
+    ];
+
+    expect(
+      selectEligibleActivityDevices({
+        actorUserId: 'author',
+        category: 'story',
+        devices,
+        now: new Date('2026-08-09T12:00:00Z'),
+        preferencesByUser: new Map([['recipient', enabledPreference]]),
+      }),
+    ).toEqual([devices[1], devices[2]]);
+  });
+
+  it('does not notify story devices when that category is disabled', () => {
+    expect(
+      shouldNotifyActivityFollower({
+        actorUserId: 'author',
+        category: 'story',
+        hasActiveDevice: true,
+        isActiveFollower: true,
+        now: new Date('2026-08-09T12:00:00Z'),
+        preference: { ...enabledPreference, story_enabled: false },
+        recipientUserId: 'recipient',
+      }),
+    ).toBe(false);
   });
 
   it('honors the family notification pause', () => {

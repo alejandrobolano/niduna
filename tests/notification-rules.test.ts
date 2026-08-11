@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { shouldNotifyCareFollower } from '../supabase/functions/_shared/notification-rules';
+import {
+  selectEligibleCareDevices,
+  shouldNotifyCareFollower,
+} from '../supabase/functions/_shared/notification-rules';
 
 const enabledPreference = {
   diaper_enabled: true,
@@ -55,6 +58,25 @@ describe('care notification recipient rules', () => {
     expect(
       shouldNotifyCareFollower({ ...baseInput, eventType: 'diaper' }),
     ).toBe(true);
+  });
+
+  it('keeps every active device for a recipient and excludes every author device', () => {
+    const devices = [
+      { id: 'author-phone', user_id: 'author' },
+      { id: 'author-browser', user_id: 'author' },
+      { id: 'recipient-phone', user_id: 'recipient' },
+      { id: 'recipient-browser', user_id: 'recipient' },
+    ];
+
+    expect(
+      selectEligibleCareDevices({
+        actorUserId: 'author',
+        devices,
+        eventType: 'feeding',
+        now: new Date('2026-08-02T12:00:00Z'),
+        preferencesByUser: new Map([['recipient', enabledPreference]]),
+      }),
+    ).toEqual([devices[2], devices[3]]);
   });
 
   it('honors a temporary pause and resumes afterwards', () => {

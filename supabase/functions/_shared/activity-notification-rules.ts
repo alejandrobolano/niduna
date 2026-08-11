@@ -1,9 +1,10 @@
-export type ActivityNotificationCategory = 'measurement' | 'note';
+export type ActivityNotificationCategory = 'measurement' | 'note' | 'story';
 
 export interface ActivityRecipientPreference {
   measurement_enabled: boolean;
   note_enabled: boolean;
   paused_until: string | null;
+  story_enabled: boolean;
 }
 
 export interface ActivityNotificationRecipientInput {
@@ -44,7 +45,39 @@ export function shouldNotifyActivityFollower({
     return true;
   }
 
-  return category === 'note'
-    ? preference.note_enabled
-    : preference.measurement_enabled;
+  if (category === 'note') {
+    return preference.note_enabled;
+  }
+
+  if (category === 'story') {
+    return preference.story_enabled;
+  }
+
+  return preference.measurement_enabled;
+}
+
+export function selectEligibleActivityDevices<
+  Device extends { user_id: string },
+>({
+  actorUserId,
+  category,
+  devices,
+  now,
+  preferencesByUser,
+}: {
+  actorUserId: string;
+  category: ActivityNotificationCategory;
+  devices: Device[];
+  now: Date;
+  preferencesByUser: ReadonlyMap<string, ActivityRecipientPreference>;
+}): Device[] {
+  return devices.filter((device) => shouldNotifyActivityFollower({
+    actorUserId,
+    category,
+    hasActiveDevice: true,
+    isActiveFollower: true,
+    now,
+    preference: preferencesByUser.get(device.user_id),
+    recipientUserId: device.user_id,
+  }));
 }

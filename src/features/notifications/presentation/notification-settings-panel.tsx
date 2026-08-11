@@ -18,6 +18,7 @@ const categoryLabels: Record<NotificationCategory, string> = {
   measurement: 'Medidas',
   note: 'Notas',
   sleep: 'Sueño',
+  story: 'Historias',
 };
 
 interface NotificationSettingsPanelProps {
@@ -58,6 +59,10 @@ function toggleCategory(
     };
   }
 
+  if (category === 'story') {
+    return { ...preferences, storyEnabled: !preferences.storyEnabled };
+  }
+
   return { ...preferences, sleepEnabled: !preferences.sleepEnabled };
 }
 
@@ -79,6 +84,10 @@ function categoryIsEnabled(
 
   if (category === 'measurement') {
     return preferences.measurementEnabled;
+  }
+
+  if (category === 'story') {
+    return preferences.storyEnabled;
   }
 
   return preferences.sleepEnabled;
@@ -206,7 +215,7 @@ export function NotificationSettingsPanel({
 
       <Text style={styles.description}>
         Recibe un aviso discreto cuando otra persona registre un cuidado, una
-        nota o una medida.
+        nota, una medida o una historia.
       </Text>
 
       {!hasActiveDevice ? (
@@ -233,6 +242,7 @@ export function NotificationSettingsPanel({
               'sleep',
               'note',
               'measurement',
+              'story',
             ] as const).map((category) => {
               const enabled = categoryIsEnabled(preferences, category);
 

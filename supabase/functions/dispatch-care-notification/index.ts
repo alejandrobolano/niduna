@@ -4,7 +4,7 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
-import { shouldNotifyCareFollower } from '../_shared/notification-rules.ts';
+import { selectEligibleCareDevices } from '../_shared/notification-rules.ts';
 
 type CareEventType = 'diaper' | 'feeding' | 'sleep';
 
@@ -231,18 +231,12 @@ const authenticatedHandler = withSupabase(
         preference,
       ]),
     );
-    const eligibleDevices = (devicesResult.data ?? []).filter((device) => {
-      const preference = preferencesByUser.get(device.user_id);
-
-      return shouldNotifyCareFollower({
-        actorUserId: userId,
-        eventType: event.event_type as CareEventType,
-        hasActiveDevice: true,
-        isActiveFollower: true,
-        now: new Date(),
-        preference,
-        recipientUserId: device.user_id,
-      });
+    const eligibleDevices = selectEligibleCareDevices({
+      actorUserId: userId,
+      devices: devicesResult.data ?? [],
+      eventType: event.event_type as CareEventType,
+      now: new Date(),
+      preferencesByUser,
     });
 
     if (!eligibleDevices.length) {

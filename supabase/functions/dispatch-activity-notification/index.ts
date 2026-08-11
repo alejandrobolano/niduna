@@ -5,7 +5,7 @@ import {
 } from 'npm:@supabase/supabase-js@2.110.8';
 
 import {
-  shouldNotifyActivityFollower,
+  selectEligibleActivityDevices,
   type ActivityNotificationCategory,
   type ActivityRecipientPreference,
 } from '../_shared/activity-notification-rules.ts';
@@ -246,15 +246,24 @@ function isInactiveInstallation(errorCode: string): boolean {
 function getNotificationCopy(
   activityType: ActivityNotificationCategory,
 ): { body: string; title: string } {
-  return activityType === 'note'
-    ? {
-        body: 'Alguien de tu familia a\u00f1adi\u00f3 una nota al relevo.',
-        title: 'Nueva nota familiar',
-      }
-    : {
-        body: 'Alguien de tu familia actualiz\u00f3 las medidas del beb\u00e9.',
-        title: 'Nuevas medidas registradas',
-      };
+  if (activityType === 'note') {
+    return {
+      body: 'Alguien de tu familia a\u00f1adi\u00f3 una nota al relevo.',
+      title: 'Nueva nota familiar',
+    };
+  }
+
+  if (activityType === 'story') {
+    return {
+      body: 'Alguien de tu familia comparti\u00f3 un nuevo momento.',
+      title: 'Nueva historia familiar',
+    };
+  }
+
+  return {
+    body: 'Alguien de tu familia actualiz\u00f3 las medidas del beb\u00e9.',
+    title: 'Nuevas medidas registradas',
+  };
 }
 
 function getWebAppUrl(request: Request): string {
@@ -277,6 +286,30 @@ async function loadActivity(
   activityType: ActivityNotificationCategory,
   activityId: string,
 ): Promise<ActivityRecord | undefined> {
+  if (activityType === 'story') {
+    const { data, error } = await userClient
+      .from('family_stories')
+      .select('id, baby_id, author_user_id, published_at, removed_at, expires_at')
+      .eq('id', activityId)
+      .maybeSingle();
+
+    if (
+      error ||
+      !data ||
+      !data.published_at ||
+      data.removed_at ||
+      Date.parse(data.expires_at) <= Date.now()
+    ) {
+      return undefined;
+    }
+
+    return {
+      baby_id: data.baby_id,
+      id: data.id,
+      recorded_by: data.author_user_id,
+    };
+  }
+
   const table = activityType === 'note' ? 'baby_notes' : 'baby_measurements';
   const { data, error } = await userClient
     .from(table)
@@ -589,7 +622,9 @@ function isDispatchRequest(value: unknown): value is DispatchRequest {
 
   return typeof input.activityId === 'string' &&
     Boolean(input.activityId) &&
-    (input.activityType === 'note' || input.activityType === 'measurement');
+    (input.activityType === 'note' ||
+      input.activityType === 'measurement' ||
+      input.activityType === 'story');
 }
 
 const adminClient = createAdminClient();
@@ -658,7 +693,9 @@ const authenticatedHandler = withSupabase(
           .eq('is_active', true),
         adminClient
           .from('notification_preferences')
-          .select('user_id, note_enabled, measurement_enabled, paused_until')
+          .select(
+            'user_id, note_enabled, measurement_enabled, story_enabled, paused_until',
+          )
           .eq('family_id', baby.family_id)
           .in('user_id', recipientIds),
       ]);
@@ -673,20 +710,21 @@ const authenticatedHandler = withSupabase(
           preference as ActivityRecipientPreference,
         ]),
       );
-      const isEligible = (device: { user_id: string }) =>
-        shouldNotifyActivityFollower({
-          actorUserId: userId,
-          category: input.activityType,
-          hasActiveDevice: true,
-          isActiveFollower: true,
-          now: new Date(),
-          preference: preferencesByUser.get(device.user_id),
-          recipientUserId: device.user_id,
-        });
-      const nativeDevices = ((nativeResult.data ?? []) as ExpoDevice[])
-        .filter(isEligible);
-      const webDevices = ((webResult.data ?? []) as WebDevice[])
-        .filter(isEligible);
+      const now = new Date();
+      const nativeDevices = selectEligibleActivityDevices({
+        actorUserId: userId,
+        category: input.activityType,
+        devices: (nativeResult.data ?? []) as ExpoDevice[],
+        now,
+        preferencesByUser,
+      });
+      const webDevices = selectEligibleActivityDevices({
+        actorUserId: userId,
+        category: input.activityType,
+        devices: (webResult.data ?? []) as WebDevice[],
+        now,
+        preferencesByUser,
+      });
       const [nativeDispatch, webDispatch] = await Promise.allSettled([
         dispatchNative(
           adminClient,
