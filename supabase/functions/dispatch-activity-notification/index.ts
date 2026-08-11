@@ -248,11 +248,11 @@ function getNotificationCopy(
 ): { body: string; title: string } {
   return activityType === 'note'
     ? {
-        body: 'Alguien de tu familia añadió una nota al relevo.',
+        body: 'Alguien de tu familia a\u00f1adi\u00f3 una nota al relevo.',
         title: 'Nueva nota familiar',
       }
     : {
-        body: 'Alguien de tu familia actualizó las medidas del bebé.',
+        body: 'Alguien de tu familia actualiz\u00f3 las medidas del beb\u00e9.',
         title: 'Nuevas medidas registradas',
       };
 }

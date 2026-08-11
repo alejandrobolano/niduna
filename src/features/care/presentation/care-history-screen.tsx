@@ -13,6 +13,7 @@ import type {
   CareHistoryPage,
   CareRepository,
 } from '@/features/care/application/care-repository';
+import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type {
   CareEventFilter,
   CareHistoryPageSize,
@@ -145,7 +146,15 @@ export function CareHistoryScreen({
 
   useEffect(() => {
     if (!babyId) return;
-    return repository.subscribe(babyId, () => setLoadVersion((value) => value + 1));
+
+    const reload = () => setLoadVersion((value) => value + 1);
+    const unsubscribeRepository = repository.subscribe(babyId, reload);
+    const unsubscribeNotifications = subscribeToCareDataChanges(reload);
+
+    return () => {
+      unsubscribeRepository();
+      unsubscribeNotifications();
+    };
   }, [babyId, repository]);
 
   function resetPage(action: () => void) {
