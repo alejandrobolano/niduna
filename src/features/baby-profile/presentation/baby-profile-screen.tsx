@@ -7,11 +7,13 @@ import {
   Sparkles,
   Sun,
   Trash2,
+  X,
 } from 'lucide-react-native';
 import { Image } from 'expo-image';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -163,6 +165,7 @@ export function BabyProfileScreen({
   const [isPhotoSaving, setIsPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState<string>();
   const [isConfirmingPhotoRemoval, setIsConfirmingPhotoRemoval] = useState(false);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const isReadOnly = !canManageBabies;
   const parsedWeightGrams = parseKilogramsToGrams(
     weightKilograms,
@@ -503,10 +506,18 @@ export function BabyProfileScreen({
 
           <View style={styles.photoCard}>
             <View style={styles.photoMain}>
-              <View style={styles.photoPlaceholder}>
+              <Pressable
+                accessibilityLabel={photoUrl ? `Ampliar foto de ${name || 'bebé'}` : undefined}
+                accessibilityRole={photoUrl ? 'button' : undefined}
+                disabled={!photoUrl}
+                onPress={() => setIsPhotoViewerOpen(true)}
+                style={({ pressed }) => [
+                  styles.photoPlaceholder,
+                  pressed && photoUrl && styles.photoActionPressed,
+                ]}
+              >
                 {photoUrl ? (
                   <Image
-                    accessibilityLabel={`Foto privada de ${name || 'bebé'}`}
                     contentFit="cover"
                     source={{ uri: photoUrl }}
                     style={styles.photoImage}
@@ -515,7 +526,7 @@ export function BabyProfileScreen({
                 ) : (
                   <Heart color={colors.coral} size={24} />
                 )}
-              </View>
+              </Pressable>
               <View style={styles.photoCopy}>
                 <Text style={styles.photoTitle}>Foto del bebé</Text>
                 <Text style={styles.photoHint}>
@@ -930,6 +941,52 @@ export function BabyProfileScreen({
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setIsPhotoViewerOpen(false)}
+        transparent
+        visible={isPhotoViewerOpen && Boolean(photoUrl)}
+      >
+        <View style={styles.photoViewerRoot}>
+          <Pressable
+            accessibilityLabel="Cerrar foto ampliada"
+            accessibilityRole="button"
+            onPress={() => setIsPhotoViewerOpen(false)}
+            style={styles.photoViewerBackdrop}
+          />
+          <SafeAreaView pointerEvents="box-none" style={styles.photoViewerSafeArea}>
+            <View style={styles.photoViewerHeader}>
+              <View>
+                <Text style={styles.photoViewerEyebrow}>FOTO PRIVADA</Text>
+                <Text style={styles.photoViewerTitle}>{name || 'Bebé'}</Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Cerrar"
+                accessibilityRole="button"
+                onPress={() => setIsPhotoViewerOpen(false)}
+                style={({ pressed }) => [
+                  styles.photoViewerClose,
+                  pressed && styles.photoViewerClosePressed,
+                ]}
+              >
+                <X color={colors.white} size={25} />
+              </Pressable>
+            </View>
+            {photoUrl ? (
+              <Image
+                accessibilityLabel={`Foto ampliada de ${name || 'bebé'}`}
+                contentFit="contain"
+                source={{ uri: photoUrl }}
+                style={styles.photoViewerImage}
+                transition={180}
+              />
+            ) : null}
+            <Text style={styles.photoViewerPrivacy}>
+              Solo las personas autorizadas de la familia pueden verla.
+            </Text>
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1038,6 +1095,56 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   photoError: { color: colors.error, fontSize: 12, lineHeight: 17 },
+  photoViewerRoot: {
+    backgroundColor: 'rgba(12, 18, 40, 0.96)',
+    flex: 1,
+  },
+  photoViewerBackdrop: {
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  photoViewerSafeArea: {
+    flex: 1,
+    gap: spacing.lg,
+    padding: spacing.lg,
+  },
+  photoViewerHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  photoViewerEyebrow: {
+    color: colors.aqua,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.8,
+  },
+  photoViewerTitle: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: spacing.xs,
+  },
+  photoViewerClose: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: radius.pill,
+    height: 46,
+    justifyContent: 'center',
+    width: 46,
+  },
+  photoViewerClosePressed: { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
+  photoViewerImage: { flex: 1, width: '100%' },
+  photoViewerPrivacy: {
+    color: colors.white,
+    fontSize: 12,
+    opacity: 0.76,
+    paddingBottom: spacing.sm,
+    textAlign: 'center',
+  },
   section: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
