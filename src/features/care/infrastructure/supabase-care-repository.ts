@@ -125,11 +125,12 @@ function getDateRange(date: string): { from: string; to: string } {
 
 async function loadHistoryPage(
   query: CareHistoryQuery,
+  retired = false,
 ): Promise<CareHistoryPage> {
   const from = (query.page - 1) * query.pageSize;
   const to = from + query.pageSize - 1;
   let request = supabase
-    .from('care_timeline')
+    .from(retired ? 'retired_care_timeline' : 'care_timeline')
     .select('*', { count: 'exact' })
     .eq('baby_id', query.babyId)
     .order('occurred_at', { ascending: false })
@@ -166,30 +167,11 @@ async function loadHistoryPage(
 }
 
 export const supabaseCareRepository: CareRepository = {
-  async deleteEvent(event) {
-    const table =
-      event.sourceType === 'care_event'
-        ? 'care_events'
-        : event.sourceType === 'baby_note'
-          ? 'baby_notes'
-          : 'baby_measurements';
-    const { data, error } = await supabase
-      .from(table)
-      .delete()
-      .eq('id', event.id)
-      .select('id')
-      .maybeSingle();
-
-    if (error) {
-      throwOperationError(error.code, error.message);
-    }
-
-    if (!data) {
-      throw new CareOperationError('not_allowed');
-    }
-  },
-
   loadHistory: loadHistoryPage,
+
+  async loadRetiredHistory(query) {
+    return loadHistoryPage(query, true);
+  },
 
   async loadHistoryForExport(query) {
     const events: CareEvent[] = [];
@@ -240,21 +222,24 @@ export const supabaseCareRepository: CareRepository = {
       supabase
         .from('care_events')
         .select(
-          'id, baby_id, event_type, occurred_at, ended_at, feeding_method, amount_milliliters, breast_side, diaper_condition, notes, recorded_by, updated_by, created_at, updated_at',
+          'id, baby_id, event_type, occurred_at, ended_at, feeding_method, amount_milliliters, breast_side, diaper_condition, notes, recorded_by, updated_by, created_at, updated_at, deleted_at, deleted_by',
         )
         .eq('baby_id', baby.id)
+        .is('deleted_at', null)
         .order('occurred_at', { ascending: false })
         .limit(25),
       supabase
         .from('baby_notes')
         .select('*')
         .eq('baby_id', baby.id)
+        .is('deleted_at', null)
         .order('occurred_at', { ascending: false })
         .limit(25),
       supabase
         .from('baby_measurements')
         .select('*')
         .eq('baby_id', baby.id)
+        .is('deleted_at', null)
         .order('measured_at', { ascending: false })
         .limit(25),
     ]);
@@ -388,6 +373,41 @@ export const supabaseCareRepository: CareRepository = {
     void dispatchActivityNotifications(data.id, 'measurement');
   },
 
+  async restoreEvent(event) {
+    const { error } = await supabase.rpc('restore_care_record', {
+      target_baby_id: event.babyId,
+      target_record_id: event.id,
+      target_source_type: event.sourceType,
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+  },
+
+  async retireEvents(events) {
+    const babyId = events[0]?.babyId;
+    if (!babyId || events.some((event) => event.babyId !== babyId)) {
+      throw new CareOperationError('unknown');
+    }
+
+    const { data, error } = await supabase.rpc('retire_care_records', {
+      target_baby_id: babyId,
+      target_records: events.map((event) => ({
+        id: event.id,
+        sourceType: event.sourceType,
+      })),
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+
+    if (data !== events.length) {
+      throw new CareOperationError('unknown');
+    }
+  },
+
   async startSleep(input) {
     await insertEvent({
       baby_id: input.babyId,
@@ -454,5 +474,50 @@ export const supabaseCareRepository: CareRepository = {
     return () => {
       void supabase.removeChannel(channel);
     };
+  },
+
+  async updateEvent(event) {
+    const payload =
+      event.type === 'feeding'
+        ? {
+            amountMilliliters: event.amountMilliliters ?? null,
+            breastSide: event.breastSide ?? null,
+            method: event.method,
+            notes: event.notes ?? null,
+            occurredAt: event.occurredAt,
+          }
+        : event.type === 'diaper'
+          ? {
+              condition: event.condition,
+              notes: event.notes ?? null,
+              occurredAt: event.occurredAt,
+            }
+          : event.type === 'sleep'
+            ? {
+                endedAt: event.endedAt ?? null,
+                notes: event.notes ?? null,
+                occurredAt: event.occurredAt,
+              }
+            : event.type === 'note'
+              ? { content: event.content, occurredAt: event.occurredAt }
+              : {
+                  headCircumferenceMillimeters:
+                    event.headCircumferenceMillimeters ?? null,
+                  lengthMillimeters: event.lengthMillimeters ?? null,
+                  notes: event.notes ?? null,
+                  occurredAt: event.occurredAt,
+                  source: event.source,
+                  weightGrams: event.weightGrams ?? null,
+                };
+    const { error } = await supabase.rpc('update_care_record', {
+      target_baby_id: event.babyId,
+      target_payload: payload,
+      target_record_id: event.id,
+      target_source_type: event.sourceType,
+    });
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
   },
 };
