@@ -13,13 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/application/care-history';
+import { getCareRecordRetention } from '@/features/care/application/care-record-retention';
 import {
   canEditCareRecord,
   getCareRecordKey,
   getSelectableCareRecordKeys,
   reconcileCareRecordSelection,
 } from '@/features/care/application/care-record-management';
-import type { CareHistoryPage, CareRepository } from '@/features/care/application/care-repository';
+import { CareOperationError, type CareHistoryPage, type CareRepository } from '@/features/care/application/care-repository';
 import { getDurationMinutes } from '@/features/care/application/care-snapshot';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
@@ -148,8 +149,12 @@ export function CareHistoryScreen({
     try {
       await repository.restoreEvent(event);
       setLoadVersion((value) => value + 1);
-    } catch {
-      setError('No pudimos restaurar el registro. Comprueba tus permisos.');
+    } catch (restoreError) {
+      setError(
+        restoreError instanceof CareOperationError && restoreError.reason === 'recovery_expired'
+          ? 'El plazo de recuperación de 30 días ya ha terminado.'
+          : 'No pudimos restaurar el registro. Comprueba tus permisos.',
+      );
     }
   }
 
@@ -219,7 +224,13 @@ export function CareHistoryScreen({
                 <View style={styles.tableHeading}>
                   <View>
                     <Text style={styles.tableTitle}>{showRetired ? 'Registros retirados' : 'Registros'}</Text>
-                    <Text style={styles.tableSubtitle}>{isLoading ? 'Actualizando…' : `${history?.total ?? 0} resultados`}</Text>
+                    <Text style={styles.tableSubtitle}>
+                      {isLoading
+                        ? 'Actualizando…'
+                        : showRetired
+                          ? `${history?.total ?? 0} resultados · recuperables durante 30 días`
+                          : `${history?.total ?? 0} resultados`}
+                    </Text>
                   </View>
                   <View style={styles.headingActions}>
                     {canManage ? (
@@ -258,7 +269,7 @@ export function CareHistoryScreen({
                 ) : null}
                 {showBulkConfirmation ? (
                   <View style={styles.bulkConfirmation}>
-                    <Text style={styles.bulkConfirmationText}>Se quitarán {selectedKeys.size} registros visibles del relevo de {babyName}. Podrás restaurarlos después.</Text>
+                    <Text style={styles.bulkConfirmationText}>Se quitarán {selectedKeys.size} registros visibles del relevo de {babyName}. Podrás restaurarlos durante 30 días; después se eliminarán definitivamente.</Text>
                     <View style={styles.confirmActionsRow}>
                       <Pressable onPress={() => void handleRetire(selectedEvents)} style={styles.confirmRetire}>
                         <Text style={styles.confirmRetireText}>Confirmar retirada</Text>
@@ -281,6 +292,9 @@ export function CareHistoryScreen({
                       const canModify = canEditCareRecord(event, userId, canManage, canRecord);
                       const key = getCareRecordKey(event);
                       const confirming = pendingRetireId === key;
+                      const retention = showRetired
+                        ? getCareRecordRetention(event.deletedAt)
+                        : undefined;
                       return (
                         <View key={key} style={styles.row}>
                           {canManage && !showRetired ? (
@@ -290,14 +304,25 @@ export function CareHistoryScreen({
                           ) : null}
                           <Text style={[styles.cell, styles.dateCell]}>{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(event.occurredAt))}</Text>
                           <Text style={[styles.cell, styles.typeCell, styles.typeText]}>{eventLabels[event.type]}</Text>
-                          <Text numberOfLines={3} style={[styles.cell, styles.detailCell]}>{describeEvent(event)}</Text>
+                          <View style={[styles.cell, styles.detailCell]}>
+                            <Text numberOfLines={3} style={styles.detailText}>{describeEvent(event)}</Text>
+                            {retention ? (
+                              <Text style={retention.isExpired ? styles.retentionExpired : styles.retentionText}>
+                                {retention.isExpired
+                                  ? 'Plazo de recuperación vencido'
+                                  : `Recuperable ${retention.daysRemaining === 1 ? 'durante 1 día más' : `durante ${retention.daysRemaining} días más`} · hasta el ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(new Date(retention.expiresAt))}`}
+                              </Text>
+                            ) : null}
+                          </View>
                           <Text style={[styles.cell, styles.authorCell]}>{event.recordedByName ?? 'Un familiar'}</Text>
                           <View style={[styles.cell, styles.actionCell]}>
-                            {showRetired && canManage ? (
+                            {showRetired && canManage ? retention?.isExpired ? (
+                              <Text style={styles.unavailable}>No recuperable</Text>
+                            ) : (
                               <Pressable onPress={() => void handleRestore(event)} style={styles.actionLink}><RotateCcw color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Restaurar</Text></Pressable>
                             ) : canModify ? confirming ? (
                               <View style={styles.confirmActions}>
-                                <Text style={styles.confirmHint}>Podrás restaurarlo después</Text>
+                                <Text style={styles.confirmHint}>Podrás restaurarlo durante 30 días</Text>
                                 <Pressable onPress={() => void handleRetire([event])} style={styles.confirmRetire}><Text style={styles.confirmRetireText}>Confirmar</Text></Pressable>
                                 <Pressable onPress={() => setPendingRetireId(undefined)}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
                               </View>
@@ -372,6 +397,9 @@ const styles = StyleSheet.create({
   typeCell: { width: 120 },
   typeText: { fontWeight: '900' },
   detailCell: { flex: 1, minWidth: 250 },
+  detailText: { color: colors.text, fontSize: 14, lineHeight: 20 },
+  retentionText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '800', lineHeight: 16, marginTop: 3 },
+  retentionExpired: { color: colors.error, fontSize: 11, fontWeight: '800', lineHeight: 16, marginTop: 3 },
   authorCell: { width: 135 },
   actionCell: { width: 180 },
   rowActions: { alignItems: 'flex-start', gap: 4 },

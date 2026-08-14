@@ -27,6 +27,7 @@ export function mapBabyNote(
   return {
     babyId: row.baby_id,
     content: row.content,
+    deletedAt: row.deleted_at ?? undefined,
     icon: NotebookPen,
     id: row.id,
     occurredAt: row.occurred_at,
@@ -43,6 +44,7 @@ export function mapMeasurement(
 ): MeasurementEvent {
   return {
     babyId: row.baby_id,
+    deletedAt: row.deleted_at ?? undefined,
     headCircumferenceMillimeters:
       row.head_circumference_millimeters ?? undefined,
     icon: Scale,
@@ -69,6 +71,7 @@ function baseEvent(
 ) {
   return {
     babyId: row.baby_id,
+    deletedAt: row.deleted_at ?? undefined,
     id: row.id,
     notes: optionalText(row.notes),
     occurredAt: row.occurred_at,

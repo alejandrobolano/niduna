@@ -77,6 +77,7 @@ export interface CareRepository {
 
 export type CareOperationErrorReason =
   | 'not_allowed'
+  | 'recovery_expired'
   | 'sleep_already_running'
   | 'unknown';
 

@@ -24,6 +24,10 @@ function mapErrorReason(
   code: string | undefined,
   message: string,
 ): CareOperationErrorReason {
+  if (message.includes('care_record_recovery_expired')) {
+    return 'recovery_expired';
+  }
+
   if (code === '23505' || message.includes('one_open_sleep')) {
     return 'sleep_already_running';
   }

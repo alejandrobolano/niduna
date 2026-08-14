@@ -19,6 +19,7 @@ export type MeasurementSource =
 
 interface BaseCareEvent {
   babyId: string;
+  deletedAt?: string;
   id: string;
   notes?: string;
   occurredAt: string;
