@@ -74,8 +74,8 @@ export function FamilyActivityScreen({
               <Text style={styles.eyebrow}>Solo administradores</Text>
               <Text style={styles.title}>Actividad de {familyName}</Text>
               <Text style={styles.subtitle}>
-                Cambios importantes realizados por los miembros de la familia.
-                Los datos se conservan durante 60 días.
+                Este registro de acciones se conserva durante 180 días. Su
+                limpieza no elimina los cuidados, notas ni medidas reales.
               </Text>
             </View>
           </View>

@@ -48,6 +48,7 @@ describe('mapCareEvent', () => {
       amountMilliliters: undefined,
       babyId: 'baby-1',
       breastSide: undefined,
+      deletedAt: undefined,
       icon: Milk,
       id: 'event-1',
       method: 'breast',
@@ -105,6 +106,40 @@ describe('additional timeline mappers', () => {
       recordedByName: 'Marta',
       sourceType: 'care_event',
       type: 'feeding',
+    });
+  });
+
+  it('preserves the retirement timestamp used by the recovery policy', () => {
+    expect(
+      mapCareTimelineRow(
+        {
+          amount_milliliters: null,
+          baby_id: 'baby-1',
+          breast_side: null,
+          content: 'Nota retirada',
+          diaper_condition: null,
+          deleted_at: '2026-08-10T10:00:00.000Z',
+          deleted_by: 'user-1',
+          ended_at: null,
+          event_type: 'note',
+          feeding_method: null,
+          head_circumference_millimeters: null,
+          id: 'timeline-retired-1',
+          length_millimeters: null,
+          measurement_source: null,
+          notes: null,
+          occurred_at: '2026-08-09T10:00:00.000Z',
+          recorded_by: 'user-1',
+          source_type: 'baby_note',
+          updated_at: '2026-08-10T10:00:00.000Z',
+          updated_by: 'user-1',
+          weight_grams: null,
+        },
+        new Map(),
+      ),
+    ).toMatchObject({
+      deletedAt: '2026-08-10T10:00:00.000Z',
+      sourceType: 'baby_note',
     });
   });
 

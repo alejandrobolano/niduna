@@ -62,3 +62,15 @@ well.
 - Native EAS builds use React Native's established fetch implementation through `EXPO_PUBLIC_USE_RN_FETCH=1`.
 - Expo SDK 57 installs `expo/fetch` globally on Android and iOS by default; the explicit fallback keeps Supabase Auth on the transport supported by React Native while web remains unchanged.
 - Authentication errors are classified from Supabase error types and stable error codes without logging emails, tokens, or API keys.
+
+## Data retention
+
+Active care records do not expire while their family exists. A retired care
+record remains recoverable for 30 days and is then physically deleted by a
+daily database job. Family activity is an operational audit trail, not the care
+history itself, and is retained for 180 days.
+
+Retention is enforced in Postgres so it does not depend on a client being open.
+Clients cannot physically delete care rows or invoke the private retention
+function. Each successful run records its cutoffs and deletion counts in the
+private schema.

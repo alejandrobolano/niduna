@@ -13,17 +13,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/application/care-history';
+import { getCareRecordRetention } from '@/features/care/application/care-record-retention';
 import {
   canEditCareRecord,
   getCareRecordKey,
   getSelectableCareRecordKeys,
   reconcileCareRecordSelection,
 } from '@/features/care/application/care-record-management';
-import type { CareHistoryPage, CareRepository } from '@/features/care/application/care-repository';
+import { CareOperationError, type CareHistoryPage, type CareRepository } from '@/features/care/application/care-repository';
 import { getDurationMinutes } from '@/features/care/application/care-snapshot';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
 import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
+import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
@@ -91,6 +93,7 @@ export function CareHistoryScreen({
   const [pendingRetireId, setPendingRetireId] = useState<string>();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [showBulkConfirmation, setShowBulkConfirmation] = useState(false);
+  const [isRetiring, setIsRetiring] = useState(false);
   const [showRetired, setShowRetired] = useState(false);
 
   useEffect(() => {
@@ -132,6 +135,7 @@ export function CareHistoryScreen({
 
   async function handleRetire(events: CareEvent[]) {
     setError(undefined);
+    setIsRetiring(true);
     try {
       await repository.retireEvents(events);
       setPendingRetireId(undefined);
@@ -139,7 +143,11 @@ export function CareHistoryScreen({
       setShowBulkConfirmation(false);
       setLoadVersion((value) => value + 1);
     } catch {
+      setPendingRetireId(undefined);
+      setShowBulkConfirmation(false);
       setError('No pudimos quitar los registros del relevo. No se aplicó ningún cambio.');
+    } finally {
+      setIsRetiring(false);
     }
   }
 
@@ -148,8 +156,12 @@ export function CareHistoryScreen({
     try {
       await repository.restoreEvent(event);
       setLoadVersion((value) => value + 1);
-    } catch {
-      setError('No pudimos restaurar el registro. Comprueba tus permisos.');
+    } catch (restoreError) {
+      setError(
+        restoreError instanceof CareOperationError && restoreError.reason === 'recovery_expired'
+          ? 'El plazo de recuperación de 30 días ya ha terminado.'
+          : 'No pudimos restaurar el registro. Comprueba tus permisos.',
+      );
     }
   }
 
@@ -180,6 +192,19 @@ export function CareHistoryScreen({
 
   const visibleEvents = history?.events ?? [];
   const selectedEvents = visibleEvents.filter((event) => selectedKeys.has(getCareRecordKey(event)));
+  const pendingSingleEvent = visibleEvents.find(
+    (event) => getCareRecordKey(event) === pendingRetireId,
+  );
+  const pendingRetireEvents = showBulkConfirmation
+    ? selectedEvents
+    : pendingSingleEvent
+      ? [pendingSingleEvent]
+      : [];
+
+  function closeRetireConfirmation() {
+    setPendingRetireId(undefined);
+    setShowBulkConfirmation(false);
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -219,7 +244,13 @@ export function CareHistoryScreen({
                 <View style={styles.tableHeading}>
                   <View>
                     <Text style={styles.tableTitle}>{showRetired ? 'Registros retirados' : 'Registros'}</Text>
-                    <Text style={styles.tableSubtitle}>{isLoading ? 'Actualizando…' : `${history?.total ?? 0} resultados`}</Text>
+                    <Text style={styles.tableSubtitle}>
+                      {isLoading
+                        ? 'Actualizando…'
+                        : showRetired
+                          ? `${history?.total ?? 0} resultados · recuperables durante 30 días`
+                          : `${history?.total ?? 0} resultados`}
+                    </Text>
                   </View>
                   <View style={styles.headingActions}>
                     {canManage ? (
@@ -256,17 +287,6 @@ export function CareHistoryScreen({
                     ) : null}
                   </View>
                 ) : null}
-                {showBulkConfirmation ? (
-                  <View style={styles.bulkConfirmation}>
-                    <Text style={styles.bulkConfirmationText}>Se quitarán {selectedKeys.size} registros visibles del relevo de {babyName}. Podrás restaurarlos después.</Text>
-                    <View style={styles.confirmActionsRow}>
-                      <Pressable onPress={() => void handleRetire(selectedEvents)} style={styles.confirmRetire}>
-                        <Text style={styles.confirmRetireText}>Confirmar retirada</Text>
-                      </Pressable>
-                      <Pressable onPress={() => setShowBulkConfirmation(false)}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
-                    </View>
-                  </View>
-                ) : null}
                 <ScrollView contentContainerStyle={styles.tableScrollContent} horizontal showsHorizontalScrollIndicator style={styles.tableScroll}>
                   <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
@@ -280,7 +300,9 @@ export function CareHistoryScreen({
                     {visibleEvents.map((event) => {
                       const canModify = canEditCareRecord(event, userId, canManage, canRecord);
                       const key = getCareRecordKey(event);
-                      const confirming = pendingRetireId === key;
+                      const retention = showRetired
+                        ? getCareRecordRetention(event.deletedAt)
+                        : undefined;
                       return (
                         <View key={key} style={styles.row}>
                           {canManage && !showRetired ? (
@@ -290,18 +312,23 @@ export function CareHistoryScreen({
                           ) : null}
                           <Text style={[styles.cell, styles.dateCell]}>{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(event.occurredAt))}</Text>
                           <Text style={[styles.cell, styles.typeCell, styles.typeText]}>{eventLabels[event.type]}</Text>
-                          <Text numberOfLines={3} style={[styles.cell, styles.detailCell]}>{describeEvent(event)}</Text>
+                          <View style={[styles.cell, styles.detailCell]}>
+                            <Text numberOfLines={3} style={styles.detailText}>{describeEvent(event)}</Text>
+                            {retention ? (
+                              <Text style={retention.isExpired ? styles.retentionExpired : styles.retentionText}>
+                                {retention.isExpired
+                                  ? 'Plazo de recuperación vencido'
+                                  : `Recuperable ${retention.daysRemaining === 1 ? 'durante 1 día más' : `durante ${retention.daysRemaining} días más`} · hasta el ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(new Date(retention.expiresAt))}`}
+                              </Text>
+                            ) : null}
+                          </View>
                           <Text style={[styles.cell, styles.authorCell]}>{event.recordedByName ?? 'Un familiar'}</Text>
                           <View style={[styles.cell, styles.actionCell]}>
-                            {showRetired && canManage ? (
-                              <Pressable onPress={() => void handleRestore(event)} style={styles.actionLink}><RotateCcw color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Restaurar</Text></Pressable>
-                            ) : canModify ? confirming ? (
-                              <View style={styles.confirmActions}>
-                                <Text style={styles.confirmHint}>Podrás restaurarlo después</Text>
-                                <Pressable onPress={() => void handleRetire([event])} style={styles.confirmRetire}><Text style={styles.confirmRetireText}>Confirmar</Text></Pressable>
-                                <Pressable onPress={() => setPendingRetireId(undefined)}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
-                              </View>
+                            {showRetired && canManage ? retention?.isExpired ? (
+                              <Text style={styles.unavailable}>No recuperable</Text>
                             ) : (
+                              <Pressable onPress={() => void handleRestore(event)} style={styles.actionLink}><RotateCcw color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Restaurar</Text></Pressable>
+                            ) : canModify ? (
                               <View style={styles.rowActions}>
                                 <Pressable onPress={() => setEditingEvent(event)} style={styles.actionLink}><Pencil color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Editar</Text></Pressable>
                                 <Pressable accessibilityLabel={`Quitar registro de ${eventLabels[event.type]} del relevo`} onPress={() => setPendingRetireId(key)} style={styles.actionLink}><Archive color={colors.error} size={15} /><Text style={styles.retireText}>Quitar</Text></Pressable>
@@ -330,6 +357,13 @@ export function CareHistoryScreen({
           )}
         </View>
       </ScrollView>
+      <CareRetireConfirmationModal
+        babyName={babyName ?? 'este bebé'}
+        isSubmitting={isRetiring}
+        onCancel={closeRetireConfirmation}
+        onConfirm={() => void handleRetire(pendingRetireEvents)}
+        recordCount={pendingRetireEvents.length}
+      />
     </SafeAreaView>
   );
 }
@@ -357,9 +391,6 @@ const styles = StyleSheet.create({
   selectionCount: { color: colors.textMuted, fontSize: 12 },
   bulkButton: { alignItems: 'center', backgroundColor: colors.error, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.xs, marginLeft: 'auto', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   bulkButtonText: { color: colors.white, fontSize: 11, fontWeight: '900' },
-  bulkConfirmation: { backgroundColor: colors.peach, borderRadius: radius.md, gap: spacing.md, padding: spacing.md },
-  bulkConfirmationText: { color: colors.text, fontSize: 13, fontWeight: '700', lineHeight: 19 },
-  confirmActionsRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   tableScroll: { width: '100%' },
   tableScrollContent: { flexGrow: 1 },
   table: { flex: 1, minWidth: 920, width: '100%' },
@@ -372,17 +403,15 @@ const styles = StyleSheet.create({
   typeCell: { width: 120 },
   typeText: { fontWeight: '900' },
   detailCell: { flex: 1, minWidth: 250 },
+  detailText: { color: colors.text, fontSize: 14, lineHeight: 20 },
+  retentionText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '800', lineHeight: 16, marginTop: 3 },
+  retentionExpired: { color: colors.error, fontSize: 11, fontWeight: '800', lineHeight: 16, marginTop: 3 },
   authorCell: { width: 135 },
   actionCell: { width: 180 },
   rowActions: { alignItems: 'flex-start', gap: 4 },
   actionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, paddingVertical: 3 },
   actionText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900' },
   retireText: { color: colors.error, fontSize: 11, fontWeight: '900' },
-  confirmActions: { alignItems: 'flex-start', gap: spacing.xs },
-  confirmHint: { color: colors.textMuted, fontSize: 9 },
-  confirmRetire: { backgroundColor: colors.error, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: 6 },
-  confirmRetireText: { color: colors.white, fontSize: 10, fontWeight: '900' },
-  cancelText: { color: colors.textMuted, fontSize: 10, fontWeight: '800' },
   unavailable: { color: colors.textMuted, fontSize: 14 },
   noRows: { color: colors.textMuted, padding: spacing.xl, textAlign: 'center' },
   empty: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.xxl },
