@@ -3,6 +3,7 @@ import { Download } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { canOfferAndroidPreview } from '@/features/app-updates/application/android-preview-availability';
 import type { AppReleaseRepository } from '@/features/app-updates/application/app-release-repository';
 import {
   isNewerBuild,
@@ -16,8 +17,16 @@ interface AppUpdatePanelProps {
 
 export function AppUpdatePanel({ repository }: AppUpdatePanelProps) {
   const [release, setRelease] = useState<AppRelease>();
+  const canLoadRelease = canOfferAndroidPreview(
+    Platform.OS,
+    typeof navigator === 'undefined' ? undefined : navigator.userAgent,
+  );
 
   useEffect(() => {
+    if (!canLoadRelease) {
+      return;
+    }
+
     let active = true;
 
     void repository
@@ -32,9 +41,9 @@ export function AppUpdatePanel({ repository }: AppUpdatePanelProps) {
     return () => {
       active = false;
     };
-  }, [repository]);
+  }, [canLoadRelease, repository]);
 
-  if (!release) {
+  if (!canLoadRelease || !release) {
     return null;
   }
 
