@@ -564,6 +564,14 @@ export type Database = {
       };
     };
     Functions: {
+      delete_personal_account_data: {
+        Args: { target_user_id: string };
+        Returns: undefined;
+      };
+      delete_owned_families_and_personal_account_data: {
+        Args: { target_user_id: string };
+        Returns: undefined;
+      };
       prepare_family_story: {
         Args: {
           target_baby_id: string;
@@ -686,6 +694,10 @@ export type Database = {
           should_follow: boolean;
           target_baby_id: string;
         };
+        Returns: undefined;
+      };
+      transfer_family_ownership: {
+        Args: { target_member_id: string };
         Returns: undefined;
       };
       update_my_family_identity: {

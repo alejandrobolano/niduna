@@ -4,7 +4,10 @@ export interface AuthService {
   completeEmailLink(url: string): Promise<AuthSession | null>;
   getSession(): Promise<AuthSession | null>;
   onSessionChange(listener: (session: AuthSession | null) => void): () => void;
-  requestEmailCode(email: string): Promise<void>;
+  requestEmailCode(
+    email: string,
+    options?: { allowCreate?: boolean },
+  ): Promise<void>;
   signOut(): Promise<void>;
   startAutoRefresh(): void;
   stopAutoRefresh(): void;

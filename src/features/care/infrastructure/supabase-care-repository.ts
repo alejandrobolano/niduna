@@ -101,6 +101,10 @@ async function loadDisplayNames(
     return displayNames;
   }
 
+  for (const userId of new Set(userIds)) {
+    displayNames.set(userId, 'Usuario eliminado');
+  }
+
   const { data: profiles, error } = await supabase
     .from('profiles')
     .select('id, display_name')
@@ -111,9 +115,7 @@ async function loadDisplayNames(
   }
 
   for (const profile of profiles ?? []) {
-    if (profile.display_name) {
-      displayNames.set(profile.id, profile.display_name);
-    }
+    displayNames.set(profile.id, profile.display_name || 'Un familiar');
   }
 
   return displayNames;

@@ -71,13 +71,13 @@ export const supabaseAuthService: AuthService = {
     return () => subscription.unsubscribe();
   },
 
-  async requestEmailCode(email) {
+  async requestEmailCode(email, options) {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: Linking.createURL('/'),
-          shouldCreateUser: true,
+          shouldCreateUser: options?.allowCreate ?? true,
         },
       });
 

@@ -13,12 +13,14 @@ import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
+  dangerContent?: ReactNode;
   email: string;
   onOpenFamilyActivity?: () => void;
   settingsContent?: ReactNode;
 }
 
 export function SessionBanner({
+  dangerContent,
   email,
   onOpenFamilyActivity,
   settingsContent,
@@ -131,6 +133,7 @@ export function SessionBanner({
                   </Text>
                 </View>
               )}
+              {dangerContent}
               {error ? (
                 <Text accessibilityLiveRegion="polite" style={styles.error}>
                   {error}

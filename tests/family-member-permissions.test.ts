@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { canRemoveFamilyMember } from '../src/features/family/application/family-member-permissions';
+import {
+  canRemoveFamilyMember,
+  canTransferFamilyOwnership,
+} from '../src/features/family/application/family-member-permissions';
 
 describe('family member removal permissions', () => {
   it('allows owners to remove administrators and regular members', () => {
@@ -33,6 +36,32 @@ describe('family member removal permissions', () => {
     ).toBe(false);
     expect(
       canRemoveFamilyMember('owner', { isCurrentUser: false, role: 'owner' }),
+    ).toBe(false);
+  });
+});
+
+describe('family ownership transfer permissions', () => {
+  it('allows owners to choose another existing member', () => {
+    expect(
+      canTransferFamilyOwnership('owner', {
+        isCurrentUser: false,
+        role: 'viewer',
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects self transfer and non-owner actors', () => {
+    expect(
+      canTransferFamilyOwnership('owner', {
+        isCurrentUser: true,
+        role: 'owner',
+      }),
+    ).toBe(false);
+    expect(
+      canTransferFamilyOwnership('admin', {
+        isCurrentUser: false,
+        role: 'caregiver',
+      }),
     ).toBe(false);
   });
 });

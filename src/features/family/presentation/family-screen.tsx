@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  Crown,
   House,
   Plus,
   Sparkles,
@@ -23,7 +24,10 @@ import {
   SelectField,
   type SelectOption,
 } from '@/features/baby-profile/presentation/select-field';
-import { canRemoveFamilyMember } from '@/features/family/application/family-member-permissions';
+import {
+  canRemoveFamilyMember,
+  canTransferFamilyOwnership,
+} from '@/features/family/application/family-member-permissions';
 import {
   FamilyOperationError,
   type FamilyRepository,
@@ -42,6 +46,7 @@ import type {
 } from '@/features/family/domain/family';
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
+import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
@@ -165,6 +170,7 @@ export function FamilyScreen({
   const [identityRelationship, setIdentityRelationship] =
     useState<FamilyRelationship>();
   const [memberToRemove, setMemberToRemove] = useState<FamilyMember>();
+  const [memberToPromote, setMemberToPromote] = useState<FamilyMember>();
 
   useEffect(() => {
     let active = true;
@@ -425,6 +431,28 @@ export function FamilyScreen({
     }
   }
 
+  async function handleTransferOwnership() {
+    if (!selectedFamily || !memberToPromote) {
+      return;
+    }
+
+    startOperation();
+
+    try {
+      await repository.transferOwnership(memberToPromote.id);
+      await refreshFamilies(selectedFamily.id);
+      setMemberToPromote(undefined);
+      setOperationMessage(
+        `${memberToPromote.displayName ?? 'La persona elegida'} ahora es propietaria. Tú conservas acceso como administrador.`,
+      );
+      setOperationSucceeded(true);
+      setIsWorking(false);
+    } catch (error) {
+      setMemberToPromote(undefined);
+      finishWithError(error);
+    }
+  }
+
   async function handleShareInvitation() {
     if (!createdInvitation || !selectedFamily) {
       return;
@@ -432,7 +460,7 @@ export function FamilyScreen({
 
     try {
       await Share.share({
-        message: `Únete a ${selectedFamily.name} en Niduna con este código: ${createdInvitation.code}. Caduca el ${formatExpiry(createdInvitation.expiresAt)}.`,
+        message: `Únete a ${selectedFamily.name} en Niduna (https://app.niduna.com) con este código: ${createdInvitation.code}. Caduca el ${formatExpiry(createdInvitation.expiresAt)}.`,
       });
     } catch {
       setOperationMessage(
@@ -811,20 +839,36 @@ export function FamilyScreen({
                         <Text style={styles.memberRelationship}>
                           {relationshipLabels[member.relationship]}
                         </Text>
-                        {canRemoveFamilyMember(
-                          selectedFamily.currentUserRole,
-                          member,
-                        ) ? (
-                          <Pressable
-                            accessibilityRole="link"
-                            disabled={isWorking}
-                            onPress={() => setMemberToRemove(member)}
-                          >
-                            <Text style={styles.removeMemberLink}>
-                              Quitar de esta familia
-                            </Text>
-                          </Pressable>
-                        ) : null}
+                        <View style={styles.memberActions}>
+                          {canTransferFamilyOwnership(
+                            selectedFamily.currentUserRole,
+                            member,
+                          ) ? (
+                            <Pressable
+                              accessibilityRole="link"
+                              disabled={isWorking}
+                              onPress={() => setMemberToPromote(member)}
+                            >
+                              <Text style={styles.transferOwnershipLink}>
+                                Transferir propiedad
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                          {canRemoveFamilyMember(
+                            selectedFamily.currentUserRole,
+                            member,
+                          ) ? (
+                            <Pressable
+                              accessibilityRole="link"
+                              disabled={isWorking}
+                              onPress={() => setMemberToRemove(member)}
+                            >
+                              <Text style={styles.removeMemberLink}>
+                                Quitar de esta familia
+                              </Text>
+                            </Pressable>
+                          ) : null}
+                        </View>
                       </View>
                       <View style={styles.roleBadge}>
                         <Text numberOfLines={1} style={styles.roleBadgeText}>
@@ -867,6 +911,17 @@ export function FamilyScreen({
                     </View>
                   </View>
                 ) : null}
+                <ConfirmationModal
+                  confirmLabel="Transferir propiedad"
+                  description={`${memberToPromote?.displayName ?? 'La persona elegida'} podrá administrar por completo la familia. Tú pasarás a ser administrador y conservarás el acceso.`}
+                  eyebrow="CAMBIO DE PROPIETARIO"
+                  icon={<Crown color={colors.primaryPressed} size={24} />}
+                  isPending={isWorking}
+                  onCancel={() => setMemberToPromote(undefined)}
+                  onConfirm={() => void handleTransferOwnership()}
+                  title="¿Transferir esta familia?"
+                  visible={Boolean(memberToPromote)}
+                />
               </View>
 
               {canManageFamily ? (
@@ -1188,11 +1243,16 @@ const styles = StyleSheet.create({
   memberCopy: { flex: 1 },
   memberName: { color: colors.text, fontSize: 14, fontWeight: '800' },
   memberRelationship: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  memberActions: { gap: spacing.xs, marginTop: spacing.xs },
+  transferOwnershipLink: {
+    color: colors.primaryPressed,
+    fontSize: 11,
+    fontWeight: '800',
+  },
   removeMemberLink: {
     color: colors.error,
     fontSize: 11,
     fontWeight: '800',
-    marginTop: spacing.xs,
   },
   roleBadge: {
     backgroundColor: colors.lavenderSoft,

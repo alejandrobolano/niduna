@@ -47,5 +47,6 @@ export interface FamilyRepository {
   load(userId: string): Promise<Family[]>;
   removeMember(memberId: string): Promise<void>;
   revokeInvitation(invitationId: string): Promise<void>;
+  transferOwnership(memberId: string): Promise<void>;
   updateIdentity(input: UpdateFamilyIdentityInput): Promise<void>;
 }
