@@ -1,6 +1,8 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import '@/global.css';
+
 import { AppUpdateNotificationObserver } from '@/features/app-updates/presentation/app-update-notification-observer';
 import { AuthProvider } from '@/features/auth/presentation/auth-provider';
 import { supabaseAuthService } from '@/features/auth/infrastructure/supabase-auth-service';

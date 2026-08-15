@@ -56,6 +56,7 @@ export function ThemePreferenceProvider({ children }: PropsWithChildren) {
 
     const background = getColors(scheme).background;
     document.documentElement.style.colorScheme = scheme;
+    document.documentElement.style.setProperty('--app-background', background);
     document.documentElement.style.backgroundColor = background;
     document.body.style.backgroundColor = background;
     document
