@@ -6,12 +6,11 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const itemHeight = 48;
 const visibleItems = 5;
@@ -188,7 +187,7 @@ export function TimePickerField({
               onPress={confirm}
               style={({ pressed }) => [styles.confirmButton, pressed && styles.confirmPressed]}
             >
-              <Check color={colors.white} size={18} />
+              <Check color={colors.onAccent} size={18} />
               <Text style={styles.confirmText}>Usar {draftHour}:{draftMinute}</Text>
             </Pressable>
           </View>
@@ -198,7 +197,7 @@ export function TimePickerField({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   field: { gap: spacing.sm },
   label: { color: colors.text, fontSize: 14, fontWeight: '600' },
   trigger: {
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   wheelList: { backgroundColor: colors.background, flexGrow: 0, height: wheelHeight },
   wheelContent: { paddingVertical: wheelPadding },
   selection: {
-    backgroundColor: 'rgba(255, 117, 107, 0.12)',
+    backgroundColor: colors.peach,
     borderColor: colors.coral,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -328,5 +327,5 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   confirmPressed: { opacity: 0.8, transform: [{ scale: 0.99 }] },
-  confirmText: { color: colors.white, fontSize: 15, fontWeight: '900' },
-});
+  confirmText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' },
+}));

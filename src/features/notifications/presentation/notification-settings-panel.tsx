@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type {
   NotificationRepository,
@@ -10,7 +10,7 @@ import {
   type NotificationCategory,
   type NotificationPreferences,
 } from '@/features/notifications/domain/notification-preferences';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryLabels: Record<NotificationCategory, string> = {
   diaper: 'Pañal',
@@ -299,7 +299,7 @@ export function NotificationSettingsPanel({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   card: {
     backgroundColor: colors.aquaSoft,
     borderRadius: radius.lg,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 48,
   },
-  enableButtonText: { color: colors.white, fontSize: 13, fontWeight: '900' },
+  enableButtonText: { color: colors.onAccent, fontSize: 13, fontWeight: '900' },
   categories: { gap: spacing.sm },
   category: {
     alignItems: 'center',
@@ -362,4 +362,4 @@ const styles = StyleSheet.create({
   message: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   buttonDisabled: { opacity: 0.5 },
   buttonPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-});
+}));

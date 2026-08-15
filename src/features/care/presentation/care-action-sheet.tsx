@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -32,7 +31,7 @@ import type {
   MeasurementSource,
   SleepEvent,
 } from '@/features/care/domain/care-event';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 export type CareAction =
   | 'diaper'
@@ -429,7 +428,7 @@ export function CareActionSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   backdrop: {
     backgroundColor: 'rgba(24, 35, 75, 0.35)',
     flex: 1,
@@ -525,8 +524,8 @@ const styles = StyleSheet.create({
   saveButtonDisabled: { opacity: 0.48 },
   saveButtonPressed: { backgroundColor: colors.primaryPressed },
   saveButtonText: {
-    color: colors.white,
+    color: colors.onAccent,
     fontSize: 16,
     fontWeight: '900',
   },
-});
+}));

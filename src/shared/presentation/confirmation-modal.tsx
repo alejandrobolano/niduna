@@ -4,13 +4,12 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 type ConfirmationTone = 'danger' | 'primary';
 
@@ -135,7 +134,7 @@ export function ConfirmationModal({
               ]}
             >
               {isPending ? (
-                <ActivityIndicator color={colors.white} />
+                <ActivityIndicator color={colors.onAccent} />
               ) : (
                 <Text style={styles.confirmText}>{confirmLabel}</Text>
               )}
@@ -147,7 +146,7 @@ export function ConfirmationModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   root: {
     alignItems: 'center',
     backgroundColor: 'rgba(24, 35, 75, 0.58)',
@@ -223,11 +222,11 @@ const styles = StyleSheet.create({
   primaryButton: { backgroundColor: colors.primaryPressed },
   cancelText: { color: colors.text, fontSize: 14, fontWeight: '900' },
   confirmText: {
-    color: colors.white,
+    color: colors.onAccent,
     fontSize: 14,
     fontWeight: '900',
     textAlign: 'center',
   },
   pressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
   disabled: { opacity: 0.68 },
-});
+}));

@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface Segment<T extends string> {
   label: string;
@@ -41,7 +41,7 @@ export function SegmentedControl<T extends string>({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
   labelSelected: {
     color: colors.primary,
   },
-});
+}));

@@ -4,13 +4,13 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   dangerContent?: ReactNode;
@@ -101,6 +101,7 @@ export function SessionBanner({
                   </Text>
                 </View>
               </View>
+              <ThemePreferenceControl />
               {onOpenFamilyActivity ? (
                 <Pressable
                   accessibilityRole="button"
@@ -160,7 +161,7 @@ export function SessionBanner({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   accountButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -280,4 +281,4 @@ const styles = StyleSheet.create({
   },
   buttonPressed: { opacity: 0.68, transform: [{ scale: 0.97 }] },
   signOutButtonText: { color: colors.error, fontSize: 13, fontWeight: '900' },
-});
+}));

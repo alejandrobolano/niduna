@@ -1,8 +1,8 @@
 import { Check, ChevronDown, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 export interface SelectOption<T extends string> {
   label: string;
@@ -132,7 +132,7 @@ export function SelectField<T extends string>({
                   >
                     <View style={[styles.optionMark, selected && styles.optionMarkSelected]}>
                       <Text style={[styles.optionMarkText, selected && styles.optionMarkTextSelected]}>
-                        {selected ? <Check color={colors.white} size={16} /> : getOptionMark(option.label)}
+                        {selected ? <Check color={colors.onAccent} size={16} /> : getOptionMark(option.label)}
                       </Text>
                     </View>
                     <View style={styles.optionCopy}>
@@ -152,7 +152,7 @@ export function SelectField<T extends string>({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   field: { gap: spacing.sm },
   label: { color: colors.text, fontSize: 14, fontWeight: '600' },
   trigger: {
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
   },
   optionMarkSelected: { backgroundColor: colors.coral },
   optionMarkText: { color: colors.textMuted, fontSize: 10, fontWeight: '900' },
-  optionMarkTextSelected: { color: colors.white, fontSize: 16 },
+  optionMarkTextSelected: { color: colors.onAccent, fontSize: 16 },
   optionCopy: { flex: 1 },
   optionLabel: { color: colors.text, fontSize: 15, fontWeight: '800' },
   optionSupporting: { color: colors.textMuted, fontSize: 11, lineHeight: 15, marginTop: 2 },
-});
+}));

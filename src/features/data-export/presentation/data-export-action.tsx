@@ -1,13 +1,13 @@
 import { Download } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type {
   DataExportRepository,
   DataExportScope,
 } from '@/features/data-export/application/data-export-repository';
 import { savePortableDataExport } from '@/features/data-export/infrastructure/portable-export-file';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface DataExportActionProps {
   description: string;
@@ -59,7 +59,7 @@ export function DataExportAction({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   root: { gap: spacing.xs },
   action: {
     alignItems: 'center',
@@ -83,4 +83,4 @@ const styles = StyleSheet.create({
   description: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
   error: { color: colors.error, fontSize: 11, lineHeight: 16 },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-});
+}));

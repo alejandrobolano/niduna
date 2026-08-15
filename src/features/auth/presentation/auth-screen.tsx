@@ -5,7 +5,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -21,7 +20,7 @@ import {
 } from '@/features/auth/domain/auth';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 type AuthStep = 'email' | 'code';
 
@@ -299,7 +298,7 @@ export function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   flex: { flex: 1 },
   safeArea: { backgroundColor: colors.background, flex: 1 },
   content: {
@@ -364,7 +363,7 @@ const styles = StyleSheet.create({
   },
   stepDotActive: { backgroundColor: colors.coral },
   stepDotText: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
-  stepDotActiveText: { color: colors.white, fontSize: 12, fontWeight: '900' },
+  stepDotActiveText: { color: colors.onAccent, fontSize: 12, fontWeight: '900' },
   stepLine: { backgroundColor: colors.surfaceMuted, flex: 1, height: 3 },
   stepLineActive: { backgroundColor: colors.coral },
   heading: { gap: spacing.sm },
@@ -374,7 +373,7 @@ const styles = StyleSheet.create({
   label: { color: colors.text, fontSize: 14, fontWeight: '700' },
   inputShell: {
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -386,7 +385,7 @@ const styles = StyleSheet.create({
   inputIcon: { color: colors.primaryPressed, fontSize: 18, fontWeight: '900', marginRight: spacing.md },
   input: { color: colors.text, flex: 1, fontSize: 16, paddingVertical: spacing.md },
   codeInput: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -411,7 +410,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { backgroundColor: colors.coralPressed, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.62 },
-  primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  primaryButtonText: { color: colors.onAccent, fontSize: 16, fontWeight: '900' },
   secondaryActions: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -449,7 +448,7 @@ const styles = StyleSheet.create({
   },
   securityMark: {
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radius.pill,
     height: 40,
     justifyContent: 'center',
@@ -459,4 +458,4 @@ const styles = StyleSheet.create({
   securityCopy: { flex: 1 },
   securityTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
   securityText: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: spacing.xs },
-});
+}));

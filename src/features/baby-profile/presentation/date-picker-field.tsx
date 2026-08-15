@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 
 import {
     addMonths,
@@ -10,7 +10,7 @@ import {
     getCalendarDays,
     isoToDate,
 } from '@/shared/presentation/date';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const WEEKDAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'] as const;
 
@@ -200,7 +200,7 @@ export function DatePickerField({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   field: { gap: spacing.sm },
   label: { color: colors.text, fontSize: 14, fontWeight: '600' },
   trigger: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
   dayText: { color: colors.text, fontSize: 14, fontWeight: '700' },
   dayTextMuted: { color: colors.textMuted },
   dayTextDisabled: { color: colors.border },
-  dayTextSelected: { color: colors.white, fontWeight: '900' },
+  dayTextSelected: { color: colors.onAccent, fontWeight: '900' },
   sheetFooter: {
     alignItems: 'center',
     borderTopColor: colors.border,
@@ -357,4 +357,4 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textAlign: 'right',
   },
-});
+}));

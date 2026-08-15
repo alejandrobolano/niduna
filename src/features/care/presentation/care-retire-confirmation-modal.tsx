@@ -1,8 +1,8 @@
 import { Archive, Clock3 } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface CareRetireConfirmationModalProps {
   babyName: string;
@@ -56,7 +56,7 @@ export function CareRetireConfirmationModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   retentionNotice: {
     alignItems: 'center',
     backgroundColor: colors.aquaSoft,
@@ -76,4 +76,4 @@ const styles = StyleSheet.create({
   retentionCopy: { flex: 1, gap: 2 },
   retentionTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   retentionText: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
-});
+}));

@@ -1,13 +1,13 @@
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import {
   buildMonthCalendar,
   type CareEventFilter,
 } from '@/features/care/application/care-history';
 import type { CareEvent } from '@/features/care/domain/care-event';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const filterOptions = [
   { label: 'Todo', value: 'all' },
@@ -180,7 +180,7 @@ export function CareHistoryControls({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   filterSelected: { backgroundColor: colors.text },
   filterText: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
-  filterTextSelected: { color: colors.white },
+  filterTextSelected: { color: colors.onAccent },
   calendar: {
     backgroundColor: colors.background,
     borderRadius: radius.md,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   daySelected: { backgroundColor: colors.text },
   dayText: { color: colors.text, fontSize: 12, fontWeight: '800' },
   dayTextOutside: { color: colors.border },
-  dayTextSelected: { color: colors.white },
+  dayTextSelected: { color: colors.onAccent },
   clearDate: { alignSelf: 'center', padding: spacing.sm },
   clearDateText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
-});
+}));

@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { CareHistoryPageSize } from '@/features/care/application/care-history';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const pageSizes = [20, 50, 100] as const;
 
@@ -69,7 +69,7 @@ export function DataPagination({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -81,22 +81,25 @@ const styles = StyleSheet.create({
   navigation: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   caption: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   size: {
+    alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
+    justifyContent: 'center',
+    minHeight: 44,
+    minWidth: 44,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
   },
   sizeSelected: { backgroundColor: colors.text },
   sizeText: { color: colors.textMuted, fontSize: 11, fontWeight: '900' },
-  sizeTextSelected: { color: colors.white },
+  sizeTextSelected: { color: colors.onAccent },
   button: {
     alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
-    height: 34,
+    height: 48,
     justifyContent: 'center',
-    width: 34,
+    width: 48,
   },
   disabled: { opacity: 0.4 },
   page: { color: colors.text, fontSize: 11, fontWeight: '900' },
-});
+}));

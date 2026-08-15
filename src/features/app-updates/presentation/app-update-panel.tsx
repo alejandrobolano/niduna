@@ -1,7 +1,7 @@
 import * as Application from 'expo-application';
 import { Download } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
 import { canOfferAndroidPreview } from '@/features/app-updates/application/android-preview-availability';
 import type { AppReleaseRepository } from '@/features/app-updates/application/app-release-repository';
@@ -9,7 +9,7 @@ import {
   isNewerBuild,
   type AppRelease,
 } from '@/features/app-updates/domain/app-release';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface AppUpdatePanelProps {
   repository: AppReleaseRepository;
@@ -98,7 +98,7 @@ export function AppUpdatePanel({ repository }: AppUpdatePanelProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   card: {
     backgroundColor: colors.butterSoft,
     borderRadius: radius.lg,
@@ -127,4 +127,4 @@ const styles = StyleSheet.create({
   },
   detailsLink: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
   linkPressed: { opacity: 0.62 },
-});
+}));

@@ -17,7 +17,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -53,7 +52,7 @@ import {
 } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const lifeStageOptions = [
   { label: 'Aún por nacer', value: 'expected' },
@@ -991,7 +990,7 @@ export function BabyProfileScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   flex: { flex: 1 },
   safeArea: { backgroundColor: colors.background, flex: 1 },
   content: {
@@ -1193,7 +1192,7 @@ const styles = StyleSheet.create({
   },
   privacyIcon: {
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radius.pill,
     height: 42,
     justifyContent: 'center',
@@ -1212,7 +1211,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { backgroundColor: colors.coralPressed },
   primaryButtonDisabled: { opacity: 0.6 },
-  primaryButtonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
+  primaryButtonText: { color: colors.onAccent, fontSize: 16, fontWeight: '900' },
   retryButton: { marginTop: spacing.md, minWidth: 220 },
   stateScreen: {
     alignItems: 'center',
@@ -1254,7 +1253,7 @@ const styles = StyleSheet.create({
     width: 40,
   },
   reviewMarkSuccess: { backgroundColor: colors.primary },
-  reviewMarkText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  reviewMarkText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' },
   reviewMarkTextSuccess: { fontSize: 18 },
   reviewCopy: { flex: 1 },
   reviewTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
@@ -1307,6 +1306,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 44,
   },
-  confirmationAcceptText: { color: colors.white, fontWeight: '900' },
+  confirmationAcceptText: { color: colors.onAccent, fontWeight: '900' },
   accessError: { color: colors.error, fontSize: 12 },
-});
+}));

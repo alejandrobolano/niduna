@@ -1,7 +1,7 @@
 import { BabyIcon, ClipboardList, Heart, House, Moon } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 export type AppSection = 'handoff' | 'history' | 'baby' | 'family' | 'activity';
 
@@ -73,7 +73,7 @@ export function AppSectionNavigation({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.md,
@@ -109,4 +109,4 @@ const styles = StyleSheet.create({
   label: { color: colors.textMuted, fontSize: 14, fontWeight: '800' },
   labelBottom: { fontSize: 11 },
   labelSelected: { color: colors.text },
-});
+}));

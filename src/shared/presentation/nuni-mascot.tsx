@@ -5,11 +5,13 @@ import {
   Animated,
   Easing,
   Platform,
-  StyleSheet,
   View
 } from 'react-native';
 
-import { colors } from '@/shared/presentation/theme';
+import {
+  createThemedStyleSheet,
+  illustrationColors,
+} from '@/shared/presentation/theme';
 
 interface NuniMascotProps {
   size?: number;
@@ -65,10 +67,10 @@ export function NuniMascot({ size = ARTBOARD_WIDTH }: NuniMascotProps) {
     >
       <View style={[styles.artboard, { transform: [{ scale }] }]}>
         <View style={[styles.star, styles.starLeft]}>
-          <Sparkles color={colors.butter} size={20} />
+          <Sparkles color={illustrationColors.butter} size={20} />
         </View>
         <View style={[styles.star, styles.starRight]}>
-          <Sparkles color={colors.butter} size={20} />
+          <Sparkles color={illustrationColors.butter} size={20} />
         </View>
         <View style={[styles.cloud, styles.cloudLeft]}>
           <View style={[styles.cloudBubble, styles.cloudBubbleSmall]} />
@@ -104,7 +106,7 @@ export function NuniMascot({ size = ARTBOARD_WIDTH }: NuniMascotProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   artboard: {
     height: ARTBOARD_HEIGHT,
     transformOrigin: 'top left',
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     width: 112,
   },
   body: {
-    backgroundColor: colors.aqua,
+    backgroundColor: illustrationColors.aqua,
     borderRadius: 58,
     height: 112,
     left: 32,
@@ -165,7 +167,7 @@ const styles = StyleSheet.create({
     width: 91,
   },
   leftWing: {
-    backgroundColor: colors.butter,
+    backgroundColor: illustrationColors.butter,
     borderRadius: 30,
     height: 56,
     left: 15,
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
     width: 38,
   },
   rightWing: {
-    backgroundColor: colors.butter,
+    backgroundColor: illustrationColors.butter,
     borderRadius: 30,
     height: 56,
     position: 'absolute',
@@ -185,7 +187,7 @@ const styles = StyleSheet.create({
     width: 38,
   },
   tuftLeft: {
-    backgroundColor: colors.coral,
+    backgroundColor: illustrationColors.coral,
     borderRadius: 12,
     height: 30,
     left: 36,
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
     width: 16,
   },
   tuftRight: {
-    backgroundColor: colors.coral,
+    backgroundColor: illustrationColors.coral,
     borderRadius: 12,
     height: 27,
     left: 51,
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
     width: 5,
   },
   leftCheek: {
-    backgroundColor: colors.coral,
+    backgroundColor: illustrationColors.coral,
     borderRadius: 7,
     height: 9,
     left: 11,
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
     width: 15,
   },
   rightCheek: {
-    backgroundColor: colors.coral,
+    backgroundColor: illustrationColors.coral,
     borderRadius: 7,
     height: 9,
     opacity: 0.72,
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
     width: 15,
   },
   beak: {
-    backgroundColor: colors.coral,
+    backgroundColor: illustrationColors.coral,
     borderRadius: 8,
     height: 10,
     left: 38,
@@ -271,4 +273,4 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 44,
   },
-});
+}));

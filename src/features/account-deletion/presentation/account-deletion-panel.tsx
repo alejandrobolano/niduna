@@ -1,6 +1,6 @@
 import { ShieldAlert, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 
 import {
   AccountDeletionError,
@@ -8,7 +8,7 @@ import {
 } from '@/features/account-deletion/application/account-deletion-repository';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 type DeletionMode = 'account' | 'ownedFamilies';
 type Dialog = 'familyWarning' | 'ownerChoice' | 'warning' | undefined;
@@ -170,7 +170,7 @@ export function AccountDeletionPanel({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   root: { alignItems: 'flex-start' },
   link: {
     alignItems: 'center',
@@ -213,4 +213,4 @@ const styles = StyleSheet.create({
   },
   error: { color: colors.error, fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.68 },
-});
+}));

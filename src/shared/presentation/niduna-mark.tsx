@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, Rect } from 'react-native-svg';
 
-import { colors, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
 
 interface NidunaMarkProps {
   accessibilityLabel?: string;
@@ -57,7 +57,7 @@ export function NidunaBrand({ compact = false }: NidunaBrandProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   brand: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   brandCompact: { gap: 0 },
   wordmark: {
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.7,
   },
-});
+}));
