@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { hasRecentOtpAuthentication } from '../supabase/functions/_shared/account-deletion-rules';
+import {
+  chunkValues,
+  hasRecentOtpAuthentication,
+  parseDeleteAccountRequest,
+} from '../supabase/functions/_shared/account-deletion-rules';
 
 describe('account deletion authentication rules', () => {
   const now = 1_800_000_000;
@@ -33,5 +37,26 @@ describe('account deletion authentication rules', () => {
         600,
       ),
     ).toBe(false);
+  });
+});
+
+describe('account deletion request rules', () => {
+  it('defaults to preserving owned families', () => {
+    expect(parseDeleteAccountRequest({})).toEqual({ deleteOwnedFamilies: false });
+  });
+
+  it('accepts an explicit full deletion request', () => {
+    expect(parseDeleteAccountRequest({ deleteOwnedFamilies: true })).toEqual({
+      deleteOwnedFamilies: true,
+    });
+  });
+
+  it('rejects unknown or invalid fields', () => {
+    expect(parseDeleteAccountRequest({ deleteOwnedFamilies: 'yes' })).toBeUndefined();
+    expect(parseDeleteAccountRequest({ deleteOwnedFamilies: true, familyId: 'unsafe' })).toBeUndefined();
+  });
+
+  it('chunks storage paths within the API limit', () => {
+    expect(chunkValues(['a', 'b', 'c'], 2)).toEqual([['a', 'b'], ['c']]);
   });
 });

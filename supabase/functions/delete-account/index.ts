@@ -5,13 +5,20 @@ import {
 } from 'npm:@supabase/supabase-js@2.110.8';
 
 import {
+  chunkValues,
   hasRecentOtpAuthentication,
+  parseDeleteAccountRequest,
   type AuthenticationMethodReference,
 } from '../_shared/account-deletion-rules.ts';
 
 interface UserClaims {
   amr?: AuthenticationMethodReference[];
   id?: string;
+}
+
+interface OwnedFamily {
+  id: string;
+  name: string;
 }
 
 const recentAuthenticationSeconds = 10 * 60;
@@ -89,10 +96,18 @@ function hasRecentAuthentication(claims: UserClaims): boolean {
   );
 }
 
-async function loadOwnedFamilyNames(
+async function readRequestBody(request: Request) {
+  try {
+    return parseDeleteAccountRequest(await request.json());
+  } catch {
+    return undefined;
+  }
+}
+
+async function loadOwnedFamilies(
   adminClient: SupabaseClient,
   userId: string,
-): Promise<string[]> {
+): Promise<OwnedFamily[]> {
   const { data: memberships, error: membershipError } = await adminClient
     .from('family_members')
     .select('family_id')
@@ -110,14 +125,68 @@ async function loadOwnedFamilyNames(
 
   const { data: families, error: familyError } = await adminClient
     .from('families')
-    .select('name')
+    .select('id, name')
     .in('id', familyIds);
 
   if (familyError) {
     throw familyError;
   }
 
-  return (families ?? []).map((family) => family.name);
+  return families ?? [];
+}
+
+async function loadOwnedFamilyStoragePaths(
+  adminClient: SupabaseClient,
+  familyIds: string[],
+): Promise<{ babyPhotos: string[]; familyStories: string[] }> {
+  if (familyIds.length === 0) {
+    return { babyPhotos: [], familyStories: [] };
+  }
+
+  const [babiesResult, storiesResult] = await Promise.all([
+    adminClient
+      .from('babies')
+      .select('photo_path')
+      .in('family_id', familyIds)
+      .not('photo_path', 'is', null),
+    adminClient
+      .from('family_stories')
+      .select('storage_path')
+      .in('family_id', familyIds),
+  ]);
+
+  if (babiesResult.error) {
+    throw babiesResult.error;
+  }
+
+  if (storiesResult.error) {
+    throw storiesResult.error;
+  }
+
+  return {
+    babyPhotos: [...new Set(
+      (babiesResult.data ?? [])
+        .map((baby) => baby.photo_path)
+        .filter((path): path is string => typeof path === 'string'),
+    )],
+    familyStories: [...new Set(
+      (storiesResult.data ?? []).map((story) => story.storage_path),
+    )],
+  };
+}
+
+async function removeStoragePaths(
+  adminClient: SupabaseClient,
+  bucket: string,
+  paths: string[],
+): Promise<void> {
+  for (const pathChunk of chunkValues(paths, 1000)) {
+    const { error } = await adminClient.storage.from(bucket).remove(pathChunk);
+
+    if (error) {
+      throw error;
+    }
+  }
 }
 
 const authenticatedHandler = withSupabase(
@@ -140,18 +209,47 @@ const authenticatedHandler = withSupabase(
     }
 
     try {
-      const adminClient = createAdminClient();
-      const ownedFamilyNames = await loadOwnedFamilyNames(adminClient, userId);
+      const requestBody = await readRequestBody(request);
+      if (!requestBody) {
+        return jsonResponse({ error: 'invalid_request' }, 400);
+      }
 
-      if (ownedFamilyNames.length > 0) {
+      const adminClient = createAdminClient();
+      const ownedFamilies = await loadOwnedFamilies(adminClient, userId);
+
+      if (ownedFamilies.length > 0 && !requestBody.deleteOwnedFamilies) {
         return jsonResponse(
-          { error: 'account_owns_family', families: ownedFamilyNames },
+          {
+            error: 'account_owns_family',
+            families: ownedFamilies.map((family) => family.name),
+          },
           409,
         );
       }
 
+      if (requestBody.deleteOwnedFamilies) {
+        const familyIds = ownedFamilies.map((family) => family.id);
+        const storagePaths = await loadOwnedFamilyStoragePaths(
+          adminClient,
+          familyIds,
+        );
+
+        await removeStoragePaths(
+          adminClient,
+          'baby-photos',
+          storagePaths.babyPhotos,
+        );
+        await removeStoragePaths(
+          adminClient,
+          'family-stories',
+          storagePaths.familyStories,
+        );
+      }
+
       const { error: cleanupError } = await adminClient.rpc(
-        'delete_personal_account_data',
+        requestBody.deleteOwnedFamilies
+          ? 'delete_owned_families_and_personal_account_data'
+          : 'delete_personal_account_data',
         { target_user_id: userId },
       );
 

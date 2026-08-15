@@ -14,6 +14,10 @@ export class AccountDeletionError extends Error {
   }
 }
 
+export interface DeleteAccountOptions {
+  deleteOwnedFamilies?: boolean;
+}
+
 export interface AccountDeletionRepository {
-  deleteAccount(): Promise<void>;
+  deleteAccount(options?: DeleteAccountOptions): Promise<void>;
 }

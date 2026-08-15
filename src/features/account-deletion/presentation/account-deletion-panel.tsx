@@ -11,7 +11,8 @@ import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
-type Dialog = 'blocked' | 'code' | 'warning' | undefined;
+type DeletionMode = 'account' | 'ownedFamilies';
+type Dialog = 'code' | 'familyWarning' | 'ownerChoice' | 'warning' | undefined;
 
 interface AccountDeletionPanelProps {
   email: string;
@@ -58,6 +59,8 @@ export function AccountDeletionPanel({
 }: AccountDeletionPanelProps) {
   const { requestEmailCode, signOut, verifyEmailCode } = useAuth();
   const [code, setCode] = useState('');
+  const [confirmationText, setConfirmationText] = useState('');
+  const [deletionMode, setDeletionMode] = useState<DeletionMode>('account');
   const [dialog, setDialog] = useState<Dialog>();
   const [error, setError] = useState<string>();
   const [isPending, setIsPending] = useState(false);
@@ -68,13 +71,22 @@ export function AccountDeletionPanel({
     }
 
     setCode('');
+    setConfirmationText('');
+    setDeletionMode('account');
     setDialog(undefined);
     setError(undefined);
   }
 
   function openDialog() {
     setError(undefined);
-    setDialog(ownedFamilyNames.length > 0 ? 'blocked' : 'warning');
+    setDeletionMode('account');
+    setDialog(ownedFamilyNames.length > 0 ? 'ownerChoice' : 'warning');
+  }
+
+  function openFamilyDeletionWarning() {
+    setError(undefined);
+    setDeletionMode('ownedFamilies');
+    setDialog('familyWarning');
   }
 
   async function requestConfirmationCode() {
@@ -102,7 +114,9 @@ export function AccountDeletionPanel({
 
     try {
       await verifyEmailCode(email, code);
-      await repository.deleteAccount();
+      await repository.deleteAccount({
+        deleteOwnedFamilies: deletionMode === 'ownedFamilies',
+      });
       await signOut().catch(() => undefined);
       setDialog(undefined);
     } catch (deletionError) {
@@ -113,21 +127,16 @@ export function AccountDeletionPanel({
   }
 
   const ownedFamilies = ownedFamilyNames.join(', ');
+  const deletesOwnedFamilies = deletionMode === 'ownedFamilies';
 
   return (
-    <View style={styles.section}>
-      <View style={styles.copy}>
-        <Text style={styles.title}>Eliminar cuenta</Text>
-        <Text style={styles.description}>
-          Borra tu acceso y tus datos personales de Niduna de forma irreversible.
-        </Text>
-      </View>
+    <View style={styles.root}>
       <Pressable
         accessibilityRole="button"
         onPress={openDialog}
         style={({ pressed }) => [styles.link, pressed && styles.pressed]}
       >
-        <Trash2 color={colors.error} size={16} />
+        <Trash2 color={colors.textMuted} size={13} />
         <Text style={styles.linkText}>Eliminar mi cuenta</Text>
       </Pressable>
 
@@ -150,7 +159,55 @@ export function AccountDeletionPanel({
       </ConfirmationModal>
 
       <ConfirmationModal
-        confirmLabel="Eliminar definitivamente"
+        cancelLabel="Conservar"
+        confirmLabel="Eliminar familias y cuenta"
+        description={`Eres propietario de ${ownedFamilyNames.length === 1 ? 'esta familia' : 'estas familias'}: ${ownedFamilies}. Puedes conservarlas transfiriendo su propiedad o eliminarlas definitivamente junto con tu cuenta.`}
+        eyebrow="ELIGE QUÉ HACER"
+        icon={<ShieldAlert color={colors.error} size={24} />}
+        onCancel={closeDialog}
+        onConfirm={openFamilyDeletionWarning}
+        title="También administras datos familiares"
+        tone="danger"
+        visible={dialog === 'ownerChoice'}
+      >
+        <Text style={styles.notice}>
+          Para conservarlas, cierra este aviso y usa Familia → Personas con acceso → Transferir propiedad.
+        </Text>
+      </ConfirmationModal>
+
+      <ConfirmationModal
+        confirmLabel="Continuar"
+        description="Se borrarán de forma irreversible todos los bebés, registros, fotos, historias, invitaciones y accesos de las familias que posees. Las demás familias no se eliminarán."
+        eyebrow="BORRADO TOTAL"
+        icon={<Trash2 color={colors.error} size={24} />}
+        isPending={isPending}
+        onCancel={closeDialog}
+        onConfirm={() => {
+          if (confirmationText.trim().toUpperCase() !== 'ELIMINAR') {
+            setError('Escribe ELIMINAR para continuar.');
+            return;
+          }
+
+          void requestConfirmationCode();
+        }}
+        title="¿Eliminar familias y cuenta?"
+        tone="danger"
+        visible={dialog === 'familyWarning'}
+      >
+        <Text style={styles.familyNames}>{ownedFamilies}</Text>
+        <TextInput
+          autoCapitalize="characters"
+          onChangeText={setConfirmationText}
+          placeholder="Escribe ELIMINAR"
+          placeholderTextColor={colors.textMuted}
+          style={styles.confirmationInput}
+          value={confirmationText}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </ConfirmationModal>
+
+      <ConfirmationModal
+        confirmLabel={deletesOwnedFamilies ? 'Eliminar todo definitivamente' : 'Eliminar definitivamente'}
         description={`Hemos enviado un código de 8 dígitos a ${email}. Escríbelo para confirmar que eres tú.`}
         eyebrow="VERIFICA TU IDENTIDAD"
         icon={<Trash2 color={colors.error} size={24} />}
@@ -175,40 +232,25 @@ export function AccountDeletionPanel({
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ConfirmationModal>
 
-      <ConfirmationModal
-        cancelLabel="Cerrar"
-        confirmLabel="Entendido"
-        description={`Antes debes transferir la propiedad desde Familia → Personas con acceso en ${ownedFamilyNames.length === 1 ? 'esta familia' : 'estas familias'}: ${ownedFamilies}.`}
-        eyebrow="PROPIEDAD PENDIENTE"
-        icon={<ShieldAlert color={colors.primaryPressed} size={24} />}
-        onCancel={closeDialog}
-        onConfirm={closeDialog}
-        title="Tu familia necesita un propietario"
-        visible={dialog === 'blocked'}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: {
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    gap: spacing.md,
-    padding: spacing.lg,
-  },
-  copy: { gap: spacing.xs },
-  title: { color: colors.text, fontSize: 14, fontWeight: '900' },
-  description: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  root: { alignItems: 'flex-start' },
   link: {
     alignItems: 'center',
     alignSelf: 'flex-start',
     flexDirection: 'row',
-    gap: spacing.sm,
-    minHeight: 40,
+    gap: spacing.xs,
+    minHeight: 28,
   },
-  linkText: { color: colors.error, fontSize: 13, fontWeight: '900' },
+  linkText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   notice: {
     backgroundColor: colors.peach,
     borderRadius: radius.md,
@@ -229,6 +271,24 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: spacing.lg,
     textAlign: 'center',
+  },
+  confirmationInput: {
+    backgroundColor: colors.background,
+    borderColor: colors.error,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+    minHeight: 50,
+    paddingHorizontal: spacing.lg,
+    textAlign: 'center',
+  },
+  familyNames: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 19,
   },
   error: { color: colors.error, fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.68 },

@@ -2,6 +2,7 @@ import {
   AccountDeletionError,
   type AccountDeletionErrorReason,
   type AccountDeletionRepository,
+  type DeleteAccountOptions,
 } from '@/features/account-deletion/application/account-deletion-repository';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 
@@ -36,9 +37,9 @@ async function readFunctionError(error: unknown): Promise<AccountDeletionError> 
 }
 
 export const supabaseAccountDeletionRepository: AccountDeletionRepository = {
-  async deleteAccount() {
+  async deleteAccount(options: DeleteAccountOptions = {}) {
     const { error } = await supabase.functions.invoke('delete-account', {
-      body: {},
+      body: { deleteOwnedFamilies: options.deleteOwnedFamilies === true },
     });
 
     if (error) {

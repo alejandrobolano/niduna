@@ -568,6 +568,10 @@ export type Database = {
         Args: { target_user_id: string };
         Returns: undefined;
       };
+      delete_owned_families_and_personal_account_data: {
+        Args: { target_user_id: string };
+        Returns: undefined;
+      };
       prepare_family_story: {
         Args: {
           target_baby_id: string;
