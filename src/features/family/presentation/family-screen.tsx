@@ -20,6 +20,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
+import type { DataExportRepository } from '@/features/data-export/application/data-export-repository';
+import { DataExportAction } from '@/features/data-export/presentation/data-export-action';
 import {
   SelectField,
   type SelectOption,
@@ -128,6 +130,7 @@ function getOperationMessage(error: unknown): string {
 
 interface FamilyScreenProps {
   babyGroups?: FamilyBabyGroup[];
+  dataExportRepository: DataExportRepository;
   onContextChanged?: (preferredFamilyId?: string) => Promise<void> | void;
   onFollowBaby?: (babyId: string) => Promise<void>;
   onRestoreBaby?: (babyId: string) => Promise<void>;
@@ -138,6 +141,7 @@ interface FamilyScreenProps {
 
 export function FamilyScreen({
   babyGroups = [],
+  dataExportRepository,
   onContextChanged,
   onFollowBaby,
   onRestoreBaby,
@@ -1015,6 +1019,28 @@ export function FamilyScreen({
                       ))}
                     </View>
                   ) : null}
+                </View>
+              ) : null}
+
+              {selectedFamily.currentUserRole === 'owner' ? (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeading}>
+                    <View style={[styles.sectionIcon, styles.aquaIcon]}>
+                      <Crown color={colors.text} size={16} />
+                    </View>
+                    <View style={styles.sectionHeadingCopy}>
+                      <Text style={styles.sectionTitle}>Copia de la familia</Text>
+                      <Text style={styles.sectionSubtitle}>
+                        Disponible solo para quien tenga la propiedad.
+                      </Text>
+                    </View>
+                  </View>
+                  <DataExportAction
+                    description="Bebés, miembros, cuidados, medidas y archivos activos."
+                    label="Exportar datos de esta familia"
+                    repository={dataExportRepository}
+                    scope={{ familyId: selectedFamily.id, type: 'family' }}
+                  />
                 </View>
               ) : null}
 

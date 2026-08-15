@@ -112,7 +112,7 @@ export function AccountDeletionPanel({
         visible={dialog === 'warning'}
       >
         <Text style={styles.notice}>
-          La descarga de una copia completa aún no está disponible. No continúes si necesitas guardar tus datos antes de eliminar la cuenta.
+          Si quieres conservar una copia, cierra este aviso y usa Descargar mis datos en Tu cuenta antes de continuar.
         </Text>
         <TextInput
           autoCapitalize="characters"

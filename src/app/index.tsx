@@ -25,6 +25,8 @@ import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-scr
 import { supabaseFamilyStoryRepository } from '@/features/family-stories/infrastructure/supabase-family-story-repository';
 import { FamilyStoriesStrip } from '@/features/family-stories/presentation/family-stories-strip';
 import { CareHistoryScreen } from '@/features/care/presentation/care-history-screen';
+import { supabaseDataExportRepository } from '@/features/data-export/infrastructure/supabase-data-export-repository';
+import { DataExportAction } from '@/features/data-export/presentation/data-export-action';
 import { supabaseFamilyAuditRepository } from '@/features/family-activity/infrastructure/supabase-family-audit-repository';
 import { FamilyActivityScreen } from '@/features/family-activity/presentation/family-activity-screen';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
@@ -137,6 +139,12 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
       }
       settingsContent={
         <View style={styles.accountSettings}>
+          <DataExportAction
+            description="Perfil, preferencias, familias y aportaciones realizadas por ti."
+            label="Descargar mis datos"
+            repository={supabaseDataExportRepository}
+            scope={{ type: 'personal' }}
+          />
           <PwaInstallPanel />
           <AppUpdatePanel repository={supabaseAppReleaseRepository} />
           {activeFamily ? (
@@ -156,6 +164,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   if (!activeFamily) {
     return (
       <FamilyScreen
+        dataExportRepository={supabaseDataExportRepository}
         onContextChanged={(familyId) =>
           context.refresh(familyId ? { familyId } : undefined)
         }
@@ -259,6 +268,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     return renderAppScreen(
       <FamilyScreen
         babyGroups={context.families}
+        dataExportRepository={supabaseDataExportRepository}
         onContextChanged={(familyId) =>
           context.refresh(familyId ? { familyId } : undefined)
         }
@@ -296,6 +306,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     ) : (
       <FamilyScreen
         babyGroups={context.families}
+        dataExportRepository={supabaseDataExportRepository}
         onContextChanged={(familyId) =>
           context.refresh(familyId ? { familyId } : undefined)
         }
