@@ -17,3 +17,14 @@ export function canRemoveFamilyMember(
     (target.role === 'caregiver' || target.role === 'viewer')
   );
 }
+
+export function canTransferFamilyOwnership(
+  actorRole: FamilyRole,
+  target: Pick<FamilyMember, 'isCurrentUser' | 'role'>,
+): boolean {
+  return (
+    actorRole === 'owner' &&
+    !target.isCurrentUser &&
+    target.role !== 'owner'
+  );
+}

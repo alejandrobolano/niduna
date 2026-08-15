@@ -178,7 +178,7 @@ export function AccountDeletionPanel({
       <ConfirmationModal
         cancelLabel="Cerrar"
         confirmLabel="Entendido"
-        description={`Antes debes transferir la propiedad o eliminar ${ownedFamilyNames.length === 1 ? 'esta familia' : 'estas familias'}: ${ownedFamilies}.`}
+        description={`Antes debes transferir la propiedad desde Familia → Personas con acceso en ${ownedFamilyNames.length === 1 ? 'esta familia' : 'estas familias'}: ${ownedFamilies}.`}
         eyebrow="PROPIEDAD PENDIENTE"
         icon={<ShieldAlert color={colors.primaryPressed} size={24} />}
         onCancel={closeDialog}

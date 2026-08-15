@@ -692,6 +692,10 @@ export type Database = {
         };
         Returns: undefined;
       };
+      transfer_family_ownership: {
+        Args: { target_member_id: string };
+        Returns: undefined;
+      };
       update_my_family_identity: {
         Args: {
           target_display_name: string;
