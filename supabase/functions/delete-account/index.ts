@@ -61,7 +61,10 @@ function createAdminClient(): SupabaseClient {
 
     headers.set('apikey', adminKey);
 
-    if (adminKey.startsWith('sb_secret_')) {
+    if (
+      adminKey.startsWith('sb_secret_') &&
+      headers.get('Authorization') === `Bearer ${adminKey}`
+    ) {
       headers.delete('Authorization');
     }
 
@@ -264,7 +267,10 @@ const authenticatedHandler = withSupabase(
       }
 
       return jsonResponse({ deleted: true });
-    } catch {
+    } catch (error) {
+      console.error(
+        error instanceof Error ? error.message : 'account_deletion_failed',
+      );
       return jsonResponse({ error: 'account_deletion_failed' }, 500);
     }
   },
