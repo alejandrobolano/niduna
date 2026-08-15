@@ -15,7 +15,10 @@ import type { AuthSession } from '@/features/auth/domain/auth';
 type AuthStatus = 'loading' | 'anonymous' | 'authenticated';
 
 interface AuthContextValue {
-  requestEmailCode(email: string): Promise<void>;
+  requestEmailCode(
+    email: string,
+    options?: { allowCreate?: boolean },
+  ): Promise<void>;
   session: AuthSession | null;
   signOut(): Promise<void>;
   status: AuthStatus;
@@ -119,7 +122,8 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      requestEmailCode: (email) => service.requestEmailCode(email),
+      requestEmailCode: (email, options) =>
+        service.requestEmailCode(email, options),
       session,
       signOut: () => service.signOut(),
       status,

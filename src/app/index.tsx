@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabaseAppReleaseRepository } from '@/features/app-updates/infrastructure/supabase-app-release-repository';
 import { AppUpdatePanel } from '@/features/app-updates/presentation/app-update-panel';
+import { supabaseAccountDeletionRepository } from '@/features/account-deletion/infrastructure/supabase-account-deletion-repository';
+import { AccountDeletionPanel } from '@/features/account-deletion/presentation/account-deletion-panel';
 import type { AuthenticatedUser } from '@/features/auth/domain/auth';
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
@@ -121,6 +123,15 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     canManageBabies || activeFamily?.role === 'caregiver';
   const sessionBanner = (
     <SessionBanner
+      dangerContent={
+        <AccountDeletionPanel
+          email={user.email}
+          ownedFamilyNames={context.families
+            .filter((family) => family.role === 'owner')
+            .map((family) => family.name)}
+          repository={supabaseAccountDeletionRepository}
+        />
+      }
       email={user.email}
       onOpenFamilyActivity={
         canManageBabies ? () => changeSection('activity') : undefined

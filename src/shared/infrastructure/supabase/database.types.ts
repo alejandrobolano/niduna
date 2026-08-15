@@ -564,6 +564,10 @@ export type Database = {
       };
     };
     Functions: {
+      delete_personal_account_data: {
+        Args: { target_user_id: string };
+        Returns: undefined;
+      };
       prepare_family_story: {
         Args: {
           target_baby_id: string;

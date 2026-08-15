@@ -27,6 +27,10 @@ export const supabaseFamilyAuditRepository: FamilyAuditRepository = {
     ];
     const actorNames = new Map<string, string>();
 
+    for (const actorId of actorIds) {
+      actorNames.set(actorId, 'Usuario eliminado');
+    }
+
     if (actorIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
@@ -38,9 +42,10 @@ export const supabaseFamilyAuditRepository: FamilyAuditRepository = {
       }
 
       for (const profile of profiles ?? []) {
-        if (profile.display_name) {
-          actorNames.set(profile.id, profile.display_name);
-        }
+        actorNames.set(
+          profile.id,
+          profile.display_name || 'Un miembro de la familia',
+        );
       }
     }
 
