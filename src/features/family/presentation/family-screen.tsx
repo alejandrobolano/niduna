@@ -13,7 +13,6 @@ import {
   Pressable,
   ScrollView,
   Share,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -50,7 +49,7 @@ import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-conte
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const invitationRoleOptions = [
   {
@@ -1074,7 +1073,7 @@ export function FamilyScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   flex: { flex: 1 },
   safeArea: { backgroundColor: colors.background, flex: 1 },
   content: {
@@ -1151,7 +1150,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   primaryButtonPressed: { backgroundColor: colors.coralPressed },
-  primaryButtonText: { color: colors.white, fontSize: 15, fontWeight: '900' },
+  primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' },
   secondaryButton: {
     alignItems: 'center',
     backgroundColor: colors.aquaSoft,
@@ -1331,7 +1330,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 44,
   },
-  memberConfirmationAcceptText: { color: colors.white, fontWeight: '900' },
+  memberConfirmationAcceptText: { color: colors.onAccent, fontWeight: '900' },
   invitationSection: { backgroundColor: colors.butterSoft },
   codeCard: {
     alignItems: 'center',
@@ -1415,4 +1414,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: { marginTop: spacing.md, minWidth: 220 },
-});
+}));

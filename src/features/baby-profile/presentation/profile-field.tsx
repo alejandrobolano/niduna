@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
+import { Text, TextInput, type TextInputProps, View } from 'react-native';
 
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface ProfileFieldProps extends TextInputProps {
   disabled?: boolean;
@@ -39,7 +39,7 @@ export function ProfileField({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: {
     flex: 1,
     gap: spacing.sm,
@@ -85,4 +85,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
-});
+}));

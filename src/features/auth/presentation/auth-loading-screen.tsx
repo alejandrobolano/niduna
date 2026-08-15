@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
 
 export function AuthLoadingScreen() {
   return (
@@ -16,7 +16,7 @@ export function AuthLoadingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   content: {
     alignItems: 'center',
@@ -26,4 +26,4 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.text, fontSize: 21, fontWeight: '900', marginTop: spacing.lg },
   text: { color: colors.textMuted, fontSize: 13, marginTop: spacing.sm },
-});
+}));

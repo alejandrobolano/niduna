@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabaseAppReleaseRepository } from '@/features/app-updates/infrastructure/supabase-app-release-repository';
@@ -45,7 +45,7 @@ import { pushPermissionService } from '@/features/notifications/infrastructure/p
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
 import { PwaInstallPanel } from '@/features/pwa/presentation/pwa-install-panel';
-import { colors, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
 
 async function exportCareHistory(
   events: CareEvent[],
@@ -320,7 +320,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   accountSettings: { gap: spacing.lg },
   appShell: { flex: 1 },
   appScreen: { flex: 1 },
@@ -334,4 +334,4 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 2,
   },
-});
+}));

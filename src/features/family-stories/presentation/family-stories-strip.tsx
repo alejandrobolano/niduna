@@ -6,7 +6,6 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -23,7 +22,7 @@ import {
   type FamilyStoryGroup,
 } from '@/features/family-stories/domain/family-story';
 import { pickAndPrepareStoryImage } from '@/features/family-stories/infrastructure/story-image-picker';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const storyDurationMilliseconds = 5_000;
 
@@ -200,7 +199,7 @@ function StoryViewer({
                   style={[styles.confirmationButton, styles.confirmationRetireButton]}
                 >
                   {isRetiring ? (
-                    <ActivityIndicator color={colors.white} />
+                    <ActivityIndicator color={colors.onAccent} />
                   ) : (
                     <Text style={styles.confirmationRetireText}>Retirar</Text>
                   )}
@@ -370,7 +369,7 @@ export function FamilyStoriesStrip({
           <Pressable disabled={isUploading} onPress={() => void publishStory()} style={styles.bubbleAction}>
             <View style={[styles.avatar, styles.addAvatar]}>
               {isUploading ? <ActivityIndicator color={colors.primaryPressed} /> : <Camera color={colors.primaryPressed} size={22} />}
-              {!isUploading ? <View style={styles.plusBadge}><Plus color={colors.white} size={12} /></View> : null}
+              {!isUploading ? <View style={styles.plusBadge}><Plus color={colors.onAccent} size={12} /></View> : null}
             </View>
             <Text numberOfLines={1} style={styles.bubbleLabel}>{isUploading ? 'Publicando…' : 'Tu historia'}</Text>
           </Pressable>
@@ -416,7 +415,7 @@ export function FamilyStoriesStrip({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   container: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.md, padding: spacing.lg },
   heading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
@@ -430,7 +429,7 @@ const styles = StyleSheet.create({
   addAvatar: { backgroundColor: colors.aquaSoft, borderColor: colors.primary, borderStyle: 'dashed' },
   plusBadge: { alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.pill, bottom: -2, height: 20, justifyContent: 'center', position: 'absolute', right: -2, width: 20 },
   bubbleLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '800', maxWidth: 72 },
-  errorRow: { alignItems: 'center', backgroundColor: '#FCE8E8', borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'space-between', padding: spacing.md },
+  errorRow: { alignItems: 'center', backgroundColor: colors.errorSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'space-between', padding: spacing.md },
   errorText: { color: colors.error, flex: 1, fontSize: 12, fontWeight: '700' },
   viewer: { backgroundColor: '#111522', flex: 1 },
   viewerImage: { height: '100%', width: '100%' },
@@ -450,7 +449,7 @@ const styles = StyleSheet.create({
   screenshotNoticeText: { color: colors.white, flex: 1, fontSize: 10, lineHeight: 14 },
   confirmationOverlay: { alignItems: 'center', backgroundColor: '#070A12CC', bottom: 0, justifyContent: 'center', left: 0, padding: spacing.xl, position: 'absolute', right: 0, top: 0 },
   confirmationCard: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.md, maxWidth: 420, padding: spacing.xl, width: '100%' },
-  confirmationIcon: { alignItems: 'center', backgroundColor: '#FCE8E8', borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
+  confirmationIcon: { alignItems: 'center', backgroundColor: colors.errorSoft, borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
   confirmationTitle: { color: colors.text, fontSize: 21, fontWeight: '900', textAlign: 'center' },
   confirmationCopy: { color: colors.textMuted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   confirmationActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, width: '100%' },
@@ -458,6 +457,6 @@ const styles = StyleSheet.create({
   confirmationCancelButton: { backgroundColor: colors.background },
   confirmationRetireButton: { backgroundColor: colors.error },
   confirmationCancelText: { color: colors.text, fontSize: 14, fontWeight: '900' },
-  confirmationRetireText: { color: colors.white, fontSize: 14, fontWeight: '900' },
+  confirmationRetireText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' },
   avatarImage: { borderRadius: radius.pill, height: '100%', width: '100%' },
-});
+}));

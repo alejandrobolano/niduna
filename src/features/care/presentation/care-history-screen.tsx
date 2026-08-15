@@ -8,7 +8,13 @@ import {
   Star,
 } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
@@ -28,7 +34,7 @@ import { CareHistoryControls } from '@/features/care/presentation/care-history-c
 import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface CareHistoryScreenProps {
   babyId?: string;
@@ -80,6 +86,8 @@ export function CareHistoryScreen({
   topContent,
   userId,
 }: CareHistoryScreenProps) {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 720;
   const [filter, setFilter] = useState<CareEventFilter>('all');
   const [selectedDate, setSelectedDate] = useState<string>();
   const [page, setPage] = useState(1);
@@ -206,18 +214,139 @@ export function CareHistoryScreen({
     setShowBulkConfirmation(false);
   }
 
+  function renderEvent(event: CareEvent, compact: boolean) {
+    const canModify = canEditCareRecord(event, userId, canManage, canRecord);
+    const key = getCareRecordKey(event);
+    const retention = showRetired
+      ? getCareRecordRetention(event.deletedAt)
+      : undefined;
+    const occurredAt = new Intl.DateTimeFormat('es-ES', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(new Date(event.occurredAt));
+    const selection = canManage && !showRetired ? (
+      <Pressable
+        accessibilityLabel={selectedKeys.has(key) ? 'Quitar de la selección' : 'Seleccionar registro'}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selectedKeys.has(key), disabled: !canModify }}
+        disabled={!canModify}
+        onPress={() => toggleSelection(event)}
+        style={compact ? styles.mobileSelect : styles.selectCell}
+      >
+        {selectedKeys.has(key) ? (
+          <CheckSquare2 color={colors.primaryPressed} size={20} />
+        ) : (
+          <Square color={canModify ? colors.textMuted : colors.border} size={20} />
+        )}
+      </Pressable>
+    ) : null;
+    const actions = showRetired && canManage ? (
+      retention?.isExpired ? (
+        <Text style={styles.unavailable}>No recuperable</Text>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => void handleRestore(event)}
+          style={styles.actionLink}
+        >
+          <RotateCcw color={colors.primaryPressed} size={16} />
+          <Text style={styles.actionText}>Restaurar</Text>
+        </Pressable>
+      )
+    ) : canModify ? (
+      <View style={[styles.rowActions, compact && styles.mobileRowActions]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setEditingEvent(event)}
+          style={styles.actionLink}
+        >
+          <Pencil color={colors.primaryPressed} size={16} />
+          <Text style={styles.actionText}>Editar</Text>
+        </Pressable>
+        <Pressable
+          accessibilityLabel={`Quitar registro de ${eventLabels[event.type]} del relevo`}
+          accessibilityRole="button"
+          onPress={() => setPendingRetireId(key)}
+          style={styles.actionLink}
+        >
+          <Archive color={colors.error} size={16} />
+          <Text style={styles.retireText}>Quitar</Text>
+        </Pressable>
+      </View>
+    ) : (
+      <Text style={styles.unavailable}>—</Text>
+    );
+    const retentionLabel = retention
+      ? retention.isExpired
+        ? 'Plazo de recuperación vencido'
+        : `Recuperable ${retention.daysRemaining === 1 ? 'durante 1 día más' : `durante ${retention.daysRemaining} días más`} · hasta el ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(new Date(retention.expiresAt))}`
+      : undefined;
+
+    if (compact) {
+      return (
+        <View key={key} style={styles.mobileRecord}>
+          <View style={styles.mobileRecordHeader}>
+            <View style={styles.mobileRecordIdentity}>
+              <Text style={styles.mobileType}>{eventLabels[event.type]}</Text>
+              <Text style={styles.mobileDate}>{occurredAt}</Text>
+            </View>
+            {selection}
+          </View>
+          <Text style={styles.mobileDetail}>{describeEvent(event)}</Text>
+          {retentionLabel ? (
+            <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>
+              {retentionLabel}
+            </Text>
+          ) : null}
+          <View style={styles.mobileRecordFooter}>
+            <Text style={styles.mobileAuthor}>
+              Registrado por {event.recordedByName ?? 'un familiar'}
+            </Text>
+            <View style={styles.mobileActions}>{actions}</View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View key={key} style={styles.row}>
+        {selection}
+        <Text style={[styles.cell, styles.dateCell]}>{occurredAt}</Text>
+        <Text style={[styles.cell, styles.typeCell, styles.typeText]}>
+          {eventLabels[event.type]}
+        </Text>
+        <View style={[styles.cell, styles.detailCell]}>
+          <Text numberOfLines={3} style={styles.detailText}>
+            {describeEvent(event)}
+          </Text>
+          {retentionLabel ? (
+            <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>
+              {retentionLabel}
+            </Text>
+          ) : null}
+        </View>
+        <Text style={[styles.cell, styles.authorCell]}>
+          {event.recordedByName ?? 'Un familiar'}
+        </Text>
+        <View style={[styles.cell, styles.actionCell]}>{actions}</View>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
-          <View style={styles.hero}>
+          <View style={[styles.hero, isCompact && styles.heroCompact]}>
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>Registro completo</Text>
-              <Text style={styles.title}>Historial de {babyName ?? 'la familia'}</Text>
+              <Text style={[styles.title, isCompact && styles.titleCompact]}>
+                Historial de {babyName ?? 'la familia'}
+              </Text>
               <Text style={styles.subtitle}>Consulta todos los cuidados con paginación real, filtros y exportación.</Text>
             </View>
-            <NuniMascot size={116} />
+            <NuniMascot size={isCompact ? 82 : 116} />
           </View>
 
           {!babyId ? (
@@ -241,7 +370,7 @@ export function CareHistoryScreen({
                 />
               ) : null}
               <View style={styles.tableCard}>
-                <View style={styles.tableHeading}>
+                <View style={[styles.tableHeading, isCompact && styles.tableHeadingCompact]}>
                   <View>
                     <Text style={styles.tableTitle}>{showRetired ? 'Registros retirados' : 'Registros'}</Text>
                     <Text style={styles.tableSubtitle}>
@@ -281,66 +410,41 @@ export function CareHistoryScreen({
                     <Text style={styles.selectionCount}>{selectedKeys.size} seleccionados</Text>
                     {selectedKeys.size > 0 ? (
                       <Pressable onPress={() => setShowBulkConfirmation(true)} style={styles.bulkButton}>
-                        <Archive color={colors.white} size={15} />
+                        <Archive color={colors.onAccent} size={15} />
                         <Text style={styles.bulkButtonText}>Quitar del relevo</Text>
                       </Pressable>
                     ) : null}
                   </View>
                 ) : null}
-                <ScrollView contentContainerStyle={styles.tableScrollContent} horizontal showsHorizontalScrollIndicator style={styles.tableScroll}>
-                  <View style={styles.table}>
-                    <View style={[styles.row, styles.headerRow]}>
-                      {canManage && !showRetired ? <View style={styles.selectCell} /> : null}
-                      <Text style={[styles.cell, styles.dateCell, styles.headerText]}>Fecha</Text>
-                      <Text style={[styles.cell, styles.typeCell, styles.headerText]}>Tipo</Text>
-                      <Text style={[styles.cell, styles.detailCell, styles.headerText]}>Detalle</Text>
-                      <Text style={[styles.cell, styles.authorCell, styles.headerText]}>Registrado por</Text>
-                      <Text style={[styles.cell, styles.actionCell, styles.headerText]}>Acciones</Text>
-                    </View>
-                    {visibleEvents.map((event) => {
-                      const canModify = canEditCareRecord(event, userId, canManage, canRecord);
-                      const key = getCareRecordKey(event);
-                      const retention = showRetired
-                        ? getCareRecordRetention(event.deletedAt)
-                        : undefined;
-                      return (
-                        <View key={key} style={styles.row}>
-                          {canManage && !showRetired ? (
-                            <Pressable accessibilityLabel={selectedKeys.has(key) ? 'Quitar de la selección' : 'Seleccionar registro'} disabled={!canModify} onPress={() => toggleSelection(event)} style={styles.selectCell}>
-                              {selectedKeys.has(key) ? <CheckSquare2 color={colors.primaryPressed} size={19} /> : <Square color={canModify ? colors.textMuted : colors.border} size={19} />}
-                            </Pressable>
-                          ) : null}
-                          <Text style={[styles.cell, styles.dateCell]}>{new Intl.DateTimeFormat('es-ES', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(event.occurredAt))}</Text>
-                          <Text style={[styles.cell, styles.typeCell, styles.typeText]}>{eventLabels[event.type]}</Text>
-                          <View style={[styles.cell, styles.detailCell]}>
-                            <Text numberOfLines={3} style={styles.detailText}>{describeEvent(event)}</Text>
-                            {retention ? (
-                              <Text style={retention.isExpired ? styles.retentionExpired : styles.retentionText}>
-                                {retention.isExpired
-                                  ? 'Plazo de recuperación vencido'
-                                  : `Recuperable ${retention.daysRemaining === 1 ? 'durante 1 día más' : `durante ${retention.daysRemaining} días más`} · hasta el ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(new Date(retention.expiresAt))}`}
-                              </Text>
-                            ) : null}
-                          </View>
-                          <Text style={[styles.cell, styles.authorCell]}>{event.recordedByName ?? 'Un familiar'}</Text>
-                          <View style={[styles.cell, styles.actionCell]}>
-                            {showRetired && canManage ? retention?.isExpired ? (
-                              <Text style={styles.unavailable}>No recuperable</Text>
-                            ) : (
-                              <Pressable onPress={() => void handleRestore(event)} style={styles.actionLink}><RotateCcw color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Restaurar</Text></Pressable>
-                            ) : canModify ? (
-                              <View style={styles.rowActions}>
-                                <Pressable onPress={() => setEditingEvent(event)} style={styles.actionLink}><Pencil color={colors.primaryPressed} size={15} /><Text style={styles.actionText}>Editar</Text></Pressable>
-                                <Pressable accessibilityLabel={`Quitar registro de ${eventLabels[event.type]} del relevo`} onPress={() => setPendingRetireId(key)} style={styles.actionLink}><Archive color={colors.error} size={15} /><Text style={styles.retireText}>Quitar</Text></Pressable>
-                              </View>
-                            ) : <Text style={styles.unavailable}>—</Text>}
-                          </View>
-                        </View>
-                      );
-                    })}
-                    {!isLoading && visibleEvents.length === 0 ? <Text style={styles.noRows}>{showRetired ? 'No hay registros retirados.' : 'No hay registros con estos filtros.'}</Text> : null}
+                {isCompact ? (
+                  <View style={styles.mobileList}>
+                    {visibleEvents.map((event) => renderEvent(event, true))}
                   </View>
-                </ScrollView>
+                ) : (
+                  <ScrollView
+                    contentContainerStyle={styles.tableScrollContent}
+                    horizontal
+                    showsHorizontalScrollIndicator
+                    style={styles.tableScroll}
+                  >
+                    <View style={styles.table}>
+                      <View style={[styles.row, styles.headerRow]}>
+                        {canManage && !showRetired ? <View style={styles.selectCell} /> : null}
+                        <Text style={[styles.cell, styles.dateCell, styles.headerText]}>Fecha</Text>
+                        <Text style={[styles.cell, styles.typeCell, styles.headerText]}>Tipo</Text>
+                        <Text style={[styles.cell, styles.detailCell, styles.headerText]}>Detalle</Text>
+                        <Text style={[styles.cell, styles.authorCell, styles.headerText]}>Registrado por</Text>
+                        <Text style={[styles.cell, styles.actionCell, styles.headerText]}>Acciones</Text>
+                      </View>
+                      {visibleEvents.map((event) => renderEvent(event, false))}
+                    </View>
+                  </ScrollView>
+                )}
+                {!isLoading && visibleEvents.length === 0 ? (
+                  <Text style={styles.noRows}>
+                    {showRetired ? 'No hay registros retirados.' : 'No hay registros con estos filtros.'}
+                  </Text>
+                ) : null}
                 <DataPagination
                   onChangePage={(value) => { setIsLoading(true); setError(undefined); setSelectedKeys(new Set()); setShowBulkConfirmation(false); setPage(value); }}
                   onChangePageSize={(value) => resetPage(() => setPageSize(value))}
@@ -368,32 +472,70 @@ export function CareHistoryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   hero: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', minHeight: 160, overflow: 'hidden', padding: spacing.xl },
+  heroCompact: { minHeight: 140, padding: spacing.lg },
   heroCopy: { flex: 1, gap: spacing.sm },
   eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
+  titleCompact: { fontSize: 24, lineHeight: 29 },
   subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 600 },
   tableCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   tableHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  tableHeadingCompact: { alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing.md },
   headingActions: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   tableTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   tableSubtitle: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 38, justifyContent: 'center', width: 38 },
-  secondaryButton: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
+  secondaryButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, justifyContent: 'center', minHeight: 44, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   secondaryButtonText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900' },
   selectionBar: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, padding: spacing.md },
   selectionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs },
   selectionLinkText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
   selectionCount: { color: colors.textMuted, fontSize: 12 },
   bulkButton: { alignItems: 'center', backgroundColor: colors.error, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.xs, marginLeft: 'auto', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  bulkButtonText: { color: colors.white, fontSize: 11, fontWeight: '900' },
+  bulkButtonText: { color: colors.onAccent, fontSize: 11, fontWeight: '900' },
   tableScroll: { width: '100%' },
   tableScrollContent: { flexGrow: 1 },
   table: { flex: 1, minWidth: 920, width: '100%' },
+  mobileList: { gap: spacing.md },
+  mobileRecord: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  mobileRecordHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  mobileRecordIdentity: { flex: 1, gap: 2 },
+  mobileType: { color: colors.text, fontSize: 15, fontWeight: '900' },
+  mobileDate: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  mobileDetail: { color: colors.text, fontSize: 14, lineHeight: 21 },
+  mobileSelect: {
+    alignItems: 'center',
+    borderRadius: radius.pill,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  mobileRecordFooter: {
+    alignItems: 'flex-start',
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    gap: spacing.sm,
+    paddingTop: spacing.md,
+  },
+  mobileAuthor: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  mobileActions: { width: '100%' },
   row: { alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', minHeight: 64 },
   headerRow: { backgroundColor: colors.surfaceMuted, borderBottomWidth: 0, borderRadius: radius.sm, minHeight: 42 },
   cell: { color: colors.text, fontSize: 14, lineHeight: 20, paddingHorizontal: spacing.sm },
@@ -409,7 +551,8 @@ const styles = StyleSheet.create({
   authorCell: { width: 135 },
   actionCell: { width: 180 },
   rowActions: { alignItems: 'flex-start', gap: 4 },
-  actionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, paddingVertical: 3 },
+  mobileRowActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  actionLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.xs, minHeight: 44, paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
   actionText: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900' },
   retireText: { color: colors.error, fontSize: 11, fontWeight: '900' },
   unavailable: { color: colors.textMuted, fontSize: 14 },
@@ -418,4 +561,4 @@ const styles = StyleSheet.create({
   emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   emptyText: { color: colors.textMuted, fontSize: 13 },
   error: { color: colors.error, fontSize: 12 },
-});
+}));

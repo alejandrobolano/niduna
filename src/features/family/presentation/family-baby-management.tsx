@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface FamilyBabyManagementProps {
   family: FamilyBabyGroup;
@@ -85,7 +85,7 @@ export function FamilyBabyManagement({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   section: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -111,4 +111,4 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   error: { color: colors.error, fontSize: 12 },
-});
+}));

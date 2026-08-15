@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
 import type {
   FamilyBabyGroup,
@@ -11,7 +11,7 @@ import {
   type AppSection,
 } from '@/features/home/presentation/app-section-navigation';
 import { NidunaBrand } from '@/shared/presentation/niduna-mark';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface AppHeaderProps {
   accountContent: ReactNode;
@@ -65,7 +65,7 @@ export function AppHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   header: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -88,4 +88,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   contextCompact: { flex: 1, minWidth: 0 },
-});
+}));

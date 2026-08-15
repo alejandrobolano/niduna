@@ -15,8 +15,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,7 +40,7 @@ import {
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const feedingLabels: Record<FeedingEvent['method'], string> = {
   breast: 'Pecho',
@@ -335,6 +335,102 @@ function TimelineEvent({
   );
 }
 
+function QuickActionsSection({
+  isSleeping,
+  onAction,
+}: {
+  isSleeping: boolean;
+  onAction: (action: CareAction) => void;
+}) {
+  return (
+    <View style={styles.quickActionsSection}>
+      <View>
+        <Text style={styles.sectionTitle}>Registrar ahora</Text>
+        <Text style={styles.sectionSubtitle}>
+          Dos toques y queda compartido con la familia.
+        </Text>
+      </View>
+      <View style={styles.actions}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onAction('feeding')}
+          style={({ pressed }) => [
+            styles.actionButton,
+            styles.feedingAction,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <Milk color={colors.text} size={20} />
+          <Text style={styles.actionLabel}>Alimentación</Text>
+          <View style={styles.actionArrow}>
+            <Plus color={colors.text} size={18} />
+          </View>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onAction('diaper')}
+          style={({ pressed }) => [
+            styles.actionButton,
+            styles.diaperAction,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <BabyIcon color={colors.text} size={20} />
+          <Text style={styles.actionLabel}>Pañal</Text>
+          <View style={styles.actionArrow}>
+            <Plus color={colors.text} size={18} />
+          </View>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onAction('sleep')}
+          style={({ pressed }) => [
+            styles.actionButton,
+            styles.sleepAction,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <Moon color={colors.text} size={20} />
+          <Text style={styles.actionLabel}>
+            {isSleeping ? 'Despertó' : 'Se durmió'}
+          </Text>
+          <View style={styles.actionArrow}>
+            {isSleeping ? (
+              <Check color={colors.text} size={18} />
+            ) : (
+              <Plus color={colors.text} size={18} />
+            )}
+          </View>
+        </Pressable>
+      </View>
+      <View style={styles.secondaryActions}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onAction('measurement')}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <Scale color={colors.primaryPressed} size={17} />
+          <Text style={styles.secondaryActionLabel}>Registrar medidas</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onAction('note')}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <NotebookPen color={colors.primaryPressed} size={17} />
+          <Text style={styles.secondaryActionLabel}>Añadir nota</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function DashboardContent({
   dashboard,
   isRefreshing,
@@ -352,6 +448,8 @@ function DashboardContent({
   onRefresh: () => void;
   storiesContent?: ReactNode;
 }) {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 640;
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
     [dashboard.events],
@@ -370,10 +468,10 @@ function DashboardContent({
 
   return (
     <>
-      <View style={styles.hero}>
+      <View style={[styles.hero, isCompact && styles.heroCompact]}>
         <View style={styles.heroCopy}>
           <Text style={styles.eyebrow}>Relevo familiar</Text>
-          <Text style={styles.heroTitle}>
+          <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>
             {isExpected
               ? `Preparando el relevo de ${dashboard.baby.name}`
               : `Así está ${dashboard.baby.name}`}
@@ -402,10 +500,17 @@ function DashboardContent({
             </View>
           ) : null}
         </View>
-        <NuniMascot size={138} />
+        <NuniMascot size={isCompact ? 92 : 138} />
       </View>
 
       {storiesContent}
+
+      {!isExpected && dashboard.canRecord && isCompact ? (
+        <QuickActionsSection
+          isSleeping={Boolean(openSleep)}
+          onAction={onAction}
+        />
+      ) : null}
 
       <View style={styles.summaryGrid}>
         <SummaryCard
@@ -487,88 +592,12 @@ function DashboardContent({
           </Pressable>
         </View>
       ) : dashboard.canRecord ? (
-        <View style={styles.section}>
-          <View style={styles.sectionHeading}>
-            <View>
-              <Text style={styles.sectionTitle}>Registrar ahora</Text>
-              <Text style={styles.sectionSubtitle}>
-                Dos toques y queda compartido con la familia.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => onAction('feeding')}
-              style={({ pressed }) => [
-                styles.actionButton,
-                styles.feedingAction,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <Milk color={colors.text} size={20} />
-              <Text style={styles.actionLabel}>Alimentación</Text>
-              <View style={styles.actionArrow}>
-                <Plus color={colors.text} size={18} />
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => onAction('diaper')}
-              style={({ pressed }) => [
-                styles.actionButton,
-                styles.diaperAction,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <BabyIcon color={colors.text} size={20} />
-              <Text style={styles.actionLabel}>Pañal</Text>
-              <View style={styles.actionArrow}>
-                <Plus color={colors.text} size={18} />
-              </View>
-            </Pressable>
-            <Pressable
-              onPress={() => onAction('sleep')}
-              style={({ pressed }) => [
-                styles.actionButton,
-                styles.sleepAction,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <Moon color={colors.text} size={20} />
-              <Text style={styles.actionLabel}>
-                {openSleep ? 'Despertó' : 'Se durmió'}
-              </Text>
-              <View style={styles.actionArrow}>
-                {openSleep ? (
-                  <Check color={colors.text} size={18} />
-                ) : (
-                  <Plus color={colors.text} size={18} />
-                )}
-              </View>
-            </Pressable>
-          </View>
-          <View style={styles.secondaryActions}>
-            <Pressable
-              onPress={() => onAction('measurement')}
-              style={({ pressed }) => [
-                styles.secondaryAction,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <Scale color={colors.primaryPressed} size={17} />
-              <Text style={styles.secondaryActionLabel}>Registrar medidas</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onAction('note')}
-              style={({ pressed }) => [
-                styles.secondaryAction,
-                pressed && styles.actionPressed,
-              ]}
-            >
-              <NotebookPen color={colors.primaryPressed} size={17} />
-              <Text style={styles.secondaryActionLabel}>Añadir nota</Text>
-            </Pressable>
-          </View>
-        </View>
+        !isCompact ? (
+          <QuickActionsSection
+            isSleeping={Boolean(openSleep)}
+            onAction={onAction}
+          />
+        ) : null
       ) : (
         <View style={styles.readOnlyNotice}>
           <Text style={styles.readOnlyTitle}>Vista de solo lectura</Text>
@@ -822,7 +851,7 @@ export function CareHandoffScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: {
     alignItems: 'center',
@@ -844,6 +873,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
   },
+  heroCompact: {
+    minHeight: 164,
+    paddingHorizontal: spacing.lg,
+  },
   heroCopy: { flex: 1, gap: spacing.sm },
   eyebrow: {
     color: colors.primaryPressed,
@@ -858,6 +891,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 38,
   },
+  heroTitleCompact: {
+    fontSize: 25,
+    lineHeight: 30,
+  },
   heroText: {
     color: colors.textMuted,
     fontSize: 15,
@@ -867,7 +904,7 @@ const styles = StyleSheet.create({
   weightProgress: {
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    backgroundColor: colors.surface,
     borderColor: `${colors.aqua}55`,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -960,6 +997,9 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     marginTop: spacing.xs,
   },
+  quickActionsSection: {
+    gap: spacing.md,
+  },
   actions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -999,7 +1039,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
-    minHeight: 40,
+    minHeight: 48,
     paddingHorizontal: spacing.md,
   },
   secondaryActionLabel: {
@@ -1059,9 +1099,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
-    height: 34,
+    height: 48,
     justifyContent: 'center',
-    width: 34,
+    width: 48,
   },
   refreshButtonPressed: { opacity: 0.72 },
   refreshIconSpin: {
@@ -1220,8 +1260,8 @@ const styles = StyleSheet.create({
   },
   primaryButtonPressed: { backgroundColor: colors.primaryPressed },
   primaryButtonText: {
-    color: colors.white,
+    color: colors.onAccent,
     fontSize: 15,
     fontWeight: '900',
   },
-});
+}));

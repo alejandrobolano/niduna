@@ -6,7 +6,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -34,7 +33,7 @@ import type {
 } from '@/features/care/domain/care-event';
 import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
@@ -220,7 +219,7 @@ export function CareEditSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   backdrop: { backgroundColor: 'rgba(24, 35, 75, 0.35)', flex: 1, justifyContent: 'flex-end' },
   dismissArea: { flex: 1 },
   sheet: { alignSelf: 'center', backgroundColor: colors.surface, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, maxHeight: '90%', maxWidth: 680, paddingBottom: spacing.xl, width: '100%' },
@@ -232,5 +231,5 @@ const styles = StyleSheet.create({
   error: { color: colors.error, fontSize: 12, fontWeight: '700' },
   saveButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, minHeight: 54, justifyContent: 'center' },
   disabled: { opacity: 0.48 },
-  saveText: { color: colors.white, fontSize: 16, fontWeight: '900' },
-});
+  saveText: { color: colors.onAccent, fontSize: 16, fontWeight: '900' },
+}));

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 import { isPwaStandalone } from '@/features/pwa/application/pwa-installation';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface InstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -99,7 +99,7 @@ export function PwaInstallPanel() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   card: {
     backgroundColor: colors.butterSoft,
     borderRadius: radius.lg,
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   buttonPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
-  buttonText: { color: colors.white, fontSize: 12, fontWeight: '900' },
-});
+  buttonText: { color: colors.onAccent, fontSize: 12, fontWeight: '900' },
+}));

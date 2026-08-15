@@ -1,6 +1,6 @@
 import { ChevronDown, Plus, X } from 'lucide-react-native';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { SelectField } from '@/features/baby-profile/presentation/select-field';
@@ -9,7 +9,7 @@ import type {
   FamilyBabySummary,
 } from '@/features/family/domain/family-baby-context';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
-import { colors, radius, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface FamilyBabySwitcherProps {
   activeBaby?: FamilyBabySummary;
@@ -191,7 +191,7 @@ export function FamilyBabyContextErrorScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   errorScreen: {
     alignItems: 'center',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: spacing.xl,
   },
-  retryLabel: { color: colors.white, fontSize: 15, fontWeight: '900' },
+  retryLabel: { color: colors.onAccent, fontSize: 15, fontWeight: '900' },
   contextButton: {
     alignItems: 'center',
     backgroundColor: colors.surface,
@@ -308,4 +308,4 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   addLabel: { color: colors.text, fontSize: 13, fontWeight: '900' },
-});
+}));
