@@ -45,7 +45,13 @@ import { pushPermissionService } from '@/features/notifications/infrastructure/p
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
 import { PwaInstallPanel } from '@/features/pwa/presentation/pwa-install-panel';
-import { createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
+import {
+  createThemedStyleSheet,
+  getColors,
+  spacing,
+  type AppColorScheme,
+} from '@/shared/presentation/theme';
+import { useThemePreference } from '@/shared/presentation/theme-preference-provider';
 
 async function exportCareHistory(
   events: CareEvent[],
@@ -59,6 +65,7 @@ async function exportCareHistory(
 
 export default function IndexRoute() {
   const { session, status } = useAuth();
+  const { scheme } = useThemePreference();
 
   if (status === 'loading') {
     return <AuthLoadingScreen />;
@@ -68,10 +75,16 @@ export default function IndexRoute() {
     return <AuthScreen />;
   }
 
-  return <AuthenticatedApp user={session.user} />;
+  return <AuthenticatedApp colorScheme={scheme} user={session.user} />;
 }
 
-function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
+function AuthenticatedApp({
+  colorScheme,
+  user,
+}: {
+  colorScheme: AppColorScheme;
+  user: AuthenticatedUser;
+}) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<AppSection>('handoff');
@@ -119,6 +132,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   }
 
   const activeFamily = context.activeFamily;
+  const appBackground = getColors(colorScheme).background;
   const canManageBabies =
     activeFamily?.role === 'owner' || activeFamily?.role === 'admin';
   const canRecordCare =
@@ -193,7 +207,7 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
   );
   const activeBabyId = context.activeBaby?.id;
   const renderAppScreen = (screen: ReactNode) => (
-    <View style={styles.appShell}>
+    <View style={[styles.appShell, { backgroundColor: appBackground }]}>
       <View style={styles.appScreen}>{screen}</View>
       {compactNavigation ? (
         <View
