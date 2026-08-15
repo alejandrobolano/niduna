@@ -11,10 +11,6 @@ function mapReason(value: unknown): AccountDeletionErrorReason {
     return 'owner_transfer_required';
   }
 
-  if (value === 'recent_authentication_required') {
-    return 'recent_authentication_required';
-  }
-
   return 'unexpected';
 }
 
@@ -39,7 +35,10 @@ async function readFunctionError(error: unknown): Promise<AccountDeletionError> 
 export const supabaseAccountDeletionRepository: AccountDeletionRepository = {
   async deleteAccount(options: DeleteAccountOptions = {}) {
     const { error } = await supabase.functions.invoke('delete-account', {
-      body: { deleteOwnedFamilies: options.deleteOwnedFamilies === true },
+      body: {
+        confirmation: 'ELIMINAR',
+        deleteOwnedFamilies: options.deleteOwnedFamilies === true,
+      },
     });
 
     if (error) {

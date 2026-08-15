@@ -125,7 +125,6 @@ function AuthenticatedApp({ user }: { user: AuthenticatedUser }) {
     <SessionBanner
       dangerContent={
         <AccountDeletionPanel
-          email={user.email}
           ownedFamilyNames={context.families
             .filter((family) => family.role === 'owner')
             .map((family) => family.name)}

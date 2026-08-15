@@ -6,13 +6,10 @@ import {
 
 import {
   chunkValues,
-  hasRecentOtpAuthentication,
   parseDeleteAccountRequest,
-  type AuthenticationMethodReference,
 } from '../_shared/account-deletion-rules.ts';
 
 interface UserClaims {
-  amr?: AuthenticationMethodReference[];
   id?: string;
 }
 
@@ -21,7 +18,6 @@ interface OwnedFamily {
   name: string;
 }
 
-const recentAuthenticationSeconds = 10 * 60;
 const corsHeaders = {
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type',
@@ -86,14 +82,6 @@ function getBearerToken(request: Request): string | undefined {
   }
 
   return authorization.slice('Bearer '.length);
-}
-
-function hasRecentAuthentication(claims: UserClaims): boolean {
-  return hasRecentOtpAuthentication(
-    claims.amr,
-    Math.floor(Date.now() / 1000),
-    recentAuthenticationSeconds,
-  );
 }
 
 async function readRequestBody(request: Request) {
@@ -202,10 +190,6 @@ const authenticatedHandler = withSupabase(
 
     if (!userId || !accessToken) {
       return jsonResponse({ error: 'authentication_required' }, 401);
-    }
-
-    if (!hasRecentAuthentication(claims)) {
-      return jsonResponse({ error: 'recent_authentication_required' }, 401);
     }
 
     try {

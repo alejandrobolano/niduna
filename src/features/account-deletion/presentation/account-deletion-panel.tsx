@@ -6,42 +6,22 @@ import {
   AccountDeletionError,
   type AccountDeletionRepository,
 } from '@/features/account-deletion/application/account-deletion-repository';
-import { AuthFailure, isValidOtp, normalizeOtp } from '@/features/auth/domain/auth';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors, radius, spacing } from '@/shared/presentation/theme';
 
 type DeletionMode = 'account' | 'ownedFamilies';
-type Dialog = 'code' | 'familyWarning' | 'ownerChoice' | 'warning' | undefined;
+type Dialog = 'familyWarning' | 'ownerChoice' | 'warning' | undefined;
 
 interface AccountDeletionPanelProps {
-  email: string;
   ownedFamilyNames: string[];
   repository: AccountDeletionRepository;
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof AuthFailure) {
-    if (error.code === 'invalid_code') {
-      return 'El código no es válido o ha caducado.';
-    }
-
-    if (error.code === 'rate_limited') {
-      return 'Has realizado demasiados intentos. Espera unos minutos.';
-    }
-
-    if (error.code === 'network' || error.code === 'service_unavailable') {
-      return 'No pudimos conectar con el servicio. Revisa la conexión.';
-    }
-  }
-
   if (error instanceof AccountDeletionError) {
     if (error.reason === 'owner_transfer_required') {
       return 'Sigues siendo propietario de una familia. Transfiere primero su propiedad.';
-    }
-
-    if (error.reason === 'recent_authentication_required') {
-      return 'La verificación ha caducado. Solicita un código nuevo.';
     }
 
     if (error.reason === 'network') {
@@ -53,14 +33,11 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function AccountDeletionPanel({
-  email,
   ownedFamilyNames,
   repository,
 }: AccountDeletionPanelProps) {
-  const { requestEmailCode, signOut, verifyEmailCode } = useAuth();
-  const [code, setCode] = useState('');
+  const { signOut } = useAuth();
   const [confirmationText, setConfirmationText] = useState('');
-  const [deletionMode, setDeletionMode] = useState<DeletionMode>('account');
   const [dialog, setDialog] = useState<Dialog>();
   const [error, setError] = useState<string>();
   const [isPending, setIsPending] = useState(false);
@@ -70,42 +47,26 @@ export function AccountDeletionPanel({
       return;
     }
 
-    setCode('');
     setConfirmationText('');
-    setDeletionMode('account');
     setDialog(undefined);
     setError(undefined);
   }
 
   function openDialog() {
     setError(undefined);
-    setDeletionMode('account');
+    setConfirmationText('');
     setDialog(ownedFamilyNames.length > 0 ? 'ownerChoice' : 'warning');
   }
 
   function openFamilyDeletionWarning() {
     setError(undefined);
-    setDeletionMode('ownedFamilies');
+    setConfirmationText('');
     setDialog('familyWarning');
   }
 
-  async function requestConfirmationCode() {
-    setError(undefined);
-    setIsPending(true);
-
-    try {
-      await requestEmailCode(email, { allowCreate: false });
-      setDialog('code');
-    } catch (requestError) {
-      setError(getErrorMessage(requestError));
-    } finally {
-      setIsPending(false);
-    }
-  }
-
-  async function deleteAccount() {
-    if (!isValidOtp(code)) {
-      setError('Introduce los 8 dígitos del código recibido por correo.');
+  async function deleteAccount(mode: DeletionMode) {
+    if (confirmationText.trim().toUpperCase() !== 'ELIMINAR') {
+      setError('Escribe ELIMINAR para continuar.');
       return;
     }
 
@@ -113,9 +74,8 @@ export function AccountDeletionPanel({
     setIsPending(true);
 
     try {
-      await verifyEmailCode(email, code);
       await repository.deleteAccount({
-        deleteOwnedFamilies: deletionMode === 'ownedFamilies',
+        deleteOwnedFamilies: mode === 'ownedFamilies',
       });
       await signOut().catch(() => undefined);
       setDialog(undefined);
@@ -127,7 +87,6 @@ export function AccountDeletionPanel({
   }
 
   const ownedFamilies = ownedFamilyNames.join(', ');
-  const deletesOwnedFamilies = deletionMode === 'ownedFamilies';
 
   return (
     <View style={styles.root}>
@@ -141,13 +100,13 @@ export function AccountDeletionPanel({
       </Pressable>
 
       <ConfirmationModal
-        confirmLabel="Enviar código"
+        confirmLabel="Eliminar definitivamente"
         description="Perderás el acceso a Niduna y tus datos personales se eliminarán. Los cuidados compartidos se conservarán sin identificarte para no romper el historial familiar."
         eyebrow="ACCIÓN IRREVERSIBLE"
         icon={<ShieldAlert color={colors.error} size={24} />}
         isPending={isPending}
         onCancel={closeDialog}
-        onConfirm={() => void requestConfirmationCode()}
+        onConfirm={() => void deleteAccount('account')}
         title="¿Eliminar tu cuenta?"
         tone="danger"
         visible={dialog === 'warning'}
@@ -155,6 +114,14 @@ export function AccountDeletionPanel({
         <Text style={styles.notice}>
           La descarga de una copia completa aún no está disponible. No continúes si necesitas guardar tus datos antes de eliminar la cuenta.
         </Text>
+        <TextInput
+          autoCapitalize="characters"
+          onChangeText={setConfirmationText}
+          placeholder="Escribe ELIMINAR"
+          placeholderTextColor={colors.textMuted}
+          style={styles.confirmationInput}
+          value={confirmationText}
+        />
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ConfirmationModal>
 
@@ -182,14 +149,7 @@ export function AccountDeletionPanel({
         icon={<Trash2 color={colors.error} size={24} />}
         isPending={isPending}
         onCancel={closeDialog}
-        onConfirm={() => {
-          if (confirmationText.trim().toUpperCase() !== 'ELIMINAR') {
-            setError('Escribe ELIMINAR para continuar.');
-            return;
-          }
-
-          void requestConfirmationCode();
-        }}
+        onConfirm={() => void deleteAccount('ownedFamilies')}
         title="¿Eliminar familias y cuenta?"
         tone="danger"
         visible={dialog === 'familyWarning'}
@@ -202,32 +162,6 @@ export function AccountDeletionPanel({
           placeholderTextColor={colors.textMuted}
           style={styles.confirmationInput}
           value={confirmationText}
-        />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-      </ConfirmationModal>
-
-      <ConfirmationModal
-        confirmLabel={deletesOwnedFamilies ? 'Eliminar todo definitivamente' : 'Eliminar definitivamente'}
-        description={`Hemos enviado un código de 8 dígitos a ${email}. Escríbelo para confirmar que eres tú.`}
-        eyebrow="VERIFICA TU IDENTIDAD"
-        icon={<Trash2 color={colors.error} size={24} />}
-        isPending={isPending}
-        onCancel={closeDialog}
-        onConfirm={() => void deleteAccount()}
-        title="Último paso"
-        tone="danger"
-        visible={dialog === 'code'}
-      >
-        <TextInput
-          accessibilityLabel="Código de seguridad"
-          autoComplete="one-time-code"
-          inputMode="numeric"
-          maxLength={8}
-          onChangeText={(value) => setCode(normalizeOtp(value))}
-          placeholder="00000000"
-          placeholderTextColor={colors.textMuted}
-          style={styles.codeInput}
-          value={code}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ConfirmationModal>
@@ -258,19 +192,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     padding: spacing.md,
-  },
-  codeInput: {
-    backgroundColor: colors.background,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 5,
-    minHeight: 56,
-    paddingHorizontal: spacing.lg,
-    textAlign: 'center',
   },
   confirmationInput: {
     backgroundColor: colors.background,
