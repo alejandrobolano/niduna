@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { getColors, type AppColors, type AppColorScheme } from '../src/shared/presentation/theme';
+import {
+  colors,
+  getColors,
+  setActiveColorScheme,
+  type AppColors,
+  type AppColorScheme,
+} from '../src/shared/presentation/theme';
 
 vi.mock('react-native', () => ({
   Appearance: { getColorScheme: () => 'light' },
@@ -64,4 +70,12 @@ describe.each<AppColorScheme>(['light', 'dark'])('%s theme contrast', (scheme) =
     expectReadable(colors, 'primaryPressed', 'aquaSoft');
     expectReadable(colors, 'lavender', 'lavenderSoft');
   });
+});
+
+it('uses the active preference for dynamic colors', () => {
+  setActiveColorScheme('dark');
+  expect(colors.background).toBe(getColors('dark').background);
+
+  setActiveColorScheme('light');
+  expect(colors.background).toBe(getColors('light').background);
 });

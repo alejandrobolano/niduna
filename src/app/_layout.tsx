@@ -1,15 +1,23 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
 
 import { AppUpdateNotificationObserver } from '@/features/app-updates/presentation/app-update-notification-observer';
 import { AuthProvider } from '@/features/auth/presentation/auth-provider';
 import { supabaseAuthService } from '@/features/auth/infrastructure/supabase-auth-service';
 import { NativeNotificationObserver } from '@/features/notifications/presentation/native-notification-observer';
-import { getColors, resolveColorScheme } from '@/shared/presentation/theme';
+import { ThemePreferenceProvider, useThemePreference } from '@/shared/presentation/theme-preference-provider';
+import { getColors } from '@/shared/presentation/theme';
 
 export default function RootLayout() {
-  const scheme = resolveColorScheme(useColorScheme());
+  return (
+    <ThemePreferenceProvider>
+      <ThemedApp />
+    </ThemePreferenceProvider>
+  );
+}
+
+function ThemedApp() {
+  const { scheme } = useThemePreference();
   const palette = getColors(scheme);
 
   return (

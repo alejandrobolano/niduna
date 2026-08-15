@@ -8,6 +8,8 @@ import {
 
 export type AppColorScheme = 'light' | 'dark';
 
+let activeColorScheme: AppColorScheme | undefined;
+
 const lightColors = {
   background: '#FFF8E8',
   surface: '#FFFCF6',
@@ -74,9 +76,17 @@ export function getColors(scheme: AppColorScheme = resolveColorScheme()): AppCol
   return scheme === 'dark' ? darkColors : lightColors;
 }
 
+export function setActiveColorScheme(scheme: AppColorScheme): void {
+  activeColorScheme = scheme;
+}
+
+function getActiveColorScheme(): AppColorScheme {
+  return activeColorScheme ?? resolveColorScheme();
+}
+
 export const colors = new Proxy(lightColors as AppColors, {
   get(_target, property: keyof AppColors) {
-    return getColors()[property];
+    return getColors(getActiveColorScheme())[property];
   },
 });
 
@@ -90,7 +100,7 @@ export function createThemedStyleSheet<T extends NamedStyles<T>>(
 
   return new Proxy(styles.light, {
     get(_target, property) {
-      return styles[resolveColorScheme()][property as keyof T];
+      return styles[getActiveColorScheme()][property as keyof T];
     },
   });
 }

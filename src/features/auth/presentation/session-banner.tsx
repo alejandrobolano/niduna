@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
+import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
@@ -100,6 +101,7 @@ export function SessionBanner({
                   </Text>
                 </View>
               </View>
+              <ThemePreferenceControl />
               {onOpenFamilyActivity ? (
                 <Pressable
                   accessibilityRole="button"
