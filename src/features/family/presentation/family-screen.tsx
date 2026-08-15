@@ -432,7 +432,7 @@ export function FamilyScreen({
 
     try {
       await Share.share({
-        message: `Únete a ${selectedFamily.name} en Niduna con este código: ${createdInvitation.code}. Caduca el ${formatExpiry(createdInvitation.expiresAt)}.`,
+        message: `Únete a ${selectedFamily.name} en Niduna (https://app.niduna.com) con este código: ${createdInvitation.code}. Caduca el ${formatExpiry(createdInvitation.expiresAt)}.`,
       });
     } catch {
       setOperationMessage(
