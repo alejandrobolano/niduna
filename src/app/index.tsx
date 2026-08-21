@@ -43,6 +43,7 @@ import {
 import { AppHeader } from '@/features/home/presentation/app-header';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
+import { NotificationOptInModal } from '@/features/notifications/presentation/notification-opt-in-modal';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
 import { PwaInstallPanel } from '@/features/pwa/presentation/pwa-install-panel';
 import {
@@ -75,7 +76,13 @@ export default function IndexRoute() {
     return <AuthScreen />;
   }
 
-  return <AuthenticatedApp colorScheme={scheme} user={session.user} />;
+  return (
+    <AuthenticatedApp
+      colorScheme={scheme}
+      key={session.user.id}
+      user={session.user}
+    />
+  );
 }
 
 function AuthenticatedApp({
@@ -90,6 +97,7 @@ function AuthenticatedApp({
   const [section, setSection] = useState<AppSection>('handoff');
   const [isCreatingBaby, setIsCreatingBaby] = useState(false);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
+  const [notificationSettingsVersion, setNotificationSettingsVersion] = useState(0);
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
@@ -165,6 +173,7 @@ function AuthenticatedApp({
             <NotificationSettingsPanel
               familyId={activeFamily.id}
               familyName={activeFamily.name}
+              key={`${activeFamily.id}:${notificationSettingsVersion}`}
               permissionService={pushPermissionService}
               repository={supabaseNotificationRepository}
               userId={user.id}
@@ -209,6 +218,15 @@ function AuthenticatedApp({
   const renderAppScreen = (screen: ReactNode) => (
     <View style={[styles.appShell, { backgroundColor: appBackground }]}>
       <View style={styles.appScreen}>{screen}</View>
+      <NotificationOptInModal
+        familyId={activeFamily.id}
+        onActivated={() =>
+          setNotificationSettingsVersion((version) => version + 1)
+        }
+        permissionService={pushPermissionService}
+        repository={supabaseNotificationRepository}
+        userId={user.id}
+      />
       {compactNavigation ? (
         <View
           style={[

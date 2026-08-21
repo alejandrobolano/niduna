@@ -265,7 +265,7 @@ const authenticatedHandler = withSupabase(
       eligibleDevices.map((device) => [device.id, device]),
     );
     const messages = insertedDeliveries.map((delivery) => ({
-      body: 'Alguien de tu familia actualizó el relevo.',
+      body: 'Alguien de tu familia actualiz\u00f3 el relevo.',
       channelId: 'care-updates',
       title: 'Nuevo cuidado registrado',
       to: deviceById.get(delivery.push_device_id)?.expo_push_token,
