@@ -1,15 +1,17 @@
 import { type ReactNode, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { Platform, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { supabaseAppReleaseRepository } from '@/features/app-updates/infrastructure/supabase-app-release-repository';
 import { AppUpdatePanel } from '@/features/app-updates/presentation/app-update-panel';
 import { supabaseAccountDeletionRepository } from '@/features/account-deletion/infrastructure/supabase-account-deletion-repository';
 import { AccountDeletionPanel } from '@/features/account-deletion/presentation/account-deletion-panel';
+import { getAccountSettingsVisibility } from '@/features/auth/application/account-settings-visibility';
 import type { AuthenticatedUser } from '@/features/auth/domain/auth';
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { AuthScreen } from '@/features/auth/presentation/auth-screen';
+import { AccountSettingsScreen } from '@/features/auth/presentation/account-settings-screen';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
@@ -53,6 +55,7 @@ import {
   type AppColorScheme,
 } from '@/shared/presentation/theme';
 import { useThemePreference } from '@/shared/presentation/theme-preference-provider';
+import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
 
 async function exportCareHistory(
   events: CareEvent[],
@@ -95,6 +98,7 @@ function AuthenticatedApp({
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [section, setSection] = useState<AppSection>('handoff');
+  const [isAccountSettingsOpen, setIsAccountSettingsOpen] = useState(false);
   const [isCreatingBaby, setIsCreatingBaby] = useState(false);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
   const [notificationSettingsVersion, setNotificationSettingsVersion] = useState(0);
@@ -116,6 +120,7 @@ function AuthenticatedApp({
   }
 
   function changeSection(nextSection: AppSection) {
+    setIsAccountSettingsOpen(false);
     setSection(nextSection);
 
     if (nextSection !== 'baby') {
@@ -147,29 +152,57 @@ function AuthenticatedApp({
     canManageBabies || activeFamily?.role === 'caregiver';
   const sessionBanner = (
     <SessionBanner
-      dangerContent={
-        <AccountDeletionPanel
-          ownedFamilyNames={context.families
-            .filter((family) => family.role === 'owner')
-            .map((family) => family.name)}
-          repository={supabaseAccountDeletionRepository}
-        />
-      }
       email={user.email}
+      onOpenAccountSettings={() => setIsAccountSettingsOpen(true)}
       onOpenFamilyActivity={
         canManageBabies ? () => changeSection('activity') : undefined
       }
-      settingsContent={
+    />
+  );
+
+  if (isAccountSettingsOpen) {
+    const userAgent =
+      Platform.OS === 'web' && typeof navigator !== 'undefined'
+        ? navigator.userAgent
+        : undefined;
+    const visibility = getAccountSettingsVisibility({
+      hasActiveFamily: Boolean(activeFamily),
+      platform: Platform.OS,
+      userAgent,
+    });
+    const deviceContent =
+      visibility.showPwaInstallation || visibility.showAndroidUpdates ? (
         <View style={styles.accountSettings}>
+          {visibility.showPwaInstallation ? <PwaInstallPanel /> : null}
+          {visibility.showAndroidUpdates ? (
+            <AppUpdatePanel repository={supabaseAppReleaseRepository} />
+          ) : null}
+        </View>
+      ) : undefined;
+
+    return (
+      <AccountSettingsScreen
+        appearanceContent={<ThemePreferenceControl />}
+        dangerContent={
+          <AccountDeletionPanel
+            ownedFamilyNames={context.families
+              .filter((family) => family.role === 'owner')
+              .map((family) => family.name)}
+            repository={supabaseAccountDeletionRepository}
+          />
+        }
+        dataContent={
           <DataExportAction
             description="Perfil, preferencias, familias y aportaciones realizadas por ti."
             label="Descargar mis datos"
             repository={supabaseDataExportRepository}
             scope={{ type: 'personal' }}
           />
-          <PwaInstallPanel />
-          <AppUpdatePanel repository={supabaseAppReleaseRepository} />
-          {activeFamily ? (
+        }
+        deviceContent={deviceContent}
+        email={user.email}
+        notificationContent={
+          activeFamily && visibility.showNotifications ? (
             <NotificationSettingsPanel
               familyId={activeFamily.id}
               familyName={activeFamily.name}
@@ -178,11 +211,12 @@ function AuthenticatedApp({
               repository={supabaseNotificationRepository}
               userId={user.id}
             />
-          ) : null}
-        </View>
-      }
-    />
-  );
+          ) : undefined
+        }
+        onBack={() => setIsAccountSettingsOpen(false)}
+      />
+    );
+  }
 
   if (!activeFamily) {
     return (
