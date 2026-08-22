@@ -9,6 +9,7 @@ Todos los cambios relevantes de Niduna se documentan en este archivo siguiendo
 
 - Pantalla independiente de cuenta y ajustes en `/settings`.
 - Versión actual visible en el panel de cuenta.
+- Recorrido contextual y repetible por Relevo, Registro, Familia y avisos.
 
 ## [0.1.0] - 2026-08-22
 

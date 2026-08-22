@@ -5,6 +5,7 @@ import type {
   NotificationRepository,
   PushPermissionService,
 } from '@/features/notifications/application/notification-repository';
+import { activateFamilyNotifications } from '@/features/notifications/application/activate-family-notifications';
 import {
   defaultNotificationPreferences,
   type NotificationCategory,
@@ -159,22 +160,26 @@ export function NotificationSettingsPanel({
     setMessage(undefined);
 
     try {
-      const result = await permissionService.requestRegistration();
+      const result = await activateFamilyNotifications({
+        familyId,
+        permissionService,
+        preferences,
+        repository,
+        userId,
+      });
 
-      if (result.status === 'denied') {
+      if (result === 'denied') {
         setMessage(
           'El permiso está desactivado. Puedes habilitarlo desde los ajustes del navegador o dispositivo.',
         );
         return;
       }
 
-      if (result.status === 'unavailable') {
+      if (result === 'unavailable') {
         setMessage('No pudimos preparar las notificaciones en este dispositivo.');
         return;
       }
 
-      await repository.registerDevice(result.registration);
-      await repository.savePreferences(familyId, userId, preferences);
       setHasActiveDevice(true);
       setMessage('Avisos activados para este dispositivo.');
     } catch {

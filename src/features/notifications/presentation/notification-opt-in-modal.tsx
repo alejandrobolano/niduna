@@ -1,4 +1,4 @@
-import { BellRing } from 'lucide-react-native';
+import { BellRing, CircleCheck } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
 
@@ -6,6 +6,7 @@ import type {
   NotificationRepository,
   PushPermissionService,
 } from '@/features/notifications/application/notification-repository';
+import { activateFamilyNotifications } from '@/features/notifications/application/activate-family-notifications';
 import {
   postponeNotificationPrompt,
   shouldShowNotificationPrompt,
@@ -22,16 +23,22 @@ import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 interface NotificationOptInModalProps {
   familyId: string;
   onActivated?: () => void;
+  onResolved?: () => void;
   permissionService: PushPermissionService;
+  presentation?: 'onboarding' | 'scheduled';
   repository: NotificationRepository;
+  suppressed?: boolean;
   userId: string;
 }
 
 export function NotificationOptInModal({
   familyId,
   onActivated,
+  onResolved,
   permissionService,
+  presentation = 'scheduled',
   repository,
+  suppressed = false,
   userId,
 }: NotificationOptInModalProps) {
   const [promptState, setPromptState] = useState<NotificationPromptState>(() =>
@@ -39,9 +46,14 @@ export function NotificationOptInModal({
   );
   const [isPending, setIsPending] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [hasActiveDevice, setHasActiveDevice] = useState(false);
   const [message, setMessage] = useState<string>();
 
   useEffect(() => {
+    if (suppressed) {
+      return;
+    }
+
     let active = true;
 
     void permissionService
@@ -51,23 +63,45 @@ export function NotificationOptInModal({
         settings: await repository.loadSettings(familyId, userId, registration),
       }))
       .then(({ settings }) => {
-        if (active && !settings.hasActiveDevice) {
-          setIsVisible(shouldShowNotificationPrompt(promptState, new Date()));
+        if (active) {
+          setHasActiveDevice(settings.hasActiveDevice);
+          setIsVisible(
+            presentation === 'onboarding' ||
+              (!settings.hasActiveDevice &&
+                shouldShowNotificationPrompt(promptState, new Date())),
+          );
         }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active && presentation === 'onboarding') {
+          setMessage('No pudimos comprobar el estado de los avisos. Puedes intentarlo ahora.');
+          setIsVisible(true);
+        }
+      });
 
     return () => {
       active = false;
     };
-  }, [familyId, permissionService, promptState, repository, userId]);
+  }, [
+    familyId,
+    permissionService,
+    presentation,
+    promptState,
+    repository,
+    suppressed,
+    userId,
+  ]);
 
   function postpone() {
-    const next = postponeNotificationPrompt(promptState, new Date());
-    saveNotificationPromptState(userId, next);
-    setPromptState(next);
+    if (!hasActiveDevice) {
+      const next = postponeNotificationPrompt(promptState, new Date());
+      saveNotificationPromptState(userId, next);
+      setPromptState(next);
+    }
+
     setIsVisible(false);
     setMessage(undefined);
+    onResolved?.();
   }
 
   async function enableNotifications() {
@@ -75,27 +109,29 @@ export function NotificationOptInModal({
     setMessage(undefined);
 
     try {
-      const result = await permissionService.requestRegistration();
+      const result = await activateFamilyNotifications({
+        familyId,
+        permissionService,
+        preferences: defaultNotificationPreferences,
+        repository,
+        userId,
+      });
 
-      if (result.status === 'denied') {
+      if (result === 'denied') {
         setMessage(
           'El permiso está bloqueado. Actívalo desde los ajustes del navegador o del dispositivo.',
         );
         return;
       }
 
-      if (result.status === 'unavailable') {
+      if (result === 'unavailable') {
         setMessage('Este dispositivo no pudo preparar las notificaciones.');
         return;
       }
 
-      await repository.registerDevice(result.registration);
-      await repository.savePreferences(
-        familyId,
-        userId,
-        defaultNotificationPreferences,
-      );
+      setHasActiveDevice(true);
       onActivated?.();
+      onResolved?.();
       setIsVisible(false);
     } catch {
       setMessage('No pudimos activar los avisos. Comprueba la conexión.');
@@ -105,23 +141,41 @@ export function NotificationOptInModal({
   }
 
   const isLastReminder = promptState.dismissals === 2;
+  const isOnboarding = presentation === 'onboarding';
+  const title = hasActiveDevice ? 'Ya estás al día' : 'No te pierdas el relevo';
+  const description = hasActiveDevice
+    ? 'Los avisos ya están activos en este dispositivo. Podrás personalizarlos cuando quieras desde Mi cuenta y ajustes.'
+    : isOnboarding
+      ? 'Activa los avisos para enterarte de los cuidados, medidas, notas e historias que comparta tu familia. El sistema operativo o la conexión pueden retrasarlos.'
+      : isLastReminder
+        ? 'Este es el último recordatorio. Si prefieres esperar, podrás activarlos cuando quieras desde Tu cuenta.'
+        : 'Recibe en este dispositivo los cuidados, medidas, notas e historias que comparta tu familia.';
 
   return (
     <ConfirmationModal
-      cancelLabel="Ahora no"
-      confirmLabel="Activar avisos"
-      description={
-        isLastReminder
-          ? 'Este es el último recordatorio. Si prefieres esperar, podrás activarlos cuando quieras desde Tu cuenta.'
-          : 'Recibe en este dispositivo los cuidados, medidas, notas e historias que comparta tu familia.'
+      cancelLabel={hasActiveDevice ? 'Cerrar' : 'Ahora no'}
+      confirmLabel={hasActiveDevice ? 'Continuar' : 'Activar avisos'}
+      description={description}
+      eyebrow={hasActiveDevice ? 'CONFIGURACIÓN COMPLETA' : 'AVISOS DE TU FAMILIA'}
+      icon={
+        hasActiveDevice ? (
+          <CircleCheck color={colors.primaryPressed} size={23} />
+        ) : (
+          <BellRing color={colors.primaryPressed} size={23} />
+        )
       }
-      eyebrow="AVISOS DE TU FAMILIA"
-      icon={<BellRing color={colors.primaryPressed} size={23} />}
       isPending={isPending}
       onCancel={postpone}
-      onConfirm={() => void enableNotifications()}
-      title="No te pierdas el relevo"
-      visible={isVisible}
+      onConfirm={
+        hasActiveDevice
+          ? () => {
+              setIsVisible(false);
+              onResolved?.();
+            }
+          : () => void enableNotifications()
+      }
+      title={title}
+      visible={!suppressed && isVisible}
     >
       {message ? (
         <Text accessibilityLiveRegion="polite" style={styles.message}>
