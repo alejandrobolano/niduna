@@ -4,6 +4,7 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
+import { careNotificationCopy } from '../_shared/notification-copy.ts';
 import { selectEligibleCareDevices } from '../_shared/notification-rules.ts';
 
 type CareEventType = 'diaper' | 'feeding' | 'sleep';
@@ -265,9 +266,9 @@ const authenticatedHandler = withSupabase(
       eligibleDevices.map((device) => [device.id, device]),
     );
     const messages = insertedDeliveries.map((delivery) => ({
-      body: 'Alguien de tu familia actualiz\u00f3 el relevo.',
+      body: careNotificationCopy.body,
       channelId: 'care-updates',
-      title: 'Nuevo cuidado registrado',
+      title: careNotificationCopy.title,
       to: deviceById.get(delivery.push_device_id)?.expo_push_token,
     }));
     const expoResponse = await fetch(

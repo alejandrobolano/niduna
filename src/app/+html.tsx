@@ -1,6 +1,8 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
+import { webViewportContent } from '@/shared/presentation/web-viewport';
+
 export default function Root({ children }: PropsWithChildren) {
   return (
     <html lang="es">
@@ -8,7 +10,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta content="IE=edge" httpEquiv="X-UA-Compatible" />
         <meta
-          content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+          content={webViewportContent}
           name="viewport"
         />
         <meta content="#fff8e8" media="(prefers-color-scheme: light)" name="theme-color" />

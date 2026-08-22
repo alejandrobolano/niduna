@@ -4,6 +4,7 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
+import { careNotificationCopy } from '../_shared/notification-copy.ts';
 import { selectEligibleCareDevices } from '../_shared/notification-rules.ts';
 
 type CareEventType = 'diaper' | 'feeding' | 'sleep';
@@ -222,10 +223,7 @@ async function sendWebNotification(
       body: JSON.stringify({
         message: {
           fid: installationId,
-          notification: {
-            body: 'Alguien de tu familia actualiz\u00f3 el relevo.',
-            title: 'Nuevo cuidado registrado',
-          },
+          notification: careNotificationCopy,
           webpush: {
             fcm_options: { link: appUrl },
             headers: { Urgency: 'normal' },
