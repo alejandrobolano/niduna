@@ -3,6 +3,8 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
+import { previewBuildNotificationCopy } from '../_shared/notification-copy.ts';
+
 interface EasBuildWebhookPayload {
   appId?: string;
   artifacts?: { buildUrl?: string };
@@ -203,10 +205,10 @@ async function sendNotifications(
 
   for (const deliveryBatch of chunk(deliveries, 100)) {
     const messages = deliveryBatch.map((delivery) => ({
-      body: 'Ya puedes descargar la nueva APK de prueba desde Niduna.',
+      body: previewBuildNotificationCopy.body,
       channelId: 'care-updates',
       data: { type: 'app_update', url: artifactUrl },
-      title: 'Nueva versión de Niduna',
+      title: previewBuildNotificationCopy.title,
       to: deviceById.get(delivery.push_device_id)?.expo_push_token,
     }));
     const response = await fetch('https://exp.host/--/api/v2/push/send', {

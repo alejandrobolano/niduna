@@ -5,7 +5,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
@@ -34,6 +33,7 @@ import type {
 import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 
 const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
@@ -157,7 +157,16 @@ export function CareEditSheet({
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} transparent visible>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : Platform.OS === 'android'
+              ? 'height'
+              : undefined
+        }
+        style={styles.backdrop}
+      >
         <Pressable accessibilityLabel="Cerrar" onPress={onClose} style={styles.dismissArea} />
         <View accessibilityViewIsModal style={styles.sheet}>
           <View style={styles.heading}>
@@ -169,7 +178,7 @@ export function CareEditSheet({
               <X color={colors.text} size={20} />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+          <KeyboardAwareScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
             <DatePickerField label="Fecha" maximumDate={dateToIso(new Date())} onChange={setDate} value={date} />
             <TimePickerField
               hour={hour}
@@ -212,7 +221,7 @@ export function CareEditSheet({
             <Pressable disabled={isSaving || invalidAmount || invalidMeasurement || invalidNote} onPress={() => void save()} style={[styles.saveButton, (isSaving || invalidAmount || invalidMeasurement || invalidNote) && styles.disabled]}>
               <Text style={styles.saveText}>{isSaving ? 'Guardando…' : 'Guardar cambios'}</Text>
             </Pressable>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>

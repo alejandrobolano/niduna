@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Text, TextInput, type TextInputProps, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { useKeyboardAwareInput } from '@/shared/presentation/keyboard-aware-scroll-view';
 
 interface ProfileFieldProps extends TextInputProps {
   disabled?: boolean;
@@ -16,10 +17,13 @@ export function ProfileField({
   error,
   label,
   hint,
+  onFocus,
   trailing,
   style,
   ...inputProps
 }: ProfileFieldProps) {
+  const revealInput = useKeyboardAwareInput();
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -27,6 +31,10 @@ export function ProfileField({
         <TextInput
           accessibilityLabel={label}
           editable={!disabled}
+          onFocus={(event) => {
+            onFocus?.(event);
+            revealInput(event.target);
+          }}
           placeholderTextColor={colors.textMuted}
           style={[styles.input, style, disabled && styles.inputDisabled]}
           {...inputProps}

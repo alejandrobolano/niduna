@@ -5,7 +5,6 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
@@ -32,6 +31,7 @@ import type {
   SleepEvent,
 } from '@/features/care/domain/care-event';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 
 export type CareAction =
   | 'diaper'
@@ -239,7 +239,13 @@ export function CareActionSheet({
       visible={Boolean(action)}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={
+          Platform.OS === 'ios'
+            ? 'padding'
+            : Platform.OS === 'android'
+              ? 'height'
+              : undefined
+        }
         style={styles.backdrop}
       >
         <Pressable
@@ -265,7 +271,7 @@ export function CareActionSheet({
             </Pressable>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             contentContainerStyle={styles.form}
             keyboardShouldPersistTaps="handled"
           >
@@ -421,7 +427,7 @@ export function CareActionSheet({
                 {isSaving ? 'Guardando…' : buttonLabel}
               </Text>
             </Pressable>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>

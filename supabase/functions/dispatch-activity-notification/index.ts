@@ -9,6 +9,7 @@ import {
   type ActivityNotificationCategory,
   type ActivityRecipientPreference,
 } from '../_shared/activity-notification-rules.ts';
+import { activityNotificationCopy } from '../_shared/notification-copy.ts';
 
 type DeliveryChannel = 'native' | 'web';
 
@@ -243,29 +244,6 @@ function isInactiveInstallation(errorCode: string): boolean {
     errorCode === 'INSTALLATION_ID_NOT_REGISTERED';
 }
 
-function getNotificationCopy(
-  activityType: ActivityNotificationCategory,
-): { body: string; title: string } {
-  if (activityType === 'note') {
-    return {
-      body: 'Alguien de tu familia a\u00f1adi\u00f3 una nota al relevo.',
-      title: 'Nueva nota familiar',
-    };
-  }
-
-  if (activityType === 'story') {
-    return {
-      body: 'Alguien de tu familia comparti\u00f3 un nuevo momento.',
-      title: 'Nueva historia familiar',
-    };
-  }
-
-  return {
-    body: 'Alguien de tu familia actualiz\u00f3 las medidas del beb\u00e9.',
-    title: 'Nuevas medidas registradas',
-  };
-}
-
 function getWebAppUrl(request: Request): string {
   const configuredOrigins = (
     Deno.env.get('WEB_APP_ORIGINS') ??
@@ -444,7 +422,7 @@ async function dispatchNative(
     return 0;
   }
 
-  const copy = getNotificationCopy(activityType);
+  const copy = activityNotificationCopy[activityType];
   const deviceById = new Map(devices.map((device) => [device.id, device]));
   let response: Response;
 
@@ -504,7 +482,7 @@ async function sendWebNotification(
   installationId: string,
   activityType: ActivityNotificationCategory,
 ): Promise<{ errorCode?: string; messageId?: string }> {
-  const copy = getNotificationCopy(activityType);
+  const copy = activityNotificationCopy[activityType];
   const response = await fetch(
     `https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`,
     {
