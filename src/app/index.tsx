@@ -1,5 +1,10 @@
 import { useRouter } from 'expo-router';
-import { type ReactNode, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -40,6 +45,20 @@ import { AppHeader } from '@/features/home/presentation/app-header';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationOptInModal } from '@/features/notifications/presentation/notification-opt-in-modal';
+import {
+  getGuidedOnboardingCompletion,
+  getGuidedOnboardingDismissal,
+  getGuidedOnboardingSteps,
+  shouldStartGuidedOnboarding,
+  type GuidedOnboardingState,
+  type GuidedOnboardingStep,
+} from '@/features/onboarding/domain/guided-onboarding';
+import {
+  consumeGuidedOnboardingReplay,
+  loadGuidedOnboardingState,
+  saveGuidedOnboardingState,
+} from '@/features/onboarding/infrastructure/guided-onboarding-storage';
+import { GuidedOnboardingOverlay } from '@/features/onboarding/presentation/guided-onboarding-overlay';
 import {
   createThemedStyleSheet,
   getColors,
@@ -91,10 +110,44 @@ function AuthenticatedApp({
   const [section, setSection] = useState<AppSection>('handoff');
   const [isCreatingBaby, setIsCreatingBaby] = useState(false);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
+  const [onboardingState, setOnboardingState] = useState<
+    GuidedOnboardingState | undefined
+  >(() => loadGuidedOnboardingState(user.id));
+  const [onboardingSessionFinished, setOnboardingSessionFinished] =
+    useState(false);
+  const [notificationPresentation, setNotificationPresentation] = useState<
+    'onboarding' | 'scheduled'
+  >('scheduled');
+  const [suppressScheduledNotifications, setSuppressScheduledNotifications] =
+    useState(false);
+  const [replayRequested, setReplayRequested] = useState(() =>
+    consumeGuidedOnboardingReplay(user.id),
+  );
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
   );
+
+  const hasActiveFamily = Boolean(context.activeFamily);
+  const onboardingSteps = useMemo(
+    () =>
+      getGuidedOnboardingSteps({
+        hasActiveBaby: Boolean(context.activeBaby),
+        hasActiveFamily,
+      }),
+    [context.activeBaby, hasActiveFamily],
+  );
+  const onboardingShouldStart =
+    context.status === 'ready' &&
+    (replayRequested ||
+      shouldStartGuidedOnboarding(onboardingState, hasActiveFamily));
+  const isOnboardingVisible =
+    onboardingShouldStart && !onboardingSessionFinished;
+
+  const showOnboardingStep = useCallback((step: GuidedOnboardingStep) => {
+    setSection(step.section);
+    setIsCreatingBaby(false);
+  }, []);
 
   if (context.status === 'loading') {
     return <AuthLoadingScreen />;
@@ -115,6 +168,45 @@ function AuthenticatedApp({
       setIsCreatingBaby(false);
     }
   }
+
+  function saveOnboardingResult(nextState: GuidedOnboardingState) {
+    if (!replayRequested || nextState.status === 'completed') {
+      saveGuidedOnboardingState(user.id, nextState);
+      setOnboardingState(nextState);
+    }
+
+    setReplayRequested(false);
+  }
+
+  function dismissOnboarding() {
+    saveOnboardingResult(getGuidedOnboardingDismissal());
+    setOnboardingSessionFinished(true);
+    setSuppressScheduledNotifications(true);
+  }
+
+  function completeOnboarding() {
+    const completion = getGuidedOnboardingCompletion(hasActiveFamily);
+    saveOnboardingResult(completion);
+    setOnboardingSessionFinished(true);
+
+    if (!hasActiveFamily) {
+      setSection('family');
+      return;
+    }
+
+    setSuppressScheduledNotifications(true);
+    setNotificationPresentation('onboarding');
+  }
+
+  const onboardingOverlay = isOnboardingVisible ? (
+    <GuidedOnboardingOverlay
+      onComplete={completeOnboarding}
+      onDismiss={dismissOnboarding}
+      onStepChange={showOnboardingStep}
+      steps={onboardingSteps}
+      visible
+    />
+  ) : null;
 
   function addBaby() {
     setIsCreatingBaby(true);
@@ -150,15 +242,18 @@ function AuthenticatedApp({
 
   if (!activeFamily) {
     return (
-      <FamilyScreen
-        dataExportRepository={supabaseDataExportRepository}
-        onContextChanged={(familyId) =>
-          context.refresh(familyId ? { familyId } : undefined)
-        }
-        repository={supabaseFamilyRepository}
-        topContent={sessionBanner}
-        userId={user.id}
-      />
+      <View style={[styles.appShell, { backgroundColor: appBackground }]}>
+        <FamilyScreen
+          dataExportRepository={supabaseDataExportRepository}
+          onContextChanged={(familyId) =>
+            context.refresh(familyId ? { familyId } : undefined)
+          }
+          repository={supabaseFamilyRepository}
+          topContent={sessionBanner}
+          userId={user.id}
+        />
+        {onboardingOverlay}
+      </View>
     );
   }
 
@@ -184,10 +279,23 @@ function AuthenticatedApp({
       <View style={styles.appScreen}>{screen}</View>
       <NotificationOptInModal
         familyId={activeFamily.id}
+        key={notificationPresentation}
+        onResolved={() => {
+          setNotificationPresentation('scheduled');
+          setSuppressScheduledNotifications(true);
+        }}
         permissionService={pushPermissionService}
+        presentation={notificationPresentation}
         repository={supabaseNotificationRepository}
+        suppressed={
+          notificationPresentation === 'scheduled' &&
+          (isOnboardingVisible ||
+            suppressScheduledNotifications ||
+            onboardingShouldStart)
+        }
         userId={user.id}
       />
+      {onboardingOverlay}
       {compactNavigation ? (
         <View
           style={[

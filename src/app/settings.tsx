@@ -19,6 +19,7 @@ import { useFamilyBabyContext } from '@/features/family/presentation/use-family-
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
 import { NotificationSettingsPanel } from '@/features/notifications/presentation/notification-settings-panel';
+import { requestGuidedOnboardingReplay } from '@/features/onboarding/infrastructure/guided-onboarding-storage';
 import { PwaInstallPanel } from '@/features/pwa/presentation/pwa-install-panel';
 import { createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
 import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
@@ -47,6 +48,10 @@ export default function SettingsRoute() {
     <AuthenticatedSettings
       email={session.user.email}
       onBack={goBack}
+      onReplayOnboarding={() => {
+        requestGuidedOnboardingReplay(session.user.id);
+        router.replace('/');
+      }}
       userId={session.user.id}
     />
   );
@@ -55,10 +60,12 @@ export default function SettingsRoute() {
 function AuthenticatedSettings({
   email,
   onBack,
+  onReplayOnboarding,
   userId,
 }: {
   email: string;
   onBack: () => void;
+  onReplayOnboarding: () => void;
   userId: string;
 }) {
   const context = useFamilyBabyContext(
@@ -127,6 +134,7 @@ function AuthenticatedSettings({
         ) : undefined
       }
       onBack={onBack}
+      onReplayOnboarding={onReplayOnboarding}
     />
   );
 }
