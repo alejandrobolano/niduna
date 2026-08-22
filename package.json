@@ -57,7 +57,9 @@
     "web:export": "expo export --platform web && node scripts/write-web-push-worker.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "version:check": "node scripts/check-version.mjs",
+    "version:set": "node scripts/set-version.mjs"
   },
   "private": true,
   "packageManager": "pnpm@11.9.0"

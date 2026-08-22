@@ -1,6 +1,8 @@
 import {
   ArrowLeft,
   Bell,
+  BookOpen,
+  CircleHelp,
   Database,
   Smartphone,
   UserRound,
@@ -116,6 +118,29 @@ export function AccountSettingsScreen({
             {dataContent}
           </SettingsSection>
 
+          <SettingsSection icon={CircleHelp} title="Ayuda">
+            <Pressable
+              accessibilityHint="Estará disponible cuando se implemente el recorrido de bienvenida"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: true }}
+              disabled
+              style={styles.onboardingAction}
+            >
+              <View style={styles.onboardingIcon}>
+                <BookOpen color={colors.lavender} size={19} />
+              </View>
+              <View style={styles.onboardingCopy}>
+                <Text style={styles.onboardingTitle}>Repetir introducción</Text>
+                <Text style={styles.onboardingDescription}>
+                  Vuelve a descubrir Relevo, Registro, Familia y avisos.
+                </Text>
+              </View>
+              <View style={styles.upcomingBadge}>
+                <Text style={styles.upcomingText}>Próximamente</Text>
+              </View>
+            </Pressable>
+          </SettingsSection>
+
           <View style={styles.dangerArea}>{dangerContent}</View>
         </View>
       </ScrollView>
@@ -201,6 +226,36 @@ const styles = createThemedStyleSheet((colors) => ({
     lineHeight: 17,
     marginTop: spacing.xs,
   },
+  onboardingAction: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 64,
+    opacity: 0.72,
+  },
+  onboardingIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.lavenderSoft,
+    borderRadius: radius.md,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  onboardingCopy: { flex: 1 },
+  onboardingTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
+  onboardingDescription: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  upcomingBadge: {
+    backgroundColor: colors.lavenderSoft,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  upcomingText: { color: colors.lavender, fontSize: 9, fontWeight: '900' },
   dangerArea: { paddingHorizontal: spacing.sm },
   pressed: { opacity: 0.7, transform: [{ scale: 0.97 }] },
 }));

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { ChevronRight, History, Settings2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
@@ -21,6 +22,7 @@ export function SessionBanner({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
+  const appVersion = Constants.expoConfig?.version;
 
   async function handleSignOut() {
     setError(undefined);
@@ -144,19 +146,24 @@ export function SessionBanner({
                 </Text>
               ) : null}
             </View>
-            <Pressable
-              accessibilityRole="button"
-              disabled={isSigningOut}
-              onPress={() => void handleSignOut()}
-              style={({ pressed }) => [
-                styles.signOutButton,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <Text style={styles.signOutButtonText}>
-                {isSigningOut ? 'Saliendo…' : 'Cerrar sesión'}
+            <View style={styles.panelFooter}>
+              <Pressable
+                accessibilityRole="button"
+                disabled={isSigningOut}
+                onPress={() => void handleSignOut()}
+                style={({ pressed }) => [
+                  styles.signOutButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.signOutButtonText}>
+                  {isSigningOut ? 'Saliendo…' : 'Cerrar sesión'}
+                </Text>
+              </Pressable>
+              <Text style={styles.version}>
+                Niduna{appVersion ? ` v${appVersion}` : ''} · Beta
               </Text>
-            </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -281,11 +288,16 @@ const styles = createThemedStyleSheet((colors) => ({
   linkTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   linkText: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
   error: { color: colors.error, fontSize: 11, marginTop: spacing.xs },
+  panelFooter: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 'auto',
+  },
   signOutButton: {
     alignItems: 'center',
     alignSelf: 'flex-start',
     justifyContent: 'center',
-    marginTop: 'auto',
     minHeight: 40,
     paddingHorizontal: spacing.sm,
   },
@@ -296,4 +308,5 @@ const styles = createThemedStyleSheet((colors) => ({
     fontWeight: '800',
     textDecorationLine: 'underline',
   },
+  version: { color: colors.textMuted, fontSize: 9, fontWeight: '700' },
 }));
