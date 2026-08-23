@@ -1,5 +1,9 @@
 import type { FamilyMember, FamilyRole } from '@/features/family/domain/family';
 
+export function canRenameFamily(actorRole: FamilyRole): boolean {
+  return actorRole === 'owner';
+}
+
 export function canRemoveFamilyMember(
   actorRole: FamilyRole,
   target: Pick<FamilyMember, 'isCurrentUser' | 'role'>,

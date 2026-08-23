@@ -37,6 +37,11 @@ export interface UpdateFamilyIdentityInput {
   relationship: FamilyRelationship;
 }
 
+export interface UpdateFamilyNameInput {
+  familyId: string;
+  name: string;
+}
+
 export interface FamilyRepository {
   acceptInvitation(input: AcceptFamilyInvitationInput): Promise<string>;
   createFamily(input: CreateFamilyInput): Promise<string>;
@@ -49,4 +54,5 @@ export interface FamilyRepository {
   revokeInvitation(invitationId: string): Promise<void>;
   transferOwnership(memberId: string): Promise<void>;
   updateIdentity(input: UpdateFamilyIdentityInput): Promise<void>;
+  updateName(input: UpdateFamilyNameInput): Promise<void>;
 }

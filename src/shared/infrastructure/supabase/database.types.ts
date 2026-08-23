@@ -587,6 +587,13 @@ export type Database = {
           sleep_minutes: number;
         }[];
       };
+      rename_family: {
+        Args: {
+          target_family_id: string;
+          target_name: string;
+        };
+        Returns: undefined;
+      };
       delete_personal_account_data: {
         Args: { target_user_id: string };
         Returns: undefined;

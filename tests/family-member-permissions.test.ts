@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  canRenameFamily,
   canRemoveFamilyMember,
   canTransferFamilyOwnership,
 } from '../src/features/family/application/family-member-permissions';
+
+describe('family name permissions', () => {
+  it('allows only the owner to rename the family', () => {
+    expect(canRenameFamily('owner')).toBe(true);
+    expect(canRenameFamily('admin')).toBe(false);
+    expect(canRenameFamily('caregiver')).toBe(false);
+    expect(canRenameFamily('viewer')).toBe(false);
+  });
+});
 
 describe('family member removal permissions', () => {
   it('allows owners to remove administrators and regular members', () => {
