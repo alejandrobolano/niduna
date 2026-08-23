@@ -17,6 +17,7 @@ interface BabyRow {
   id: string;
   life_stage: BabyLifeStage;
   name: string;
+  photo_url?: string;
 }
 
 interface FollowerRow {
@@ -81,5 +82,6 @@ function mapBaby(baby: BabyRow) {
     id: baby.id,
     lifeStage: baby.life_stage,
     name: baby.name,
+    photoUrl: baby.photo_url,
   };
 }

@@ -74,6 +74,7 @@ const styles = createThemedStyleSheet((colors) => ({
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.md,
+    justifyContent: 'flex-start',
     padding: spacing.sm,
     width: '100%',
   },
@@ -86,6 +87,7 @@ const styles = createThemedStyleSheet((colors) => ({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.sm,
+    justifyContent: 'flex-start',
   },
   contextCompact: { flex: 1, minWidth: 0 },
 }));

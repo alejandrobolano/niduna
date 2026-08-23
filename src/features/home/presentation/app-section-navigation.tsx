@@ -3,7 +3,13 @@ import { Pressable, Text, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
-export type AppSection = 'handoff' | 'history' | 'baby' | 'family' | 'activity';
+export type AppSection =
+  | 'handoff'
+  | 'history'
+  | 'summary'
+  | 'baby'
+  | 'family'
+  | 'activity';
 
 interface AppSectionNavigationProps {
   onChange: (section: AppSection) => void;
@@ -37,6 +43,7 @@ export function AppSectionNavigation({
       {sections.map((section) => {
         const selected =
           value === section.value ||
+          (value === 'summary' && section.value === 'history') ||
           (value === 'activity' && section.value === 'family');
 
         return (

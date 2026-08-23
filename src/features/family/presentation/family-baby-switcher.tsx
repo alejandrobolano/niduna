@@ -1,4 +1,5 @@
 import { ChevronDown, Plus, X } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,6 +42,7 @@ export function FamilyBabySwitcher({
     value: family.id,
   }));
   const babyOptions = activeFamily.babies.map((baby) => ({
+    imageUrl: baby.photoUrl,
     label: baby.name,
     supportingText:
       baby.lifeStage === 'expected' ? 'Aún por nacer' : 'Ya nació',
@@ -77,9 +79,19 @@ export function FamilyBabySwitcher({
           pressed && styles.buttonPressed,
         ]}
       >
-        <View style={styles.contextAvatar}>
-          <Text style={styles.contextAvatarText}>{initial}</Text>
-        </View>
+        {activeBaby?.photoUrl ? (
+          <Image
+            accessibilityLabel={`Foto de ${activeBaby.name}`}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            source={activeBaby.photoUrl}
+            style={styles.contextAvatar}
+          />
+        ) : (
+          <View style={styles.contextAvatar}>
+            <Text style={styles.contextAvatarText}>{initial}</Text>
+          </View>
+        )}
         <View style={styles.contextCopy}>
           <Text numberOfLines={1} style={styles.contextName}>
             {isCreatingBaby

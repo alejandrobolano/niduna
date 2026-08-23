@@ -1,10 +1,12 @@
 import { Check, ChevronDown, X } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 export interface SelectOption<T extends string> {
+  imageUrl?: string;
   label: string;
   supportingText?: string;
   value: T;
@@ -67,14 +69,24 @@ export function SelectField<T extends string>({
           pressed && !disabled && styles.triggerPressed,
         ]}
       >
-        <View style={styles.dropIcon}>
-          <View style={styles.dropTop} />
-          <View style={styles.dropBody}>
-            <Text numberOfLines={1} style={styles.dropText}>
-              {selectedOption ? getOptionMark(selectedOption.label) : '?'}
-            </Text>
+        {selectedOption?.imageUrl ? (
+          <Image
+            accessibilityLabel={`Foto de ${selectedOption.label}`}
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            source={selectedOption.imageUrl}
+            style={styles.optionImage}
+          />
+        ) : (
+          <View style={styles.dropIcon}>
+            <View style={styles.dropTop} />
+            <View style={styles.dropBody}>
+              <Text numberOfLines={1} style={styles.dropText}>
+                {selectedOption ? getOptionMark(selectedOption.label) : '?'}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
         <View style={styles.triggerCopy}>
           <Text style={[styles.value, !selectedOption && styles.placeholder]}>
             {selectedOption?.label ?? placeholder}
@@ -130,11 +142,21 @@ export function SelectField<T extends string>({
                       pressed && styles.pressed,
                     ]}
                   >
-                    <View style={[styles.optionMark, selected && styles.optionMarkSelected]}>
-                      <Text style={[styles.optionMarkText, selected && styles.optionMarkTextSelected]}>
-                        {selected ? <Check color={colors.onAccent} size={16} /> : getOptionMark(option.label)}
-                      </Text>
-                    </View>
+                    {option.imageUrl ? (
+                      <Image
+                        accessibilityLabel={`Foto de ${option.label}`}
+                        cachePolicy="memory-disk"
+                        contentFit="cover"
+                        source={option.imageUrl}
+                        style={[styles.optionMark, styles.optionImage]}
+                      />
+                    ) : (
+                      <View style={[styles.optionMark, selected && styles.optionMarkSelected]}>
+                        <Text style={[styles.optionMarkText, selected && styles.optionMarkTextSelected]}>
+                          {selected ? <Check color={colors.onAccent} size={16} /> : getOptionMark(option.label)}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.optionCopy}>
                       <Text style={styles.optionLabel}>{option.label}</Text>
                       {option.supportingText ? (
@@ -271,6 +293,7 @@ const styles = createThemedStyleSheet((colors) => ({
     width: 38,
   },
   optionMarkSelected: { backgroundColor: colors.coral },
+  optionImage: { borderRadius: radius.pill, height: 44, width: 44 },
   optionMarkText: { color: colors.textMuted, fontSize: 10, fontWeight: '900' },
   optionMarkTextSelected: { color: colors.onAccent, fontSize: 16 },
   optionCopy: { flex: 1 },

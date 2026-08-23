@@ -2,6 +2,7 @@ import {
   AlertCircle,
   Crown,
   House,
+  Pencil,
   Plus,
   Sparkles,
   Users,
@@ -26,6 +27,7 @@ import {
   type SelectOption,
 } from '@/features/baby-profile/presentation/select-field';
 import {
+  canRenameFamily,
   canRemoveFamilyMember,
   canTransferFamilyOwnership,
 } from '@/features/family/application/family-member-permissions';
@@ -169,6 +171,8 @@ export function FamilyScreen({
   const [operationSucceeded, setOperationSucceeded] = useState(false);
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [isEditingIdentity, setIsEditingIdentity] = useState(false);
+  const [isEditingFamilyName, setIsEditingFamilyName] = useState(false);
+  const [editedFamilyName, setEditedFamilyName] = useState('');
   const [identityDisplayName, setIdentityDisplayName] = useState('');
   const [identityRelationship, setIdentityRelationship] =
     useState<FamilyRelationship>();
@@ -296,6 +300,51 @@ export function FamilyScreen({
     setIdentityRelationship(currentMember.relationship);
     setIsEditingIdentity(true);
     setOperationMessage(undefined);
+  }
+
+  function openFamilyNameEditor() {
+    if (!selectedFamily || !canRenameFamily(selectedFamily.currentUserRole)) {
+      return;
+    }
+
+    setEditedFamilyName(selectedFamily.name);
+    setIsEditingFamilyName(true);
+    setOperationMessage(undefined);
+  }
+
+  async function handleUpdateFamilyName() {
+    if (!selectedFamily || !canRenameFamily(selectedFamily.currentUserRole)) {
+      return;
+    }
+
+    const normalizedName = editedFamilyName.trim();
+
+    if (!normalizedName || normalizedName.length > 80) {
+      setOperationMessage('Escribe un nombre de familia de hasta 80 caracteres.');
+      setOperationSucceeded(false);
+      return;
+    }
+
+    if (normalizedName === selectedFamily.name) {
+      setIsEditingFamilyName(false);
+      return;
+    }
+
+    startOperation();
+
+    try {
+      await repository.updateName({
+        familyId: selectedFamily.id,
+        name: normalizedName,
+      });
+      await refreshFamilies(selectedFamily.id);
+      setIsEditingFamilyName(false);
+      setOperationMessage('El nombre de la familia está actualizado.');
+      setOperationSucceeded(true);
+      setIsWorking(false);
+    } catch (error) {
+      finishWithError(error);
+    }
   }
 
   async function handleUpdateIdentity() {
@@ -444,6 +493,7 @@ export function FamilyScreen({
     try {
       await repository.transferOwnership(memberToPromote.id);
       await refreshFamilies(selectedFamily.id);
+      setIsEditingFamilyName(false);
       setMemberToPromote(undefined);
       setOperationMessage(
         `${memberToPromote.displayName ?? 'La persona elegida'} ahora es propietaria. Tú conservas acceso como administrador.`,
@@ -692,6 +742,7 @@ export function FamilyScreen({
                       onPress={() => {
                         setSelectedFamilyId(family.id);
                         setCreatedInvitation(undefined);
+                        setIsEditingFamilyName(false);
                       }}
                       style={[
                         styles.familyChip,
@@ -714,9 +765,25 @@ export function FamilyScreen({
               ) : null}
 
               <View style={[styles.section, styles.familySummary]}>
-                <View>
+                <View style={styles.familySummaryCopy}>
                   <Text style={styles.summaryEyebrow}>FAMILIA ACTIVA</Text>
-                  <Text style={styles.familyName}>{selectedFamily.name}</Text>
+                  <View style={styles.familyNameRow}>
+                    <Text style={styles.familyName}>{selectedFamily.name}</Text>
+                    {canRenameFamily(selectedFamily.currentUserRole) ? (
+                      <Pressable
+                        accessibilityLabel="Editar nombre de la familia"
+                        accessibilityRole="button"
+                        onPress={openFamilyNameEditor}
+                        style={({ pressed }) => [
+                          styles.renameButton,
+                          pressed && styles.shareButtonPressed,
+                        ]}
+                      >
+                        <Pencil color={colors.primaryPressed} size={16} />
+                        <Text style={styles.renameButtonText}>Editar nombre</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
                   <Text style={styles.familyRole}>
                     Tu permiso: {roleLabels[selectedFamily.currentUserRole]}
                   </Text>
@@ -730,6 +797,56 @@ export function FamilyScreen({
                   </Text>
                 </View>
               </View>
+
+              {isEditingFamilyName ? (
+                <View style={styles.section}>
+                  <View style={styles.sectionHeading}>
+                    <View style={[styles.sectionIcon, styles.aquaIcon]}>
+                      <House color={colors.text} size={16} />
+                    </View>
+                    <View style={styles.sectionHeadingCopy}>
+                      <Text style={styles.sectionTitle}>Nombre de la familia</Text>
+                      <Text style={styles.sectionSubtitle}>
+                        Solo la persona propietaria puede modificarlo.
+                      </Text>
+                    </View>
+                  </View>
+                  <ProfileField
+                    autoCapitalize="words"
+                    label="Nuevo nombre"
+                    maxLength={80}
+                    onChangeText={setEditedFamilyName}
+                    value={editedFamilyName}
+                  />
+                  <View style={styles.identityActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setIsEditingFamilyName(false)}
+                      style={({ pressed }) => [
+                        styles.cancelButton,
+                        pressed && styles.secondaryButtonPressed,
+                      ]}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancelar</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={isWorking}
+                      onPress={() => void handleUpdateFamilyName()}
+                      style={({ pressed }) => [
+                        styles.primaryButton,
+                        styles.identitySaveButton,
+                        pressed && styles.primaryButtonPressed,
+                        isWorking && styles.buttonDisabled,
+                      ]}
+                    >
+                      <Text style={styles.primaryButtonText}>
+                        {isWorking ? 'Guardando…' : 'Guardar nombre'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : null}
 
               <View style={styles.identityBar}>
                 <View style={styles.identityCopy}>
@@ -1201,6 +1318,13 @@ const styles = createThemedStyleSheet((colors) => ({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  familySummaryCopy: { flex: 1, minWidth: 0 },
+  familyNameRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
   summaryEyebrow: {
     color: colors.primaryPressed,
     fontSize: 10,
@@ -1208,6 +1332,18 @@ const styles = createThemedStyleSheet((colors) => ({
     letterSpacing: 1.7,
   },
   familyName: { color: colors.text, fontSize: 25, fontWeight: '900', marginTop: 3 },
+  renameButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 44,
+    paddingHorizontal: spacing.sm,
+  },
+  renameButtonText: {
+    color: colors.primaryPressed,
+    fontSize: 11,
+    fontWeight: '900',
+  },
   familyRole: { color: colors.textMuted, fontSize: 12, marginTop: spacing.xs },
   memberCount: { alignItems: 'center' },
   memberCountNumber: { color: colors.primaryPressed, fontSize: 30, fontWeight: '900' },

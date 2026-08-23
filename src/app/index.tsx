@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
@@ -16,6 +16,8 @@ import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
+import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
+import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
   createCareHistoryCsv,
   createCareHistoryFileName,
@@ -79,6 +81,10 @@ async function exportCareHistory(
 export default function IndexRoute() {
   const { session, status } = useAuth();
   const { scheme } = useThemePreference();
+  const params = useLocalSearchParams<{
+    createBaby?: string;
+    section?: string;
+  }>();
 
   if (status === 'loading') {
     return <AuthLoadingScreen />;
@@ -91,6 +97,8 @@ export default function IndexRoute() {
   return (
     <AuthenticatedApp
       colorScheme={scheme}
+      initialCreateBaby={params.createBaby === '1'}
+      initialSection={resolveInitialSection(params.section)}
       key={session.user.id}
       user={session.user}
     />
@@ -99,16 +107,20 @@ export default function IndexRoute() {
 
 function AuthenticatedApp({
   colorScheme,
+  initialCreateBaby,
+  initialSection,
   user,
 }: {
   colorScheme: AppColorScheme;
+  initialCreateBaby: boolean;
+  initialSection: AppSection;
   user: AuthenticatedUser;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [section, setSection] = useState<AppSection>('handoff');
-  const [isCreatingBaby, setIsCreatingBaby] = useState(false);
+  const [section, setSection] = useState<AppSection>(initialSection);
+  const [isCreatingBaby, setIsCreatingBaby] = useState(initialCreateBaby);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
   const [onboardingState, setOnboardingState] = useState<
     GuidedOnboardingState | undefined
@@ -144,10 +156,25 @@ function AuthenticatedApp({
   const isOnboardingVisible =
     onboardingShouldStart && !onboardingSessionFinished;
 
-  const showOnboardingStep = useCallback((step: GuidedOnboardingStep) => {
-    setSection(step.section);
-    setIsCreatingBaby(false);
-  }, []);
+  const navigateToSection = useCallback(
+    (nextSection: AppSection, createBaby = false) => {
+      setSection(nextSection);
+      setIsCreatingBaby(createBaby);
+      router.replace({
+        pathname: '/',
+        params: {
+          section: nextSection,
+          ...(createBaby ? { createBaby: '1' } : {}),
+        },
+      });
+    },
+    [router],
+  );
+
+  const showOnboardingStep = useCallback(
+    (step: GuidedOnboardingStep) => navigateToSection(step.section),
+    [navigateToSection],
+  );
 
   if (context.status === 'loading') {
     return <AuthLoadingScreen />;
@@ -162,11 +189,7 @@ function AuthenticatedApp({
   }
 
   function changeSection(nextSection: AppSection) {
-    setSection(nextSection);
-
-    if (nextSection !== 'baby') {
-      setIsCreatingBaby(false);
-    }
+    navigateToSection(nextSection);
   }
 
   function saveOnboardingResult(nextState: GuidedOnboardingState) {
@@ -190,7 +213,7 @@ function AuthenticatedApp({
     setOnboardingSessionFinished(true);
 
     if (!hasActiveFamily) {
-      setSection('family');
+      navigateToSection('family');
       return;
     }
 
@@ -209,18 +232,17 @@ function AuthenticatedApp({
   ) : null;
 
   function addBaby() {
-    setIsCreatingBaby(true);
     setNewBabyFormVersion((version) => version + 1);
-    setSection('baby');
+    navigateToSection('baby', true);
   }
 
   function changeFamily(familyId: string) {
-    setIsCreatingBaby(false);
+    navigateToSection(section);
     context.changeFamily(familyId);
   }
 
   function changeBaby(babyId: string) {
-    setIsCreatingBaby(false);
+    navigateToSection(section);
     context.changeBaby(babyId);
   }
 
@@ -319,7 +341,7 @@ function AuthenticatedApp({
         babyId={context.activeBaby?.id}
         canCreateBaby={canManageBabies}
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
-        onOpenBabyProfile={() => setSection('baby')}
+        onOpenBabyProfile={() => changeSection('baby')}
         repository={supabaseCareRepository}
         storiesContent={
           context.activeBaby ? (
@@ -347,9 +369,23 @@ function AuthenticatedApp({
         canRecord={canRecordCare}
         exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
+        onOpenSummary={() => changeSection('summary')}
         repository={supabaseCareRepository}
         topContent={topContent}
         userId={user.id}
+      />,
+    );
+  }
+
+  if (section === 'summary') {
+    return renderAppScreen(
+      <DailyCareSummaryScreen
+        babyId={context.activeBaby?.id}
+        babyName={context.activeBaby?.name}
+        key={context.activeBaby?.id ?? `${activeFamily.id}:summary-empty`}
+        onOpenHistory={() => changeSection('history')}
+        repository={supabaseCareSummaryRepository}
+        topContent={topContent}
       />,
     );
   }
@@ -397,9 +433,12 @@ function AuthenticatedApp({
         onSaved={(babyId) => {
           void context
             .refresh({ babyId, familyId: activeFamily.id })
-            .then(() => setIsCreatingBaby(false));
+            .then(() => navigateToSection('baby'));
         }}
         onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
+        onPhotoChanged={activeBabyId
+          ? () => context.refresh({ babyId: activeBabyId, familyId: activeFamily.id })
+          : undefined}
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}
@@ -419,6 +458,16 @@ function AuthenticatedApp({
       />
     ),
   );
+}
+
+function resolveInitialSection(value: string | undefined): AppSection {
+  return value === 'history' ||
+    value === 'summary' ||
+    value === 'baby' ||
+    value === 'family' ||
+    value === 'activity'
+    ? value
+    : 'handoff';
 }
 
 const styles = createThemedStyleSheet((colors) => ({

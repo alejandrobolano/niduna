@@ -26,6 +26,7 @@ function mapErrorReason(message: string): FamilyOperationErrorReason {
   if (
     message.includes('family_member_removal_not_allowed') ||
     message.includes('family_ownership_transfer_not_allowed') ||
+    message.includes('family_rename_not_allowed') ||
     message.includes('row-level security') ||
     message.includes('permission denied')
   ) {
@@ -191,6 +192,17 @@ export const supabaseFamilyRepository: FamilyRepository = {
       target_display_name: input.displayName,
       target_family_id: input.familyId,
       target_relationship: input.relationship,
+    });
+
+    if (error) {
+      throwOperationError(error.message);
+    }
+  },
+
+  async updateName(input) {
+    const { error } = await supabase.rpc('rename_family', {
+      target_family_id: input.familyId,
+      target_name: input.name,
     });
 
     if (error) {
