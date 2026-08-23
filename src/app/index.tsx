@@ -411,6 +411,9 @@ function AuthenticatedApp({
             .then(() => setIsCreatingBaby(false));
         }}
         onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
+        onPhotoChanged={activeBabyId
+          ? () => context.refresh({ babyId: activeBabyId, familyId: activeFamily.id })
+          : undefined}
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}

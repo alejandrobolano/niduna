@@ -47,10 +47,12 @@ interface SummaryCardProps {
 function SummaryCard({ accent, detail, icon: Icon, label, value }: SummaryCardProps) {
   return (
     <View style={[styles.card, styles[`${accent}Card`]]}>
-      <View style={[styles.cardIcon, styles[`${accent}Icon`]]}>
-        <Icon color={colors.text} size={20} />
+      <View style={styles.cardHeading}>
+        <View style={[styles.cardIcon, styles[`${accent}Icon`]]}>
+          <Icon color={colors.text} size={16} />
+        </View>
+        <Text style={styles.cardLabel}>{label}</Text>
       </View>
-      <Text style={styles.cardLabel}>{label}</Text>
       <Text style={styles.cardValue}>{value}</Text>
       <Text style={styles.cardDetail}>{detail}</Text>
     </View>
@@ -327,24 +329,24 @@ const styles = createThemedStyleSheet((colors) => ({
   butterIcon: { backgroundColor: colors.butterSoft },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderTopWidth: 4,
+    borderRadius: radius.md,
+    borderTopWidth: 5,
     flex: 1,
     gap: spacing.sm,
-    minHeight: 190,
-    minWidth: 190,
+    minWidth: 220,
     padding: spacing.lg,
   },
-  cardDetail: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  cardDetail: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  cardHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
   cardIcon: {
     alignItems: 'center',
-    borderRadius: radius.md,
-    height: 42,
+    borderRadius: radius.pill,
+    height: 28,
     justifyContent: 'center',
-    width: 42,
+    width: 28,
   },
-  cardLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
-  cardValue: { color: colors.text, fontSize: 24, fontWeight: '900', lineHeight: 29 },
+  cardLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
+  cardValue: { color: colors.text, fontSize: 20, fontWeight: '900' },
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   cardsCompact: { flexDirection: 'column' },
   chartCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },

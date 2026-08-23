@@ -5,6 +5,7 @@ export interface FamilyBabySummary {
   id: string;
   lifeStage: BabyLifeStage;
   name: string;
+  photoUrl?: string;
 }
 
 export interface ArchivedBabySummary {

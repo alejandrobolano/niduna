@@ -13,6 +13,7 @@ describe('family baby context mapping', () => {
           id: 'baby-1',
           life_stage: 'born',
           name: 'Luna',
+          photo_url: 'https://example.com/luna.jpg',
         },
         {
           family_id: 'family-1',
@@ -33,6 +34,7 @@ describe('family baby context mapping', () => {
     );
 
     expect(groups[0]?.babies.map((baby) => baby.id)).toEqual(['baby-1']);
+    expect(groups[0]?.babies[0]?.photoUrl).toBe('https://example.com/luna.jpg');
     expect(groups[0]?.unfollowedBabies.map((baby) => baby.id)).toEqual([
       'baby-2',
     ]);

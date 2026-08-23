@@ -118,6 +118,7 @@ interface BabyProfileScreenProps {
   canManageBabies?: boolean;
   familyId: string;
   onArchive?: () => Promise<void>;
+  onPhotoChanged?: () => Promise<void> | void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -130,6 +131,7 @@ export function BabyProfileScreen({
   canManageBabies = false,
   familyId,
   onArchive,
+  onPhotoChanged,
   onSaved,
   onUnfollow,
   repository,
@@ -288,6 +290,7 @@ export function BabyProfileScreen({
         image,
       });
       setPhotoUrl(url);
+      void onPhotoChanged?.();
     } catch (error) {
       const message =
         error instanceof BabyPhotoError && error.code === 'not_allowed'
@@ -313,6 +316,7 @@ export function BabyProfileScreen({
       await babyPhotoRepository.remove(storedBabyId);
       setPhotoUrl(undefined);
       setIsConfirmingPhotoRemoval(false);
+      void onPhotoChanged?.();
     } catch {
       setPhotoError('No pudimos retirar la foto. Inténtalo de nuevo.');
     } finally {
