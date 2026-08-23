@@ -6,6 +6,7 @@ import {
   RefreshCw,
   Scale,
   Star,
+  TrendingUp,
 } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
@@ -13,11 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
 import {
-  createLocalDayRange,
+  createCareSummaryRange,
+  formatWeightGrams,
   formatSummaryDuration,
+  getCareSummaryPeriodLabel,
+  type CareSummaryPeriod,
+  type CareSummaryReport,
   type DailyCareSummary,
 } from '@/features/care-summary/domain/daily-care-summary';
+import { CareTrendChart } from '@/features/care-summary/presentation/care-trend-chart';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
+import { MeasurementEvolutionChart } from '@/features/care-summary/presentation/measurement-evolution-chart';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
@@ -50,13 +57,6 @@ function SummaryCard({ accent, detail, icon: Icon, label, value }: SummaryCardPr
   );
 }
 
-function formatWeight(grams: number): string {
-  return `${new Intl.NumberFormat('es-ES', {
-    maximumFractionDigits: 3,
-    minimumFractionDigits: 3,
-  }).format(grams / 1000)} kg`;
-}
-
 function formatLength(millimeters: number): string {
   return `${new Intl.NumberFormat('es-ES', {
     maximumFractionDigits: 1,
@@ -67,7 +67,7 @@ function getMeasurementValue(summary: DailyCareSummary): string {
   const measurement = summary.latestMeasurement;
 
   if (!measurement) return 'Sin medidas';
-  if (measurement.weightGrams !== undefined) return formatWeight(measurement.weightGrams);
+  if (measurement.weightGrams !== undefined) return formatWeightGrams(measurement.weightGrams);
   if (measurement.lengthMillimeters !== undefined) return formatLength(measurement.lengthMillimeters);
   if (measurement.headCircumferenceMillimeters !== undefined) {
     return `PC ${formatLength(measurement.headCircumferenceMillimeters)}`;
@@ -93,7 +93,8 @@ export function DailyCareSummaryScreen({
 }: DailyCareSummaryScreenProps) {
   const { width } = useWindowDimensions();
   const compact = width < 720;
-  const [summary, setSummary] = useState<DailyCareSummary>();
+  const [period, setPeriod] = useState<CareSummaryPeriod>('24h');
+  const [report, setReport] = useState<CareSummaryReport>();
   const [isLoading, setIsLoading] = useState(Boolean(babyId));
   const [error, setError] = useState<string>();
   const [loadVersion, setLoadVersion] = useState(0);
@@ -104,38 +105,40 @@ export function DailyCareSummaryScreen({
     if (!babyId) return () => { active = false; };
 
     void repository
-      .loadDaily({ babyId, ...createLocalDayRange() })
+      .loadReport({ babyId, ...createCareSummaryRange(period) })
       .then((result) => {
         if (!active) return;
-        setSummary(result);
+        setReport(result);
         setError(undefined);
       })
       .catch(() => {
-        if (active) setError('No pudimos preparar el resumen de hoy.');
+        if (active) setError('No pudimos preparar el resumen y sus tendencias.');
       })
       .finally(() => {
         if (active) setIsLoading(false);
       });
 
     return () => { active = false; };
-  }, [babyId, loadVersion, repository]);
+  }, [babyId, loadVersion, period, repository]);
 
   useEffect(() => {
     if (!babyId) return;
     return repository.subscribe(babyId, () => setLoadVersion((value) => value + 1));
   }, [babyId, repository]);
 
+  const summary = report?.summary;
+  const periodLabel = getCareSummaryPeriodLabel(period);
   const feedingDetail = summary?.feeding.count
     ? summary.feeding.knownAmountCount > 0
       ? `${summary.feeding.totalAmountMilliliters} ml registrados en ${summary.feeding.knownAmountCount} tomas.`
       : 'Las tomas no incluyen una cantidad en mililitros.'
-    : 'Todavía no hay tomas registradas hoy.';
+    : `Todavía no hay tomas registradas en ${periodLabel}.`;
   const feedingInterval = summary?.feeding.averageIntervalMinutes
     ? ` Intervalo medio: ${formatSummaryDuration(summary.feeding.averageIntervalMinutes)}.`
     : '';
   const diaperDetail = summary?.diaper.total
     ? `${summary.diaper.wet} pipí · ${summary.diaper.dirty} caca · ${summary.diaper.both} mixtos.`
-    : 'Todavía no hay cambios registrados hoy.';
+    : `Todavía no hay cambios registrados en ${periodLabel}.`;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -150,12 +153,12 @@ export function DailyCareSummaryScreen({
           />
           <View style={[styles.hero, compact && styles.heroCompact]}>
             <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>Resumen de hoy</Text>
+              <Text style={styles.eyebrow}>Resumen y tendencias</Text>
               <Text style={[styles.title, compact && styles.titleCompact]}>
                 Así va el día de {babyName ?? 'tu bebé'}
               </Text>
               <Text style={styles.subtitle}>
-                Una lectura rápida de lo registrado por la familia desde las 00:00.
+                Consulta las últimas 24 horas, los últimos días y el crecimiento desde el nacimiento.
               </Text>
             </View>
             <NuniMascot size={compact ? 82 : 116} />
@@ -169,11 +172,42 @@ export function DailyCareSummaryScreen({
             </View>
           ) : (
             <View style={styles.summarySection}>
+              <View accessibilityRole="tablist" style={styles.periodSelector}>
+                {([
+                  { label: '24 h', value: '24h' },
+                  { label: '7 días', value: '7d' },
+                  { label: '30 días', value: '30d' },
+                ] satisfies { label: string; value: CareSummaryPeriod }[]).map((option) => {
+                  const selected = option.value === period;
+                  return (
+                    <Pressable
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected }}
+                      key={option.value}
+                      onPress={() => {
+                        setIsLoading(true);
+                        setReport(undefined);
+                        setPeriod(option.value);
+                      }}
+                      style={({ pressed }) => [
+                        styles.periodButton,
+                        selected && styles.periodButtonSelected,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text style={[styles.periodLabel, selected && styles.periodLabelSelected]}>
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
               <View style={styles.sectionHeading}>
                 <View style={styles.sectionCopy}>
                   <Text style={styles.sectionTitle}>Cuidados registrados</Text>
                   <Text style={styles.sectionSubtitle}>
-                    {new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(new Date())}
+                    Datos de {periodLabel}
                   </Text>
                 </View>
                 <Pressable
@@ -191,9 +225,9 @@ export function DailyCareSummaryScreen({
               </View>
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
-              {isLoading && !summary ? (
+              {isLoading && !report ? (
                 <Text style={styles.loading}>Preparando el resumen…</Text>
-              ) : summary ? (
+              ) : report && summary ? (
                 <>
                   <View style={[styles.cards, compact && styles.cardsCompact]}>
                     <SummaryCard
@@ -212,18 +246,54 @@ export function DailyCareSummaryScreen({
                     />
                     <SummaryCard
                       accent="lavender"
-                      detail={summary.sleepMinutes ? 'Tiempo acumulado en los periodos registrados.' : 'Todavía no hay sueño registrado hoy.'}
+                      detail={summary.sleepMinutes ? 'Tiempo acumulado en los periodos registrados.' : `Todavía no hay sueño registrado en ${periodLabel}.`}
                       icon={Moon}
                       label="Sueño"
                       value={formatSummaryDuration(summary.sleepMinutes)}
                     />
                     <SummaryCard
                       accent="aqua"
-                      detail={summary.noteCount ? 'Notas compartidas por la familia durante el día.' : 'Todavía no hay notas registradas hoy.'}
+                      detail={summary.noteCount ? `Notas compartidas por la familia en ${periodLabel}.` : `Todavía no hay notas registradas en ${periodLabel}.`}
                       icon={NotebookPen}
                       label="Notas"
                       value={`${summary.noteCount} ${summary.noteCount === 1 ? 'nota' : 'notas'}`}
                     />
+                  </View>
+
+                  {isLoading ? (
+                    <Text accessibilityLiveRegion="polite" style={styles.loadingInline}>
+                      Actualizando el periodo…
+                    </Text>
+                  ) : null}
+
+                  <View style={styles.chartCard}>
+                    <View style={styles.chartHeading}>
+                      <View style={styles.trendIcon}>
+                        <TrendingUp color={colors.primaryPressed} size={22} />
+                      </View>
+                      <View style={styles.chartCopy}>
+                        <Text style={styles.chartTitle}>Ritmo de cuidados</Text>
+                        <Text style={styles.chartSubtitle}>Compara los registros dentro del periodo seleccionado.</Text>
+                      </View>
+                    </View>
+                    <CareTrendChart
+                      period={period}
+                      points={report.trend}
+                      summary={summary}
+                    />
+                  </View>
+
+                  <View style={styles.chartCard}>
+                    <View style={styles.chartHeading}>
+                      <View style={styles.measurementIcon}>
+                        <Scale color={colors.primaryPressed} size={22} />
+                      </View>
+                      <View style={styles.chartCopy}>
+                        <Text style={styles.chartTitle}>Evolución desde el nacimiento</Text>
+                        <Text style={styles.chartSubtitle}>Peso, longitud y perímetro según las medidas registradas.</Text>
+                      </View>
+                    </View>
+                    <MeasurementEvolutionChart points={report.measurements} />
                   </View>
 
                   <View style={styles.measurementCard}>
@@ -277,6 +347,11 @@ const styles = createThemedStyleSheet((colors) => ({
   cardValue: { color: colors.text, fontSize: 24, fontWeight: '900', lineHeight: 29 },
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   cardsCompact: { flexDirection: 'column' },
+  chartCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
+  chartCopy: { flex: 1, gap: spacing.xs },
+  chartHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  chartSubtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
+  chartTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   coralCard: { borderTopColor: colors.coral },
   coralIcon: { backgroundColor: colors.peach },
@@ -292,11 +367,17 @@ const styles = createThemedStyleSheet((colors) => ({
   lavenderCard: { borderTopColor: colors.lavender },
   lavenderIcon: { backgroundColor: colors.lavenderSoft },
   loading: { color: colors.textMuted, fontSize: 13, paddingVertical: spacing.xl, textAlign: 'center' },
+  loadingInline: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
   measurementCard: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: 'row', gap: spacing.lg, padding: spacing.lg },
   measurementCopy: { flex: 1, gap: spacing.xs },
   measurementIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 52, justifyContent: 'center', width: 52 },
   measurementValue: { color: colors.text, fontSize: 21, fontWeight: '900' },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 96 },
+  periodButton: { alignItems: 'center', borderRadius: radius.pill, flex: 1, justifyContent: 'center', minHeight: 42, paddingHorizontal: spacing.sm },
+  periodButtonSelected: { backgroundColor: colors.primary },
+  periodLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '900' },
+  periodLabelSelected: { color: colors.onAccent },
+  periodSelector: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', padding: spacing.xs },
   pressed: { opacity: 0.72, transform: [{ scale: 0.97 }] },
   refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
   safeArea: { backgroundColor: colors.background, flex: 1 },
@@ -306,6 +387,7 @@ const styles = createThemedStyleSheet((colors) => ({
   sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 600 },
   summarySection: { gap: spacing.lg },
+  trendIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 46, justifyContent: 'center', width: 46 },
   title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
   titleCompact: { fontSize: 24, lineHeight: 29 },
 }));

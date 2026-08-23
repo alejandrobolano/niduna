@@ -564,6 +564,55 @@ export type Database = {
       };
     };
     Functions: {
+      get_care_range_summary: {
+        Args: {
+          target_baby_id: string;
+          target_range_end: string;
+          target_range_start: string;
+        };
+        Returns: {
+          average_feeding_interval_minutes: number | null;
+          diaper_both_count: number;
+          diaper_dirty_count: number;
+          diaper_wet_count: number;
+          feeding_amount_count: number;
+          feeding_amount_milliliters: number;
+          feeding_count: number;
+          latest_head_circumference_millimeters: number | null;
+          latest_length_millimeters: number | null;
+          latest_measurement_at: string | null;
+          latest_measurement_source: string | null;
+          latest_weight_grams: number | null;
+          note_count: number;
+          sleep_minutes: number;
+        }[];
+      };
+      get_care_summary_trend: {
+        Args: {
+          target_baby_id: string;
+          target_bucket_minutes: number;
+          target_range_end: string;
+          target_range_start: string;
+        };
+        Returns: {
+          bucket_start: string;
+          diaper_count: number;
+          feeding_amount_milliliters: number;
+          feeding_count: number;
+          note_count: number;
+          sleep_minutes: number;
+        }[];
+      };
+      get_measurement_evolution: {
+        Args: { target_baby_id: string };
+        Returns: {
+          head_circumference_millimeters: number | null;
+          length_millimeters: number | null;
+          measured_at: string;
+          measurement_source: string | null;
+          weight_grams: number | null;
+        }[];
+      };
       get_daily_care_summary: {
         Args: {
           target_baby_id: string;

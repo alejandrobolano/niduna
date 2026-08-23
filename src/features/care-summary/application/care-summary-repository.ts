@@ -1,5 +1,5 @@
 import type {
-  DailyCareSummary,
+  CareSummaryReport,
   DailyCareSummaryRange,
 } from '@/features/care-summary/domain/daily-care-summary';
 
@@ -8,6 +8,6 @@ export interface DailyCareSummaryQuery extends DailyCareSummaryRange {
 }
 
 export interface CareSummaryRepository {
-  loadDaily(query: DailyCareSummaryQuery): Promise<DailyCareSummary>;
+  loadReport(query: DailyCareSummaryQuery): Promise<CareSummaryReport>;
   subscribe(babyId: string, onChange: () => void): () => void;
 }
