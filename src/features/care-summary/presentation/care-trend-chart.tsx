@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
-import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
 
 import type {
   CareSummaryPeriod,
@@ -53,14 +53,24 @@ function formatBucketLabel(date: Date, period: CareSummaryPeriod): string {
   }).format(date);
 }
 
+function formatAxisValue(value: number, metric: CareMetric): string {
+  if (metric === 'sleep') {
+    if (value >= 60) return `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value / 60)} h`;
+    return `${Math.round(value)} min`;
+  }
+
+  return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
+}
+
 export function CareTrendChart({ period, points, summary }: CareTrendChartProps) {
   const { width } = useWindowDimensions();
   const [metric, setMetric] = useState<CareMetric>('feeding');
   const chartWidth = Math.min(Math.max(width - 80, 280), 820);
   const chartHeight = width < 480 ? 190 : 220;
   const values = points.map((point) => getValue(point, metric));
-  const maximum = Math.max(...values, 1);
-  const plotLeft = 22;
+  const maximum = Math.max(...values, 0);
+  const scaleMaximum = Math.max(maximum, 1);
+  const plotLeft = 48;
   const plotRight = chartWidth - 12;
   const plotTop = 12;
   const plotBottom = chartHeight - 34;
@@ -109,6 +119,39 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
         style={styles.chart}
       >
         <Svg height={chartHeight} width={chartWidth}>
+          {(maximum === 0 ? [0] : [maximum, maximum / 2, 0]).map((value, index, axisValues) => {
+            const y = plotTop + (index / Math.max(axisValues.length - 1, 1)) * plotHeight;
+            return (
+              <G key={`axis-${value}`}>
+                <Line
+                  stroke={colors.border}
+                  strokeDasharray={index === axisValues.length - 1 ? undefined : '4 5'}
+                  strokeWidth={1}
+                  x1={plotLeft}
+                  x2={plotRight}
+                  y1={y}
+                  y2={y}
+                />
+                <SvgText
+                  fill={colors.textMuted}
+                  fontSize={9}
+                  textAnchor="end"
+                  x={plotLeft - 7}
+                  y={y + 3}
+                >
+                  {formatAxisValue(value, metric)}
+                </SvgText>
+              </G>
+            );
+          })}
+          <Line
+            stroke={colors.border}
+            strokeWidth={1}
+            x1={plotLeft}
+            x2={plotLeft}
+            y1={plotTop}
+            y2={plotBottom}
+          />
           <Line
             stroke={colors.border}
             strokeWidth={1}
@@ -119,7 +162,7 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
           />
           {points.map((point, index) => {
             const value = values[index] ?? 0;
-            const height = value === 0 ? 2 : Math.max(5, (value / maximum) * plotHeight);
+            const height = value === 0 ? 2 : Math.max(5, (value / scaleMaximum) * plotHeight);
             const x = plotLeft + index * slotWidth + (slotWidth - barWidth) / 2;
             const y = plotBottom - height;
 

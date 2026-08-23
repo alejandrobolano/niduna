@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
-import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 
 import {
   formatWeightGrams,
@@ -32,6 +32,14 @@ function formatValue(value: number, metric: MeasurementMetric): string {
   return `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value / 10)} cm`;
 }
 
+function formatMeasurementDate(value: string, includeYear = false): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    ...(includeYear ? { year: 'numeric' } : {}),
+  }).format(new Date(value));
+}
+
 function getMetricSummary(
   metric: MeasurementMetric,
   points: MeasurementTrendPoint[],
@@ -54,6 +62,7 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
     [points],
   );
   const [selectedMetric, setSelectedMetric] = useState<MeasurementMetric>('weight');
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
   const metric = availableMetrics.some((option) => option.value === selectedMetric)
     ? selectedMetric
     : availableMetrics[0]?.value ?? 'weight';
@@ -62,7 +71,7 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
     .filter((item): item is { point: MeasurementTrendPoint; value: number } => item.value !== undefined);
   const chartWidth = Math.min(Math.max(width - 80, 280), 820);
   const chartHeight = width < 480 ? 190 : 220;
-  const plotLeft = 34;
+  const plotLeft = 62;
   const plotRight = chartWidth - 18;
   const plotTop = 18;
   const plotBottom = chartHeight - 34;
@@ -99,6 +108,15 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
     y: plotBottom - ((item.value - minimum) / valueRange) * (plotBottom - plotTop),
   }));
   const linePoints = coordinates.map(({ x, y }) => `${x},${y}`).join(' ');
+  const axisValues = rawMaximum === rawMinimum
+    ? [rawMaximum]
+    : [rawMaximum, (rawMaximum + rawMinimum) / 2, rawMinimum];
+  const selectedCoordinate = selectedPointIndex === null
+    ? undefined
+    : coordinates[selectedPointIndex];
+  const selectedDescription = selectedCoordinate
+    ? `${formatValue(selectedCoordinate.item.value, metric)}, ${formatMeasurementDate(selectedCoordinate.item.point.measuredAt, true)}`
+    : undefined;
   const metricSummary = getMetricSummary(metric, points);
   const accessibilitySummary = `${metricSummary} ${summarizeMeasurementEvolution(points)}`;
 
@@ -113,7 +131,10 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}
                 key={option.value}
-                onPress={() => setSelectedMetric(option.value)}
+                onPress={() => {
+                  setSelectedMetric(option.value);
+                  setSelectedPointIndex(null);
+                }}
                 style={({ pressed }) => [
                   styles.metricButton,
                   selected && styles.metricButtonSelected,
@@ -137,6 +158,32 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
       >
         {coordinates.length > 0 ? (
           <Svg height={chartHeight} width={chartWidth}>
+            {axisValues.map((value, index) => {
+              const y = plotBottom - ((value - minimum) / valueRange) * (plotBottom - plotTop);
+              return (
+                <G key={`axis-${index}`}>
+                  <Line
+                    stroke={colors.border}
+                    strokeDasharray="4 5"
+                    strokeWidth={1}
+                    x1={plotLeft}
+                    x2={plotRight}
+                    y1={y}
+                    y2={y}
+                  />
+                  <SvgText
+                    fill={colors.textMuted}
+                    fontSize={9}
+                    textAnchor="end"
+                    x={plotLeft - 7}
+                    y={y + 3}
+                  >
+                    {formatValue(value, metric)}
+                  </SvgText>
+                </G>
+              );
+            })}
+            <Line stroke={colors.border} strokeWidth={1} x1={plotLeft} x2={plotLeft} y1={plotTop} y2={plotBottom} />
             <Line stroke={colors.border} strokeWidth={1} x1={plotLeft} x2={plotRight} y1={plotBottom} y2={plotBottom} />
             {coordinates.length > 1 ? (
               <Polyline
@@ -149,23 +196,85 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
               />
             ) : null}
             {coordinates.map(({ item, x, y }, index) => (
-              <Circle
-                cx={x}
-                cy={y}
-                fill={colors.surface}
-                key={`${item.point.measuredAt}-${index}`}
-                r={5}
-                stroke={colors.aqua}
-                strokeWidth={3}
-              />
+              <G key={`${item.point.measuredAt}-${index}`}>
+                <Circle
+                  cx={x}
+                  cy={y}
+                  fill="transparent"
+                  onPress={() => setSelectedPointIndex(index)}
+                  r={18}
+                />
+                <Circle
+                  cx={x}
+                  cy={y}
+                  fill={selectedPointIndex === index ? colors.aqua : colors.surface}
+                  onPress={() => setSelectedPointIndex(index)}
+                  r={selectedPointIndex === index ? 7 : 5}
+                  stroke={colors.aqua}
+                  strokeWidth={3}
+                />
+              </G>
             ))}
-            {coordinates.length > 0 ? (
+            {selectedCoordinate ? (() => {
+              const tooltipWidth = 142;
+              const tooltipHeight = 45;
+              const tooltipX = Math.min(
+                Math.max(selectedCoordinate.x - tooltipWidth / 2, plotLeft),
+                plotRight - tooltipWidth,
+              );
+              const tooltipY = selectedCoordinate.y - tooltipHeight - 14 < plotTop
+                ? selectedCoordinate.y + 14
+                : selectedCoordinate.y - tooltipHeight - 14;
+
+              return (
+                <G>
+                  <Rect
+                    fill={colors.text}
+                    height={tooltipHeight}
+                    rx={10}
+                    width={tooltipWidth}
+                    x={tooltipX}
+                    y={tooltipY}
+                  />
+                  <SvgText
+                    fill={colors.surface}
+                    fontSize={11}
+                    fontWeight="700"
+                    textAnchor="middle"
+                    x={tooltipX + tooltipWidth / 2}
+                    y={tooltipY + 18}
+                  >
+                    {formatValue(selectedCoordinate.item.value, metric)}
+                  </SvgText>
+                  <SvgText
+                    fill={colors.surface}
+                    fontSize={10}
+                    textAnchor="middle"
+                    x={tooltipX + tooltipWidth / 2}
+                    y={tooltipY + 34}
+                  >
+                    {formatMeasurementDate(selectedCoordinate.item.point.measuredAt, true)}
+                  </SvgText>
+                </G>
+              );
+            })() : null}
+            {coordinates.length === 1 ? (
+              <SvgText
+                fill={colors.textMuted}
+                fontSize={10}
+                textAnchor="middle"
+                x={(plotLeft + plotRight) / 2}
+                y={chartHeight - 10}
+              >
+                {formatMeasurementDate(coordinates[0].item.point.measuredAt)}
+              </SvgText>
+            ) : coordinates.length > 1 ? (
               <>
                 <SvgText fill={colors.textMuted} fontSize={10} textAnchor="start" x={plotLeft} y={chartHeight - 10}>
-                  Primera
+                  {formatMeasurementDate(coordinates[0].item.point.measuredAt)}
                 </SvgText>
                 <SvgText fill={colors.textMuted} fontSize={10} textAnchor="end" x={plotRight} y={chartHeight - 10}>
-                  Última
+                  {formatMeasurementDate(coordinates.at(-1)!.item.point.measuredAt)}
                 </SvgText>
               </>
             ) : null}
@@ -176,6 +285,11 @@ export function MeasurementEvolutionChart({ points }: MeasurementEvolutionChartP
           </View>
         )}
       </View>
+      {selectedDescription ? (
+        <Text accessibilityLiveRegion="polite" style={styles.selectedValue}>
+          Medida seleccionada: {selectedDescription}.
+        </Text>
+      ) : null}
       <Text style={styles.accessibleSummary}>{accessibilitySummary}</Text>
     </View>
   );
@@ -205,4 +319,5 @@ const styles = createThemedStyleSheet((colors) => ({
     padding: spacing.xs,
   },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
+  selectedValue: { color: colors.text, fontSize: 12, fontWeight: '700', lineHeight: 18 },
 }));
