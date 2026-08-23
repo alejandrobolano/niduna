@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
 
@@ -76,7 +76,7 @@ function formatAxisValue(value: number, metric: CareMetric): string {
 export function CareTrendChart({ period, points, summary }: CareTrendChartProps) {
   const { width } = useWindowDimensions();
   const [metric, setMetric] = useState<CareMetric>('feeding');
-  const [selectedPointIndex, setSelectedPointIndex] = useState<number>();
+  const [selectedPointStart, setSelectedPointStart] = useState<string>();
   const chartWidth = Math.min(Math.max(width - 80, 280), 820);
   const chartHeight = width < 480 ? 190 : 220;
   const values = points.map((point) => getValue(point, metric));
@@ -94,18 +94,14 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
   const metricDescription = getMetricDescription(metric, total);
   const bucketDescription = getBucketDescription(metric, period);
   const accessibilitySummary = `${metricDescription}. ${bucketDescription} ${summarizeCareTrend(summary, period)}`;
-  const selectedPoint = selectedPointIndex === undefined
-    ? undefined
-    : points[selectedPointIndex];
+  const selectedPoint = points.find(
+    (point) => point.startedAt === selectedPointStart,
+  );
   const labelIndexes = new Set(
     points.length <= 7
       ? points.map((_, index) => index)
       : [0, Math.floor((points.length - 1) / 2), points.length - 1],
   );
-
-  useEffect(() => {
-    setSelectedPointIndex(undefined);
-  }, [metric, period, points]);
 
   return (
     <View style={styles.container}>
@@ -191,8 +187,8 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
                 fill={metric === 'feeding' ? colors.coral : metric === 'diaper' ? colors.butter : colors.lavender}
                 height={height}
                 key={point.startedAt}
-                onPress={() => setSelectedPointIndex(index)}
-                opacity={selectedPointIndex === index ? 1 : 0.9}
+                onPress={() => setSelectedPointStart(point.startedAt)}
+                opacity={selectedPointStart === point.startedAt ? 1 : 0.9}
                 rx={Math.min(5, barWidth / 2)}
                 width={barWidth}
                 x={x}
