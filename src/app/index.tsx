@@ -16,6 +16,8 @@ import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
+import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
+import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
   createCareHistoryCsv,
   createCareHistoryFileName,
@@ -154,10 +156,25 @@ function AuthenticatedApp({
   const isOnboardingVisible =
     onboardingShouldStart && !onboardingSessionFinished;
 
-  const showOnboardingStep = useCallback((step: GuidedOnboardingStep) => {
-    setSection(step.section);
-    setIsCreatingBaby(false);
-  }, []);
+  const navigateToSection = useCallback(
+    (nextSection: AppSection, createBaby = false) => {
+      setSection(nextSection);
+      setIsCreatingBaby(createBaby);
+      router.replace({
+        pathname: '/',
+        params: {
+          section: nextSection,
+          ...(createBaby ? { createBaby: '1' } : {}),
+        },
+      });
+    },
+    [router],
+  );
+
+  const showOnboardingStep = useCallback(
+    (step: GuidedOnboardingStep) => navigateToSection(step.section),
+    [navigateToSection],
+  );
 
   if (context.status === 'loading') {
     return <AuthLoadingScreen />;
@@ -172,11 +189,7 @@ function AuthenticatedApp({
   }
 
   function changeSection(nextSection: AppSection) {
-    setSection(nextSection);
-
-    if (nextSection !== 'baby') {
-      setIsCreatingBaby(false);
-    }
+    navigateToSection(nextSection);
   }
 
   function saveOnboardingResult(nextState: GuidedOnboardingState) {
@@ -200,7 +213,7 @@ function AuthenticatedApp({
     setOnboardingSessionFinished(true);
 
     if (!hasActiveFamily) {
-      setSection('family');
+      navigateToSection('family');
       return;
     }
 
@@ -219,9 +232,8 @@ function AuthenticatedApp({
   ) : null;
 
   function addBaby() {
-    setIsCreatingBaby(true);
     setNewBabyFormVersion((version) => version + 1);
-    setSection('baby');
+    navigateToSection('baby', true);
   }
 
   function changeFamily(familyId: string) {
@@ -329,7 +341,7 @@ function AuthenticatedApp({
         babyId={context.activeBaby?.id}
         canCreateBaby={canManageBabies}
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
-        onOpenBabyProfile={() => setSection('baby')}
+        onOpenBabyProfile={() => changeSection('baby')}
         repository={supabaseCareRepository}
         storiesContent={
           context.activeBaby ? (
@@ -357,10 +369,23 @@ function AuthenticatedApp({
         canRecord={canRecordCare}
         exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
-        onOpenSummary={() => router.push('./records/summary')}
+        onOpenSummary={() => changeSection('summary')}
         repository={supabaseCareRepository}
         topContent={topContent}
         userId={user.id}
+      />,
+    );
+  }
+
+  if (section === 'summary') {
+    return renderAppScreen(
+      <DailyCareSummaryScreen
+        babyId={context.activeBaby?.id}
+        babyName={context.activeBaby?.name}
+        key={context.activeBaby?.id ?? `${activeFamily.id}:summary-empty`}
+        onOpenHistory={() => changeSection('history')}
+        repository={supabaseCareSummaryRepository}
+        topContent={topContent}
       />,
     );
   }
@@ -437,6 +462,7 @@ function AuthenticatedApp({
 
 function resolveInitialSection(value: string | undefined): AppSection {
   return value === 'history' ||
+    value === 'summary' ||
     value === 'baby' ||
     value === 'family' ||
     value === 'activity'

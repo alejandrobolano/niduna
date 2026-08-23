@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
 
@@ -39,6 +39,17 @@ function getMetricDescription(metric: CareMetric, total: number): string {
   return `${formatSummaryDuration(total)} de sueño registrado`;
 }
 
+function getBucketDescription(
+  metric: CareMetric,
+  period: CareSummaryPeriod,
+): string {
+  const unit = period === '24h' ? 'cada bloque de 4 horas' : 'cada día';
+
+  if (metric === 'feeding') return `Cada barra muestra las tomas de ${unit}.`;
+  if (metric === 'diaper') return `Cada barra muestra los cambios de ${unit}.`;
+  return `Cada barra muestra el tiempo dormido en ${unit}.`;
+}
+
 function formatBucketLabel(date: Date, period: CareSummaryPeriod): string {
   if (period === '24h') {
     return new Intl.DateTimeFormat('es-ES', {
@@ -65,6 +76,7 @@ function formatAxisValue(value: number, metric: CareMetric): string {
 export function CareTrendChart({ period, points, summary }: CareTrendChartProps) {
   const { width } = useWindowDimensions();
   const [metric, setMetric] = useState<CareMetric>('feeding');
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number>();
   const chartWidth = Math.min(Math.max(width - 80, 280), 820);
   const chartHeight = width < 480 ? 190 : 220;
   const values = points.map((point) => getValue(point, metric));
@@ -80,12 +92,20 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
   const barWidth = Math.max(3, Math.min(slotWidth * 0.62, 34));
   const total = values.reduce((sum, value) => sum + value, 0);
   const metricDescription = getMetricDescription(metric, total);
-  const accessibilitySummary = `${metricDescription}. ${summarizeCareTrend(summary, period)}`;
+  const bucketDescription = getBucketDescription(metric, period);
+  const accessibilitySummary = `${metricDescription}. ${bucketDescription} ${summarizeCareTrend(summary, period)}`;
+  const selectedPoint = selectedPointIndex === undefined
+    ? undefined
+    : points[selectedPointIndex];
   const labelIndexes = new Set(
     points.length <= 7
       ? points.map((_, index) => index)
       : [0, Math.floor((points.length - 1) / 2), points.length - 1],
   );
+
+  useEffect(() => {
+    setSelectedPointIndex(undefined);
+  }, [metric, period, points]);
 
   return (
     <View style={styles.container}>
@@ -162,7 +182,7 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
           />
           {points.map((point, index) => {
             const value = values[index] ?? 0;
-            const height = value === 0 ? 2 : Math.max(5, (value / scaleMaximum) * plotHeight);
+            const height = value === 0 ? 0 : Math.max(5, (value / scaleMaximum) * plotHeight);
             const x = plotLeft + index * slotWidth + (slotWidth - barWidth) / 2;
             const y = plotBottom - height;
 
@@ -171,7 +191,8 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
                 fill={metric === 'feeding' ? colors.coral : metric === 'diaper' ? colors.butter : colors.lavender}
                 height={height}
                 key={point.startedAt}
-                opacity={value === 0 ? 0.24 : 0.9}
+                onPress={() => setSelectedPointIndex(index)}
+                opacity={selectedPointIndex === index ? 1 : 0.9}
                 rx={Math.min(5, barWidth / 2)}
                 width={barWidth}
                 x={x}
@@ -197,7 +218,19 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
           })}
         </Svg>
       </View>
-      <Text style={styles.accessibleSummary}>{accessibilitySummary}</Text>
+      {selectedPoint ? (
+        <View accessibilityLiveRegion="polite" style={styles.selection}>
+          <Text style={styles.selectionLabel}>
+            {formatBucketLabel(new Date(selectedPoint.startedAt), period)}
+          </Text>
+          <Text style={styles.selectionValue}>
+            {getMetricDescription(metric, getValue(selectedPoint, metric))}
+          </Text>
+        </View>
+      ) : null}
+      <Text style={styles.accessibleSummary}>
+        {metricDescription}. {bucketDescription}
+      </Text>
     </View>
   );
 }
@@ -224,4 +257,15 @@ const styles = createThemedStyleSheet((colors) => ({
     padding: spacing.xs,
   },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
+  selection: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  selectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
+  selectionValue: { color: colors.text, fontSize: 12, fontWeight: '900' },
 }));
