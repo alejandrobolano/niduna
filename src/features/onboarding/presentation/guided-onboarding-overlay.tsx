@@ -60,21 +60,6 @@ export function GuidedOnboardingOverlay({
     return () => clearTimeout(timeout);
   }, [stepIndex, visible]);
 
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !visible || typeof document === 'undefined') {
-      return;
-    }
-
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onDismiss();
-      }
-    };
-
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onDismiss, visible]);
-
   if (!step) {
     return null;
   }
@@ -85,18 +70,13 @@ export function GuidedOnboardingOverlay({
   return (
     <Modal
       animationType="fade"
-      onRequestClose={onDismiss}
+      onRequestClose={() => undefined}
       statusBarTranslucent
       transparent
       visible={visible}
     >
       <SafeAreaView style={styles.root}>
-        <Pressable
-          accessibilityLabel="Saltar introducción"
-          accessibilityRole="button"
-          onPress={onDismiss}
-          style={styles.backdrop}
-        />
+        <View style={styles.backdrop} />
         <View accessibilityViewIsModal style={styles.card}>
           <View style={styles.heading}>
             <View style={styles.icon}>
