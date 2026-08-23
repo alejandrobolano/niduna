@@ -33,6 +33,15 @@ function getValue(point: CareTrendPoint, metric: CareMetric): number {
   return point.sleepMinutes;
 }
 
+function getSummaryValue(
+  summary: DailyCareSummary,
+  metric: CareMetric,
+): number {
+  if (metric === 'feeding') return summary.feeding.count;
+  if (metric === 'diaper') return summary.diaper.total;
+  return summary.sleepMinutes;
+}
+
 function getMetricDescription(metric: CareMetric, total: number): string {
   if (metric === 'feeding') return `${total} ${total === 1 ? 'toma registrada' : 'tomas registradas'}`;
   if (metric === 'diaper') return `${total} ${total === 1 ? 'cambio registrado' : 'cambios registrados'}`;
@@ -73,6 +82,14 @@ function formatAxisValue(value: number, metric: CareMetric): string {
   return new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value);
 }
 
+function formatBarValue(value: number, metric: CareMetric): string {
+  if (metric !== 'sleep') return String(value);
+  if (value >= 60) return `${new Intl.NumberFormat('es-ES', {
+    maximumFractionDigits: 1,
+  }).format(value / 60)}h`;
+  return `${Math.round(value)}m`;
+}
+
 export function CareTrendChart({ period, points, summary }: CareTrendChartProps) {
   const { width } = useWindowDimensions();
   const [metric, setMetric] = useState<CareMetric>('feeding');
@@ -90,8 +107,10 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
   const plotHeight = plotBottom - plotTop;
   const slotWidth = plotWidth / Math.max(points.length, 1);
   const barWidth = Math.max(3, Math.min(slotWidth * 0.62, 34));
-  const total = values.reduce((sum, value) => sum + value, 0);
-  const metricDescription = getMetricDescription(metric, total);
+  const metricDescription = getMetricDescription(
+    metric,
+    getSummaryValue(summary, metric),
+  );
   const bucketDescription = getBucketDescription(metric, period);
   const accessibilitySummary = `${metricDescription}. ${bucketDescription} ${summarizeCareTrend(summary, period)}`;
   const selectedPoint = points.find(
@@ -126,6 +145,11 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
             </Pressable>
           );
         })}
+      </View>
+
+      <View style={styles.metricOverview}>
+        <Text style={styles.metricOverviewLabel}>Total del periodo</Text>
+        <Text style={styles.metricOverviewValue}>{metricDescription}</Text>
       </View>
 
       <View
@@ -183,17 +207,30 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
             const y = plotBottom - height;
 
             return (
-              <Rect
-                fill={metric === 'feeding' ? colors.coral : metric === 'diaper' ? colors.butter : colors.lavender}
-                height={height}
-                key={point.startedAt}
-                onPress={() => setSelectedPointStart(point.startedAt)}
-                opacity={selectedPointStart === point.startedAt ? 1 : 0.9}
-                rx={Math.min(5, barWidth / 2)}
-                width={barWidth}
-                x={x}
-                y={y}
-              />
+              <G key={point.startedAt}>
+                <Rect
+                  fill={metric === 'feeding' ? colors.coral : metric === 'diaper' ? colors.butter : colors.lavender}
+                  height={height}
+                  onPress={() => setSelectedPointStart(point.startedAt)}
+                  opacity={selectedPointStart === point.startedAt ? 1 : 0.9}
+                  rx={Math.min(5, barWidth / 2)}
+                  width={barWidth}
+                  x={x}
+                  y={y}
+                />
+                {value > 0 ? (
+                  <SvgText
+                    fill={colors.text}
+                    fontSize={9}
+                    fontWeight="800"
+                    textAnchor="middle"
+                    x={x + barWidth / 2}
+                    y={Math.max(plotTop + 10, y - 6)}
+                  >
+                    {formatBarValue(value, metric)}
+                  </SvgText>
+                ) : null}
+              </G>
             );
           })}
           {points.map((point, index) => {
@@ -246,6 +283,15 @@ const styles = createThemedStyleSheet((colors) => ({
   metricButtonSelected: { backgroundColor: colors.surface },
   metricLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '800' },
   metricLabelSelected: { color: colors.text },
+  metricOverview: {
+    alignItems: 'baseline',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  metricOverviewLabel: { color: colors.textMuted, fontSize: 12 },
+  metricOverviewValue: { color: colors.text, fontSize: 14, fontWeight: '900' },
   metricSelector: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radius.pill,
