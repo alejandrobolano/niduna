@@ -45,11 +45,15 @@ interface SummaryCardProps {
 }
 
 function SummaryCard({ accent, detail, icon: Icon, label, value }: SummaryCardProps) {
+  const accentColor = colors[accent];
+
   return (
-    <View style={[styles.card, styles[`${accent}Card`]]}>
+    <View style={[styles.card, { borderTopColor: accentColor }]}>
       <View style={styles.cardHeading}>
-        <View style={[styles.cardIcon, styles[`${accent}Icon`]]}>
-          <Icon color={colors.text} size={16} />
+        <View
+          style={[styles.cardIcon, { backgroundColor: `${accentColor}22` }]}
+        >
+          <Icon color={accentColor} size={16} />
         </View>
         <Text style={styles.cardLabel}>{label}</Text>
       </View>
@@ -231,7 +235,7 @@ export function DailyCareSummaryScreen({
                 <Text style={styles.loading}>Preparando el resumen…</Text>
               ) : report && summary ? (
                 <>
-                  <View style={[styles.cards, compact && styles.cardsCompact]}>
+                  <View style={styles.cards}>
                     <SummaryCard
                       accent="coral"
                       detail={`${feedingDetail}${feedingInterval}`}
@@ -323,10 +327,6 @@ export function DailyCareSummaryScreen({
 }
 
 const styles = createThemedStyleSheet((colors) => ({
-  aquaCard: { borderTopColor: colors.aqua },
-  aquaIcon: { backgroundColor: colors.aquaSoft },
-  butterCard: { borderTopColor: colors.butter },
-  butterIcon: { backgroundColor: colors.butterSoft },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
@@ -348,15 +348,12 @@ const styles = createThemedStyleSheet((colors) => ({
   cardLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
   cardValue: { color: colors.text, fontSize: 20, fontWeight: '900' },
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  cardsCompact: { flexDirection: 'column' },
   chartCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   chartCopy: { flex: 1, gap: spacing.xs },
   chartHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   chartSubtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
   chartTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
-  coralCard: { borderTopColor: colors.coral },
-  coralIcon: { backgroundColor: colors.peach },
   disclaimer: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
   empty: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.xxl },
   emptyText: { color: colors.textMuted, fontSize: 13 },
@@ -366,8 +363,6 @@ const styles = createThemedStyleSheet((colors) => ({
   hero: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', minHeight: 160, overflow: 'hidden', padding: spacing.xl },
   heroCompact: { minHeight: 140, padding: spacing.lg },
   heroCopy: { flex: 1, gap: spacing.sm },
-  lavenderCard: { borderTopColor: colors.lavender },
-  lavenderIcon: { backgroundColor: colors.lavenderSoft },
   loading: { color: colors.textMuted, fontSize: 13, paddingVertical: spacing.xl, textAlign: 'center' },
   loadingInline: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
   measurementCard: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: 'row', gap: spacing.lg, padding: spacing.lg },
