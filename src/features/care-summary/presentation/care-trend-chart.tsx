@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, useWindowDimensions, View } from 'react-native';
-import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { G, Line, Rect, Text as SvgText, TSpan } from 'react-native-svg';
 
 import type {
   CareSummaryPeriod,
@@ -73,6 +73,25 @@ function formatBucketLabel(date: Date, period: CareSummaryPeriod): string {
   }).format(date);
 }
 
+function getBucketEnd(date: Date, period: CareSummaryPeriod): Date {
+  const durationMilliseconds = period === '24h'
+    ? 4 * 60 * 60 * 1000
+    : 24 * 60 * 60 * 1000;
+
+  return new Date(date.getTime() + durationMilliseconds);
+}
+
+function formatBucketInterval(
+  startedAt: string,
+  period: CareSummaryPeriod,
+): string {
+  const start = new Date(startedAt);
+
+  if (period !== '24h') return formatBucketLabel(start, period);
+
+  return `${formatBucketLabel(start, period)}–${formatBucketLabel(getBucketEnd(start, period), period)}`;
+}
+
 function formatAxisValue(value: number, metric: CareMetric): string {
   if (metric === 'sleep') {
     if (value >= 60) return `${new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value / 60)} h`;
@@ -102,7 +121,7 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
   const plotLeft = 48;
   const plotRight = chartWidth - 12;
   const plotTop = 12;
-  const plotBottom = chartHeight - 34;
+  const plotBottom = chartHeight - (period === '24h' ? 46 : 34);
   const plotWidth = plotRight - plotLeft;
   const plotHeight = plotBottom - plotTop;
   const slotWidth = plotWidth / Math.max(points.length, 1);
@@ -236,6 +255,26 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
           {points.map((point, index) => {
             if (!labelIndexes.has(index)) return null;
             const x = plotLeft + index * slotWidth + slotWidth / 2;
+            const start = new Date(point.startedAt);
+
+            if (period === '24h') {
+              return (
+                <SvgText
+                  fill={colors.textMuted}
+                  fontSize={9}
+                  key={`label-${point.startedAt}`}
+                  textAnchor="middle"
+                  x={x}
+                  y={chartHeight - 22}
+                >
+                  <TSpan x={x}>{formatBucketLabel(start, period)}</TSpan>
+                  <TSpan dy={11} x={x}>
+                    –{formatBucketLabel(getBucketEnd(start, period), period)}
+                  </TSpan>
+                </SvgText>
+              );
+            }
+
             return (
               <SvgText
                 fill={colors.textMuted}
@@ -245,7 +284,7 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
                 x={x}
                 y={chartHeight - 10}
               >
-                {formatBucketLabel(new Date(point.startedAt), period)}
+                {formatBucketLabel(start, period)}
               </SvgText>
             );
           })}
@@ -254,7 +293,7 @@ export function CareTrendChart({ period, points, summary }: CareTrendChartProps)
       {selectedPoint ? (
         <View accessibilityLiveRegion="polite" style={styles.selection}>
           <Text style={styles.selectionLabel}>
-            {formatBucketLabel(new Date(selectedPoint.startedAt), period)}
+            {formatBucketInterval(selectedPoint.startedAt, period)}
           </Text>
           <Text style={styles.selectionValue}>
             {getMetricDescription(metric, getValue(selectedPoint, metric))}
