@@ -15,6 +15,7 @@ import {
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
+import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
 
 type CareEventInsert =
   Database['public']['Tables']['care_events']['Insert'];
@@ -479,7 +480,7 @@ export const supabaseCareRepository: CareRepository = {
 
   subscribe(babyId, onChange) {
     const channel = supabase
-      .channel(`care-events:${babyId}`)
+      .channel(createRealtimeChannelTopic('care-events', babyId))
       .on(
         'postgres_changes',
         {

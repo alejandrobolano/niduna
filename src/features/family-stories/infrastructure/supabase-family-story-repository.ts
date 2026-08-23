@@ -4,6 +4,7 @@ import {
 } from '@/features/family-stories/application/family-story-repository';
 import type { FamilyStory } from '@/features/family-stories/domain/family-story';
 import { supabase } from '@/shared/infrastructure/supabase/client';
+import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
 
 const signedUrlLifetimeSeconds = 5 * 60;
 
@@ -159,7 +160,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
 
   subscribe(babyId, onChange) {
     const channel = supabase
-      .channel(`family-stories:${babyId}`)
+      .channel(createRealtimeChannelTopic('family-stories', babyId))
       .on(
         'postgres_changes',
         {
