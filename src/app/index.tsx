@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
@@ -79,6 +79,10 @@ async function exportCareHistory(
 export default function IndexRoute() {
   const { session, status } = useAuth();
   const { scheme } = useThemePreference();
+  const params = useLocalSearchParams<{
+    createBaby?: string;
+    section?: string;
+  }>();
 
   if (status === 'loading') {
     return <AuthLoadingScreen />;
@@ -91,6 +95,8 @@ export default function IndexRoute() {
   return (
     <AuthenticatedApp
       colorScheme={scheme}
+      initialCreateBaby={params.createBaby === '1'}
+      initialSection={resolveInitialSection(params.section)}
       key={session.user.id}
       user={session.user}
     />
@@ -99,16 +105,20 @@ export default function IndexRoute() {
 
 function AuthenticatedApp({
   colorScheme,
+  initialCreateBaby,
+  initialSection,
   user,
 }: {
   colorScheme: AppColorScheme;
+  initialCreateBaby: boolean;
+  initialSection: AppSection;
   user: AuthenticatedUser;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [section, setSection] = useState<AppSection>('handoff');
-  const [isCreatingBaby, setIsCreatingBaby] = useState(false);
+  const [section, setSection] = useState<AppSection>(initialSection);
+  const [isCreatingBaby, setIsCreatingBaby] = useState(initialCreateBaby);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
   const [onboardingState, setOnboardingState] = useState<
     GuidedOnboardingState | undefined
@@ -347,6 +357,7 @@ function AuthenticatedApp({
         canRecord={canRecordCare}
         exportHistory={exportCareHistory}
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
+        onOpenSummary={() => router.push('./records/summary')}
         repository={supabaseCareRepository}
         topContent={topContent}
         userId={user.id}
@@ -419,6 +430,15 @@ function AuthenticatedApp({
       />
     ),
   );
+}
+
+function resolveInitialSection(value: string | undefined): AppSection {
+  return value === 'history' ||
+    value === 'baby' ||
+    value === 'family' ||
+    value === 'activity'
+    ? value
+    : 'handoff';
 }
 
 const styles = createThemedStyleSheet((colors) => ({

@@ -32,6 +32,7 @@ import type { CareEvent } from '@/features/care/domain/care-event';
 import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
 import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
+import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -42,6 +43,7 @@ interface CareHistoryScreenProps {
   canManage: boolean;
   canRecord: boolean;
   exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
+  onOpenSummary: () => void;
   repository: CareRepository;
   topContent?: ReactNode;
   userId: string;
@@ -82,6 +84,7 @@ export function CareHistoryScreen({
   canManage,
   canRecord,
   exportHistory,
+  onOpenSummary,
   repository,
   topContent,
   userId,
@@ -338,6 +341,12 @@ export function CareHistoryScreen({
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
+          <CareRecordViewTabs
+            onChange={(view) => {
+              if (view === 'summary') onOpenSummary();
+            }}
+            value="history"
+          />
           <View style={[styles.hero, isCompact && styles.heroCompact]}>
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>Registro completo</Text>
