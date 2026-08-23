@@ -21,6 +21,7 @@ interface AccountSettingsScreenProps {
   email: string;
   notificationContent?: ReactNode;
   onBack: () => void;
+  onReplayOnboarding: () => void;
 }
 
 interface SettingsSectionProps {
@@ -51,6 +52,7 @@ export function AccountSettingsScreen({
   email,
   notificationContent,
   onBack,
+  onReplayOnboarding,
 }: AccountSettingsScreenProps) {
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -120,11 +122,13 @@ export function AccountSettingsScreen({
 
           <SettingsSection icon={CircleHelp} title="Ayuda">
             <Pressable
-              accessibilityHint="Estará disponible cuando se implemente el recorrido de bienvenida"
+              accessibilityHint="Abre de nuevo el recorrido guiado sobre la aplicación"
               accessibilityRole="button"
-              accessibilityState={{ disabled: true }}
-              disabled
-              style={styles.onboardingAction}
+              onPress={onReplayOnboarding}
+              style={({ pressed }) => [
+                styles.onboardingAction,
+                pressed && styles.pressed,
+              ]}
             >
               <View style={styles.onboardingIcon}>
                 <BookOpen color={colors.lavender} size={19} />
@@ -134,9 +138,6 @@ export function AccountSettingsScreen({
                 <Text style={styles.onboardingDescription}>
                   Vuelve a descubrir Relevo, Registro, Familia y avisos.
                 </Text>
-              </View>
-              <View style={styles.upcomingBadge}>
-                <Text style={styles.upcomingText}>Próximamente</Text>
               </View>
             </Pressable>
           </SettingsSection>
@@ -231,7 +232,6 @@ const styles = createThemedStyleSheet((colors) => ({
     flexDirection: 'row',
     gap: spacing.md,
     minHeight: 64,
-    opacity: 0.72,
   },
   onboardingIcon: {
     alignItems: 'center',
@@ -249,13 +249,6 @@ const styles = createThemedStyleSheet((colors) => ({
     lineHeight: 16,
     marginTop: 2,
   },
-  upcomingBadge: {
-    backgroundColor: colors.lavenderSoft,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  upcomingText: { color: colors.lavender, fontSize: 9, fontWeight: '900' },
   dangerArea: { paddingHorizontal: spacing.sm },
   pressed: { opacity: 0.7, transform: [{ scale: 0.97 }] },
 }));
