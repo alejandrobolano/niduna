@@ -237,12 +237,12 @@ function AuthenticatedApp({
   }
 
   function changeFamily(familyId: string) {
-    setIsCreatingBaby(false);
+    navigateToSection(section);
     context.changeFamily(familyId);
   }
 
   function changeBaby(babyId: string) {
-    setIsCreatingBaby(false);
+    navigateToSection(section);
     context.changeBaby(babyId);
   }
 
@@ -433,7 +433,7 @@ function AuthenticatedApp({
         onSaved={(babyId) => {
           void context
             .refresh({ babyId, familyId: activeFamily.id })
-            .then(() => setIsCreatingBaby(false));
+            .then(() => navigateToSection('baby'));
         }}
         onArchive={activeBabyId ? () => context.archiveBaby(activeBabyId) : undefined}
         onPhotoChanged={activeBabyId
