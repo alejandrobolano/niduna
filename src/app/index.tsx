@@ -160,12 +160,9 @@ function AuthenticatedApp({
     (nextSection: AppSection, createBaby = false) => {
       setSection(nextSection);
       setIsCreatingBaby(createBaby);
-      router.replace({
-        pathname: '/',
-        params: {
-          section: nextSection,
-          ...(createBaby ? { createBaby: '1' } : {}),
-        },
+      router.setParams({
+        createBaby: createBaby ? '1' : undefined,
+        section: nextSection,
       });
     },
     [router],
