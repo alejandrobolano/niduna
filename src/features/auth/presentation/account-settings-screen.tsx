@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Bell,
   BookOpen,
+  ChevronRight,
   CircleHelp,
   Database,
   Smartphone,
@@ -21,6 +22,7 @@ interface AccountSettingsScreenProps {
   email: string;
   notificationContent?: ReactNode;
   onBack: () => void;
+  onOpenHelp: () => void;
   onReplayOnboarding: () => void;
 }
 
@@ -52,6 +54,7 @@ export function AccountSettingsScreen({
   email,
   notificationContent,
   onBack,
+  onOpenHelp,
   onReplayOnboarding,
 }: AccountSettingsScreenProps) {
   useEffect(() => {
@@ -121,6 +124,26 @@ export function AccountSettingsScreen({
           </SettingsSection>
 
           <SettingsSection icon={CircleHelp} title="Ayuda">
+            <Pressable
+              accessibilityHint="Abre las guías y preguntas frecuentes de Niduna"
+              accessibilityRole="button"
+              onPress={onOpenHelp}
+              style={({ pressed }) => [
+                styles.onboardingAction,
+                pressed && styles.pressed,
+              ]}
+            >
+              <View style={styles.helpIcon}>
+                <CircleHelp color={colors.primaryPressed} size={19} />
+              </View>
+              <View style={styles.onboardingCopy}>
+                <Text style={styles.onboardingTitle}>Cómo usar Niduna</Text>
+                <Text style={styles.onboardingDescription}>
+                  Consulta guías paso a paso y preguntas frecuentes.
+                </Text>
+              </View>
+              <ChevronRight color={colors.textMuted} size={19} />
+            </Pressable>
             <Pressable
               accessibilityHint="Abre de nuevo el recorrido guiado sobre la aplicación"
               accessibilityRole="button"
@@ -236,6 +259,14 @@ const styles = createThemedStyleSheet((colors) => ({
   onboardingIcon: {
     alignItems: 'center',
     backgroundColor: colors.lavenderSoft,
+    borderRadius: radius.md,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
+  },
+  helpIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
     borderRadius: radius.md,
     height: 40,
     justifyContent: 'center',

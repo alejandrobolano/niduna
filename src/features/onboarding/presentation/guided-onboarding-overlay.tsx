@@ -1,4 +1,4 @@
-import { ClipboardList, Moon, Users, X } from 'lucide-react-native';
+import { CircleHelp, ClipboardList, Moon, Users, X } from 'lucide-react-native';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -25,6 +25,7 @@ interface GuidedOnboardingOverlayProps {
 const stepIcons = {
   family: Users,
   handoff: Moon,
+  help: CircleHelp,
   history: ClipboardList,
 };
 
@@ -64,7 +65,7 @@ export function GuidedOnboardingOverlay({
     return null;
   }
 
-  const Icon = stepIcons[step.section as keyof typeof stepIcons] ?? Moon;
+  const Icon = stepIcons[step.id];
   const isLastStep = stepIndex === steps.length - 1;
 
   return (
@@ -86,7 +87,7 @@ export function GuidedOnboardingOverlay({
               {steps.map((item, index) => (
                 <View
                   accessibilityLabel={`Paso ${index + 1} de ${steps.length}`}
-                  key={item.section}
+                  key={item.id}
                   style={[
                     styles.progressDot,
                     index === stepIndex && styles.progressDotActive,
@@ -122,7 +123,9 @@ export function GuidedOnboardingOverlay({
 
           <View style={styles.contextNote}>
             <Text style={styles.contextNoteText}>
-              Estás viendo esta zona de Niduna detrás de esta guía.
+              {step.section
+                ? 'Estás viendo esta zona de Niduna detrás de esta guía.'
+                : 'Podrás abrir esta ayuda cuando quieras desde Mi cuenta y ajustes.'}
             </Text>
           </View>
 
@@ -148,7 +151,9 @@ export function GuidedOnboardingOverlay({
                 const nextStep = steps[stepIndex + 1];
 
                 if (nextStep) {
-                  onStepChange(nextStep);
+                  if (nextStep.section) {
+                    onStepChange(nextStep);
+                  }
                   setStepIndex((current) => current + 1);
                 }
               }}

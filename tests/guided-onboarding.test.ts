@@ -49,17 +49,19 @@ describe('guided onboarding', () => {
     expect(steps[0]?.section).toBe('family');
   });
 
-  it('uses the three product areas and adapts the handoff copy without a baby', () => {
+  it('uses the three product areas, closes with help, and adapts the handoff copy without a baby', () => {
     const steps = getGuidedOnboardingSteps({
       hasActiveBaby: false,
       hasActiveFamily: true,
     });
 
-    expect(steps.map((step) => step.section)).toEqual([
+    expect(steps.map((step) => step.id)).toEqual([
       'handoff',
       'history',
       'family',
+      'help',
     ]);
     expect(steps[0]?.title).toContain('bebé');
+    expect(steps.at(-1)?.section).toBeUndefined();
   });
 });

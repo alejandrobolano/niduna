@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "expo",
+  "include-v-in-tag": true,
+  "changelog-sections": [
+    {
+      "type": "feat",
+      "section": "Nuevas funciones"
+    },
+    {
+      "type": "fix",
+      "section": "Correcciones"
+    },
+    {
+      "type": "perf",
+      "section": "Rendimiento"
+    },
+    {
+      "type": "refactor",
+      "section": "Mantenimiento"
+    },
+    {
+      "type": "docs",
+      "section": "Documentación"
+    }
+  ],
+  "packages": {
+    ".": {
+      "component": "niduna",
+      "package-name": "niduna"
+    }
+  }
+}

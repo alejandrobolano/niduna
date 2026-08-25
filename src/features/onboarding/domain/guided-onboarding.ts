@@ -15,7 +15,8 @@ export interface GuidedOnboardingState {
 export interface GuidedOnboardingStep {
   description: string;
   eyebrow: string;
-  section: AppSection;
+  id: 'family' | 'handoff' | 'help' | 'history';
+  section?: AppSection;
   title: string;
 }
 
@@ -32,6 +33,7 @@ export function getGuidedOnboardingSteps({
         description:
           'Crea una familia o únete con un código. Así los cuidados quedarán disponibles para las personas que participen en el relevo.',
         eyebrow: 'EMPIEZA EN FAMILIA',
+        id: 'family',
         section: 'family',
         title: 'El cuidado se comparte mejor',
       },
@@ -44,6 +46,7 @@ export function getGuidedOnboardingSteps({
         ? 'Registra alimentación, pañal, sueño, medidas y notas sin abandonar esta pantalla.'
         : 'Añade el perfil del bebé y después podrás registrar alimentación, pañal, sueño, medidas y notas aquí.',
       eyebrow: 'RELEVO',
+      id: 'handoff',
       section: 'handoff',
       title: hasActiveBaby ? 'Deja constancia en segundos' : 'Primero, añade al bebé',
     },
@@ -52,6 +55,7 @@ export function getGuidedOnboardingSteps({
         ? 'Consulta y filtra los cuidados. También podrás corregir, retirar y exportar los registros cuando lo necesites.'
         : 'Cuando exista el primer cuidado, aquí podrás consultarlo, filtrarlo, corregirlo, retirarlo o exportarlo.',
       eyebrow: 'REGISTRO',
+      id: 'history',
       section: 'history',
       title: 'Todo el historial, en orden',
     },
@@ -59,8 +63,16 @@ export function getGuidedOnboardingSteps({
       description:
         'Invita a otra persona con un código seguro y elige qué podrá consultar o registrar dentro de la familia.',
       eyebrow: 'FAMILIA',
+      id: 'family',
       section: 'family',
       title: 'Haz que el relevo sea compartido',
+    },
+    {
+      description:
+        'En Mi cuenta y ajustes encontrarás Cómo usar Niduna, con guías paso a paso y respuestas para consultar cuando las necesites.',
+      eyebrow: 'SIEMPRE A MANO',
+      id: 'help',
+      title: 'La ayuda no termina aquí',
     },
   ];
 }

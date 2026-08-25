@@ -161,7 +161,7 @@ export function SessionBanner({
                 </Text>
               </Pressable>
               <Text style={styles.version}>
-                Niduna{appVersion ? ` v${appVersion}` : ''} · Beta
+                Niduna{appVersion ? ` v${appVersion}` : ''}
               </Text>
             </View>
           </View>
