@@ -48,6 +48,7 @@ export default function SettingsRoute() {
     <AuthenticatedSettings
       email={session.user.email}
       onBack={goBack}
+      onOpenHelp={() => router.push('/help')}
       onReplayOnboarding={() => {
         requestGuidedOnboardingReplay(session.user.id);
         router.replace('/');
@@ -60,11 +61,13 @@ export default function SettingsRoute() {
 function AuthenticatedSettings({
   email,
   onBack,
+  onOpenHelp,
   onReplayOnboarding,
   userId,
 }: {
   email: string;
   onBack: () => void;
+  onOpenHelp: () => void;
   onReplayOnboarding: () => void;
   userId: string;
 }) {
@@ -134,6 +137,7 @@ function AuthenticatedSettings({
         ) : undefined
       }
       onBack={onBack}
+      onOpenHelp={onOpenHelp}
       onReplayOnboarding={onReplayOnboarding}
     />
   );

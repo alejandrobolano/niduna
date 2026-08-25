@@ -169,7 +169,11 @@ function AuthenticatedApp({
   );
 
   const showOnboardingStep = useCallback(
-    (step: GuidedOnboardingStep) => navigateToSection(step.section),
+    (step: GuidedOnboardingStep) => {
+      if (step.section) {
+        navigateToSection(step.section);
+      }
+    },
     [navigateToSection],
   );
 
