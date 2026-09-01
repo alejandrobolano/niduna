@@ -1,5 +1,6 @@
 import {
   Camera,
+  FileText,
   Heart,
   HeartHandshake,
   MoveVertical,
@@ -119,6 +120,7 @@ interface BabyProfileScreenProps {
   familyId: string;
   onArchive?: () => Promise<void>;
   onPhotoChanged?: () => Promise<void> | void;
+  onOpenDocuments?: () => void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -132,6 +134,7 @@ export function BabyProfileScreen({
   familyId,
   onArchive,
   onPhotoChanged,
+  onOpenDocuments,
   onSaved,
   onUnfollow,
   repository,
@@ -619,6 +622,29 @@ export function BabyProfileScreen({
             ) : null}
           </View>
 
+          {storedBabyId && onOpenDocuments ? (
+            <Pressable
+              accessibilityHint="Abre los documentos privados del bebé"
+              accessibilityRole="button"
+              onPress={onOpenDocuments}
+              style={({ pressed }) => [
+                styles.documentsCard,
+                pressed && styles.photoActionPressed,
+              ]}
+            >
+              <View style={styles.documentsIcon}>
+                <FileText color={colors.primaryPressed} size={24} />
+              </View>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Documentos del bebé</Text>
+                <Text style={styles.photoHint}>
+                  Guarda informes, autorizaciones y carnets para toda la familia.
+                </Text>
+              </View>
+              <Text style={styles.documentsLink}>Abrir</Text>
+            </Pressable>
+          ) : null}
+
           <View style={[styles.section, styles.momentSection]}>
             <SectionHeading accent={colors.butter} icon={Sun} title="Momento" />
             <SegmentedControl
@@ -1098,6 +1124,30 @@ const styles = createThemedStyleSheet((colors) => ({
     padding: spacing.lg,
   },
   photoError: { color: colors.error, fontSize: 12, lineHeight: 17 },
+  documentsCard: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 82,
+    padding: spacing.lg,
+  },
+  documentsIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  documentsLink: {
+    color: colors.primaryPressed,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   photoViewerRoot: {
     backgroundColor: 'rgba(12, 18, 40, 0.96)',
     flex: 1,

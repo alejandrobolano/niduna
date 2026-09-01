@@ -16,6 +16,8 @@ import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
+import { supabaseBabyDocumentRepository } from '@/features/baby-documents/infrastructure/supabase-baby-document-repository';
+import { BabyDocumentsScreen } from '@/features/baby-documents/presentation/baby-documents-screen';
 import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
 import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
@@ -402,6 +404,20 @@ function AuthenticatedApp({
     );
   }
 
+  if (section === 'documents' && context.activeBaby) {
+    return renderAppScreen(
+      <BabyDocumentsScreen
+        babyId={context.activeBaby.id}
+        babyName={context.activeBaby.name}
+        familyRole={activeFamily.role}
+        onBack={() => changeSection('baby')}
+        repository={supabaseBabyDocumentRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
   if (section === 'baby' && !context.activeBaby && !canManageBabies) {
     return renderAppScreen(
       <FamilyScreen
@@ -440,6 +456,7 @@ function AuthenticatedApp({
         onPhotoChanged={activeBabyId
           ? () => context.refresh({ babyId: activeBabyId, familyId: activeFamily.id })
           : undefined}
+        onOpenDocuments={activeBabyId ? () => changeSection('documents') : undefined}
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}
@@ -465,6 +482,7 @@ function resolveInitialSection(value: string | undefined): AppSection {
   return value === 'history' ||
     value === 'summary' ||
     value === 'baby' ||
+    value === 'documents' ||
     value === 'family' ||
     value === 'activity'
     ? value

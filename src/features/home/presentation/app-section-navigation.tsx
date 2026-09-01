@@ -8,6 +8,7 @@ export type AppSection =
   | 'history'
   | 'summary'
   | 'baby'
+  | 'documents'
   | 'family'
   | 'activity';
 
@@ -44,6 +45,7 @@ export function AppSectionNavigation({
         const selected =
           value === section.value ||
           (value === 'summary' && section.value === 'history') ||
+          (value === 'documents' && section.value === 'baby') ||
           (value === 'activity' && section.value === 'family');
 
         return (

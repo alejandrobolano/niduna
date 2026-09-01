@@ -14,6 +14,7 @@ type Table<Row, Insert, Update> = {
 };
 
 type BabyLifeStage = 'expected' | 'born';
+type BabyDocumentCategory = 'report' | 'authorization' | 'card' | 'other';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
 type BreastSide = 'left' | 'right' | 'both';
 type CareEventType = 'feeding' | 'diaper' | 'sleep';
@@ -454,6 +455,30 @@ export type Database = {
           occurred_at?: string;
         }
       >;
+      baby_documents: Table<
+        {
+          author_user_id: string | null;
+          baby_id: string;
+          category: BabyDocumentCategory;
+          created_at: string;
+          description: string | null;
+          display_name: string;
+          document_date: string | null;
+          family_id: string;
+          file_size_bytes: number;
+          id: string;
+          mime_type: 'application/pdf' | 'image/jpeg' | 'image/png';
+          original_file_name: string;
+          published_at: string | null;
+          retired_at: string | null;
+          retired_by: string | null;
+          status: 'draft' | 'published';
+          storage_path: string;
+          updated_at: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       family_audit_logs: Table<
         {
           action: 'created' | 'updated' | 'deleted';
@@ -464,6 +489,7 @@ export type Database = {
           entity_id: string | null;
           entity_type:
             | 'baby'
+            | 'baby_document'
             | 'baby_note'
             | 'care_event'
             | 'family_member'
@@ -564,6 +590,50 @@ export type Database = {
       };
     };
     Functions: {
+      prepare_baby_document: {
+        Args: {
+          target_baby_id: string;
+          target_category: BabyDocumentCategory;
+          target_description: string | null;
+          target_display_name: string;
+          target_document_date: string | null;
+          target_file_size_bytes: number;
+          target_mime_type: string;
+          target_original_file_name: string;
+        };
+        Returns: { id: string; storage_path: string }[];
+      };
+      publish_baby_document: {
+        Args: { target_document_id: string };
+        Returns: undefined;
+      };
+      update_baby_document_metadata: {
+        Args: {
+          target_category: BabyDocumentCategory;
+          target_description: string | null;
+          target_display_name: string;
+          target_document_date: string | null;
+          target_document_id: string;
+        };
+        Returns: undefined;
+      };
+      prepare_baby_document_replacement: {
+        Args: {
+          target_document_id: string;
+          target_file_size_bytes: number;
+          target_mime_type: string;
+          target_original_file_name: string;
+        };
+        Returns: { id: string; storage_path: string }[];
+      };
+      publish_baby_document_replacement: {
+        Args: { target_replacement_id: string };
+        Returns: undefined;
+      };
+      set_baby_document_retired: {
+        Args: { should_retire: boolean; target_document_id: string };
+        Returns: undefined;
+      };
       get_care_range_summary: {
         Args: {
           target_baby_id: string;
@@ -809,6 +879,7 @@ export type Database = {
       };
     };
     Enums: {
+      baby_document_category: BabyDocumentCategory;
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;
       breast_side: BreastSide;

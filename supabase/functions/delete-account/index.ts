@@ -129,12 +129,12 @@ async function loadOwnedFamilies(
 async function loadOwnedFamilyStoragePaths(
   adminClient: SupabaseClient,
   familyIds: string[],
-): Promise<{ babyPhotos: string[]; familyStories: string[] }> {
+): Promise<{ babyDocuments: string[]; babyPhotos: string[]; familyStories: string[] }> {
   if (familyIds.length === 0) {
-    return { babyPhotos: [], familyStories: [] };
+    return { babyDocuments: [], babyPhotos: [], familyStories: [] };
   }
 
-  const [babiesResult, storiesResult] = await Promise.all([
+  const [babiesResult, storiesResult, documentsResult] = await Promise.all([
     adminClient
       .from('babies')
       .select('photo_path')
@@ -142,6 +142,10 @@ async function loadOwnedFamilyStoragePaths(
       .not('photo_path', 'is', null),
     adminClient
       .from('family_stories')
+      .select('storage_path')
+      .in('family_id', familyIds),
+    adminClient
+      .from('baby_documents')
       .select('storage_path')
       .in('family_id', familyIds),
   ]);
@@ -154,7 +158,14 @@ async function loadOwnedFamilyStoragePaths(
     throw storiesResult.error;
   }
 
+  if (documentsResult.error) {
+    throw documentsResult.error;
+  }
+
   return {
+    babyDocuments: [...new Set(
+      (documentsResult.data ?? []).map((document) => document.storage_path),
+    )],
     babyPhotos: [...new Set(
       (babiesResult.data ?? [])
         .map((baby) => baby.photo_path)
@@ -230,6 +241,11 @@ const authenticatedHandler = withSupabase(
           adminClient,
           'family-stories',
           storagePaths.familyStories,
+        );
+        await removeStoragePaths(
+          adminClient,
+          'baby-documents',
+          storagePaths.babyDocuments,
         );
       }
 

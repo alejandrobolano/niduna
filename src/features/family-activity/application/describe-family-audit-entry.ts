@@ -115,6 +115,19 @@ export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
         : entry.action === 'deleted'
           ? 'eliminó una nota familiar'
           : 'actualizó una nota familiar';
+  } else if (entry.entityType === 'baby_document') {
+    action =
+      changeKind === 'retired'
+        ? 'retiró un documento del bebé'
+        : changeKind === 'restored'
+          ? 'restauró un documento del bebé'
+          : changeKind === 'replaced'
+            ? 'sustituyó el archivo de un documento del bebé'
+            : changeKind === 'metadata_updated'
+              ? 'actualizó los datos de un documento del bebé'
+              : entry.action === 'created'
+                ? 'añadió un documento del bebé'
+                : 'eliminó un documento del bebé';
   } else if (entry.entityType === 'measurement') {
     action = describeMeasurement(details, entry.action);
   } else if (entry.entityType === 'family_member') {

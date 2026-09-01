@@ -68,3 +68,13 @@ that active family-care records are kept while needed for the service, retired
 records can be recovered for 30 days before permanent deletion, and the
 administrative activity log is retained for 180 days. It must also distinguish
 application deletion from the database provider's backup lifecycle.
+
+The policy must also state that families may upload private PDF, JPEG, and PNG
+documents associated with a baby. These files and their metadata are available
+only to active authorized members of that family through short-lived signed
+URLs. Authors can manage their own documents, while family owners and
+administrators can manage every family document. Retired documents remain
+stored until they are restored or permanently deleted with the baby, family,
+or account; replaced files and abandoned uploads are removed automatically.
+Niduna does not interpret these files as medical records and does not provide
+diagnosis or clinical advice.
