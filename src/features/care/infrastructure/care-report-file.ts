@@ -1,4 +1,5 @@
 import * as Print from 'expo-print';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Platform } from 'react-native';
 
@@ -51,9 +52,13 @@ export async function exportCareReportFile(
     html: report.html,
     width: 595,
   });
+  const generatedFile = new File(uri);
+  const savedFile = new File(Paths.document, report.fileName);
 
-  await Sharing.shareAsync(uri, {
-    dialogTitle: 'Compartir informe de Niduna',
+  await generatedFile.copy(savedFile, { overwrite: true });
+
+  await Sharing.shareAsync(savedFile.uri, {
+    dialogTitle: 'Guardar informe de Niduna',
     mimeType: 'application/pdf',
     UTI: 'com.adobe.pdf',
   });

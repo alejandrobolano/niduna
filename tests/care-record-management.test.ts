@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   canEditCareRecord,
+  getCareEventsForExport,
   getCareRecordKey,
   getSelectableCareRecordKeys,
   reconcileCareRecordSelection,
@@ -61,6 +62,21 @@ describe('care record management', () => {
         [feeding],
       ),
     ).toEqual(new Set(['care_event:event-1']));
+  });
+
+  it('exports only selected records when a manual selection exists', () => {
+    const secondFeeding = { ...feeding, id: 'event-2' };
+
+    expect(
+      getCareEventsForExport(
+        [feeding, secondFeeding],
+        new Set(['care_event:event-2']),
+      ),
+    ).toEqual([secondFeeding]);
+  });
+
+  it('exports the complete filtered set when nothing is selected', () => {
+    expect(getCareEventsForExport([feeding], new Set())).toEqual([feeding]);
   });
 
   it('changes the local date and time without changing the event type', () => {

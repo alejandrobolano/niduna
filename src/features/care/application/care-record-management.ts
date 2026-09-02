@@ -20,6 +20,15 @@ export function reconcileCareRecordSelection(
   return new Set([...selectedKeys].filter((key) => visibleKeys.has(key)));
 }
 
+export function getCareEventsForExport(
+  events: CareEvent[],
+  selectedKeys: ReadonlySet<string>,
+): CareEvent[] {
+  if (selectedKeys.size === 0) return events;
+
+  return events.filter((event) => selectedKeys.has(getCareRecordKey(event)));
+}
+
 export function canEditCareRecord(
   event: CareEvent,
   userId: string,

@@ -26,6 +26,7 @@ interface CareHistoryControlsProps {
   exportCount: number;
   isExporting: boolean;
   isReportPreparing: boolean;
+  isSelectionExport: boolean;
   onChangeDate: (dateKey: string | undefined) => void;
   onChangeFilter: (filter: CareEventFilter) => void;
   onExport: () => void;
@@ -39,6 +40,7 @@ export function CareHistoryControls({
   exportCount,
   isExporting,
   isReportPreparing,
+  isSelectionExport,
   onChangeDate,
   onChangeFilter,
   onExport,
@@ -86,7 +88,9 @@ export function CareHistoryControls({
               <Text style={styles.exportLabel}>
                 {isExporting ? 'Preparando…' : 'Excel'}
               </Text>
-              <Text style={styles.exportHint}>{exportCount} registros · CSV</Text>
+              <Text style={styles.exportHint}>
+                {exportCount} {isSelectionExport ? 'seleccionados' : 'registros'} · CSV
+              </Text>
             </View>
           </Pressable>
           <Pressable
@@ -104,7 +108,9 @@ export function CareHistoryControls({
               <Text style={styles.reportLabel}>
                 {isReportPreparing ? 'Preparando…' : 'Informe PDF'}
               </Text>
-              <Text style={styles.reportHint}>Personalizar</Text>
+              <Text style={styles.reportHint}>
+                {isSelectionExport ? `${exportCount} seleccionados` : 'Personalizar'}
+              </Text>
             </View>
           </Pressable>
         </View>

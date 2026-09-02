@@ -55,6 +55,8 @@ describe('createCareReportHtml', () => {
     expect(html).toContain('Familia &amp; compañía');
     expect(html).toContain('150 ml registrados');
     expect(html).toContain('2 tomas');
+    expect(html).toContain('class="report-end"');
+    expect(html).toContain('footer { color: #66708F; font-size: 7.5px; margin-top: 14px; }');
     expect(html).toContain('<th class="date">Fecha</th>');
     expect(html).not.toContain('<th class="author">Registrado por</th>');
   });

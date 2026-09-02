@@ -268,8 +268,9 @@ export function createCareReportHtml({
         .type { width: 17%; }
         .detail { width: 41%; }
         .author { width: 20%; }
-        .notice { background: #F3ECFF; border-radius: 8px; color: #66708F; font-size: 8px; line-height: 1.35; margin-top: 12px; padding: 8px 10px; }
-        footer { color: #66708F; font-size: 7.5px; margin-top: 12px; }
+        .report-end { break-inside: avoid; margin-top: 18px; page-break-inside: avoid; }
+        .notice { background: #F3ECFF; border-radius: 8px; color: #66708F; font-size: 8px; line-height: 1.35; margin: 0; padding: 8px 10px; }
+        footer { color: #66708F; font-size: 7.5px; margin-top: 14px; }
         footer .footer-line { border-top: 1px solid #E7DFCC; display: flex; justify-content: space-between; padding-top: 5px; }
       </style>
     </head>
@@ -292,9 +293,11 @@ export function createCareReportHtml({
         ${renderContacts(contacts)}
         <h2>Detalle de registros</h2>
         ${renderTable(events, columns)}
-        <p class="notice"><strong>Importante:</strong> este informe ayuda a coordinar el cuidado familiar. No sustituye una historia clínica, una valoración médica ni los servicios de emergencia.</p>
       </main>
-      <footer><div class="footer-line"><span>niduna.com · Generado el ${escapeHtml(generatedLabel)}</span><span>Informe de ${safeBabyName}</span></div></footer>
+      <section class="report-end">
+        <p class="notice"><strong>Importante:</strong> este informe ayuda a coordinar el cuidado familiar. No sustituye una historia clínica, una valoración médica ni los servicios de emergencia.</p>
+        <footer><div class="footer-line"><span>niduna.com · Generado el ${escapeHtml(generatedLabel)}</span><span>Informe de ${safeBabyName}</span></div></footer>
+      </section>
     </body>
   </html>`;
 }

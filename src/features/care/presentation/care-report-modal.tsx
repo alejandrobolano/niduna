@@ -113,7 +113,7 @@ export function CareReportModal({
           <View style={styles.handle} />
           <View style={styles.heading}>
             <View style={styles.headingCopy}>
-              <Text style={styles.eyebrow}>EXPORTAR PDF</Text>
+              <Text style={styles.eyebrow}>GUARDAR PDF</Text>
               <Text style={styles.title}>Informe personalizado</Text>
               <Text style={styles.subtitle}>
                 Elige qué información acompañará a la tabla de registros.
@@ -249,7 +249,7 @@ export function CareReportModal({
               ) : (
                 <>
                   <FileText color={colors.onAccent} size={18} />
-                  <Text style={styles.generateText}>Generar PDF</Text>
+                  <Text style={styles.generateText}>Guardar PDF</Text>
                 </>
               )}
             </Pressable>

@@ -28,6 +28,7 @@ import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/appli
 import { getCareRecordRetention } from '@/features/care/application/care-record-retention';
 import {
   canEditCareRecord,
+  getCareEventsForExport,
   getCareRecordKey,
   getSelectableCareRecordKeys,
   reconcileCareRecordSelection,
@@ -188,12 +189,22 @@ export function CareHistoryScreen({
     setShowBulkConfirmation(false);
   }
 
+  const visibleEvents = history?.events ?? [];
+  const selectedEvents = visibleEvents.filter((event) =>
+    selectedKeys.has(getCareRecordKey(event)),
+  );
+  const exportEvents = getCareEventsForExport(visibleEvents, selectedKeys);
+  const isSelectionExport = selectedKeys.size > 0;
+  const exportCount = isSelectionExport ? exportEvents.length : history?.total ?? 0;
+
   async function handleExport() {
     if (!babyId || !babyName) return;
     setIsExporting(true);
     setError(undefined);
     try {
-      const events = await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
+      const events = isSelectionExport
+        ? exportEvents
+        : await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       await exportHistory(events, babyName);
     } catch {
       setError('No pudimos preparar el archivo para Excel.');
@@ -208,8 +219,11 @@ export function CareHistoryScreen({
     setError(undefined);
 
     try {
+      const eventsPromise = isSelectionExport
+        ? Promise.resolve(exportEvents)
+        : repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       const [events, contacts] = await Promise.all([
-        repository.loadHistoryForExport({ babyId, date: selectedDate, filter }),
+        eventsPromise,
         contactRepository.loadActive(babyId),
       ]);
       setReportEvents(events);
@@ -235,7 +249,9 @@ export function CareHistoryScreen({
         contacts: selection.contacts,
         events: reportEvents,
         familyName,
-        filterLabel: selectedDate
+        filterLabel: isSelectionExport
+          ? `Selección manual · ${reportEvents.length} registros`
+          : selectedDate
           ? `${filterLabels[filter]} · ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'long' }).format(new Date(`${selectedDate}T12:00:00`))}`
           : filterLabels[filter],
       });
@@ -247,8 +263,6 @@ export function CareHistoryScreen({
     }
   }
 
-  const visibleEvents = history?.events ?? [];
-  const selectedEvents = visibleEvents.filter((event) => selectedKeys.has(getCareRecordKey(event)));
   const pendingSingleEvent = visibleEvents.find(
     (event) => getCareRecordKey(event) === pendingRetireId,
   );
@@ -416,9 +430,10 @@ export function CareHistoryScreen({
                 <CareHistoryControls
                   eventFilter={filter}
                   events={visibleEvents}
-                  exportCount={history?.total ?? 0}
+                  exportCount={exportCount}
                   isExporting={isExporting}
                   isReportPreparing={isReportLoading}
+                  isSelectionExport={isSelectionExport}
                   onChangeDate={(date) => resetPage(() => setSelectedDate(date))}
                   onChangeFilter={(value) => resetPage(() => setFilter(value))}
                   onExport={() => void handleExport()}
@@ -518,7 +533,11 @@ export function CareHistoryScreen({
                 <CareReportModal
                   contacts={reportContacts}
                   events={reportEvents}
-                  filterLabel={selectedDate ? `${filterLabels[filter]} · día seleccionado` : filterLabels[filter]}
+                  filterLabel={isSelectionExport
+                    ? `Selección manual · ${reportEvents.length} registros`
+                    : selectedDate
+                      ? `${filterLabels[filter]} · día seleccionado`
+                      : filterLabels[filter]}
                   isGenerating={isReportGenerating}
                   isLoading={isReportLoading}
                   onClose={() => setReportVisible(false)}
