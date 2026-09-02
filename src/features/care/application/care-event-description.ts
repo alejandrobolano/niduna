@@ -1,5 +1,5 @@
-import { getDurationMinutes } from '@/features/care/application/care-snapshot';
-import type { CareEvent } from '@/features/care/domain/care-event';
+import { getDurationMinutes } from './care-snapshot';
+import type { CareEvent } from '../domain/care-event';
 
 export const careEventLabels: Record<CareEvent['type'], string> = {
   diaper: 'Pañal',

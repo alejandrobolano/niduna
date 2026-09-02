@@ -2,9 +2,9 @@ import type { BabyContact } from '@/features/baby-contacts/domain/baby-contact';
 import {
   careEventLabels,
   describeCareEvent,
-} from '@/features/care/application/care-event-description';
-import { getDurationMinutes } from '@/features/care/application/care-snapshot';
-import type { CareEvent } from '@/features/care/domain/care-event';
+} from './care-event-description';
+import { getDurationMinutes } from './care-snapshot';
+import type { CareEvent } from '../domain/care-event';
 
 export type CareReportColumn = 'date' | 'type' | 'detail' | 'author';
 
@@ -224,7 +224,7 @@ export function createCareReportHtml({
       <meta name="viewport" content="width=device-width, initial-scale=1"/>
       <title>Informe de ${safeBabyName} · Niduna</title>
       <style>
-        @page { size: A4 portrait; margin: 14mm 13mm 17mm; }
+        @page { size: A4 portrait; margin: 14mm 13mm; }
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: #fff; color: #18234B; font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; }
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -269,7 +269,7 @@ export function createCareReportHtml({
         .detail { width: 41%; }
         .author { width: 20%; }
         .notice { background: #F3ECFF; border-radius: 8px; color: #66708F; font-size: 8px; line-height: 1.35; margin-top: 12px; padding: 8px 10px; }
-        footer { bottom: 5mm; color: #66708F; font-size: 7.5px; left: 13mm; position: fixed; right: 13mm; }
+        footer { color: #66708F; font-size: 7.5px; margin-top: 12px; }
         footer .footer-line { border-top: 1px solid #E7DFCC; display: flex; justify-content: space-between; padding-top: 5px; }
       </style>
     </head>

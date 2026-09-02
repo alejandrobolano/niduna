@@ -25,6 +25,7 @@ interface CareHistoryControlsProps {
   events: CareEvent[];
   exportCount: number;
   isExporting: boolean;
+  isReportPreparing: boolean;
   onChangeDate: (dateKey: string | undefined) => void;
   onChangeFilter: (filter: CareEventFilter) => void;
   onExport: () => void;
@@ -37,6 +38,7 @@ export function CareHistoryControls({
   events,
   exportCount,
   isExporting,
+  isReportPreparing,
   onChangeDate,
   onChangeFilter,
   onExport,
@@ -89,17 +91,19 @@ export function CareHistoryControls({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            disabled={exportCount === 0}
+            disabled={isReportPreparing || exportCount === 0}
             onPress={onOpenReport}
             style={({ pressed }) => [
               styles.reportButton,
               pressed && styles.pressed,
-              exportCount === 0 && styles.disabled,
+              (isReportPreparing || exportCount === 0) && styles.disabled,
             ]}
           >
             <FileText color={colors.onAccent} size={18} />
             <View>
-              <Text style={styles.reportLabel}>Informe PDF</Text>
+              <Text style={styles.reportLabel}>
+                {isReportPreparing ? 'Preparando…' : 'Informe PDF'}
+              </Text>
               <Text style={styles.reportHint}>Personalizar</Text>
             </View>
           </Pressable>

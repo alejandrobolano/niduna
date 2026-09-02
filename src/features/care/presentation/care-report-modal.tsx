@@ -5,7 +5,7 @@ import {
   Users,
   X,
 } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -58,15 +58,9 @@ export function CareReportModal({
   const [columns, setColumns] = useState<Set<CareReportColumn>>(
     () => new Set(careReportColumns.map((column) => column.value)),
   );
-  const [contactIds, setContactIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!visible) return;
-    setColumns(new Set(careReportColumns.map((column) => column.value)));
-    setContactIds(
-      new Set(contacts.filter((contact) => contact.isFeatured).map((contact) => contact.id)),
-    );
-  }, [contacts, visible]);
+  const [contactIds, setContactIds] = useState<Set<string>>(
+    () => new Set(contacts.filter((contact) => contact.isFeatured).map((contact) => contact.id)),
+  );
 
   function toggleColumn(column: CareReportColumn) {
     setColumns((current) => {

@@ -204,7 +204,6 @@ export function CareHistoryScreen({
 
   async function handleOpenReport() {
     if (!babyId) return;
-    setReportVisible(true);
     setIsReportLoading(true);
     setError(undefined);
 
@@ -215,6 +214,7 @@ export function CareHistoryScreen({
       ]);
       setReportEvents(events);
       setReportContacts(contacts);
+      setReportVisible(true);
     } catch {
       setReportVisible(false);
       setError('No pudimos preparar los datos del informe.');
@@ -418,6 +418,7 @@ export function CareHistoryScreen({
                   events={visibleEvents}
                   exportCount={history?.total ?? 0}
                   isExporting={isExporting}
+                  isReportPreparing={isReportLoading}
                   onChangeDate={(date) => resetPage(() => setSelectedDate(date))}
                   onChangeFilter={(value) => resetPage(() => setFilter(value))}
                   onExport={() => void handleExport()}
@@ -513,16 +514,18 @@ export function CareHistoryScreen({
               {editingEvent ? (
                 <CareEditSheet key={getCareRecordKey(editingEvent)} event={editingEvent} onClose={() => setEditingEvent(undefined)} onSaved={() => setLoadVersion((value) => value + 1)} repository={repository} />
               ) : null}
-              <CareReportModal
-                contacts={reportContacts}
-                events={reportEvents}
-                filterLabel={selectedDate ? `${filterLabels[filter]} · día seleccionado` : filterLabels[filter]}
-                isGenerating={isReportGenerating}
-                isLoading={isReportLoading}
-                onClose={() => setReportVisible(false)}
-                onGenerate={(selection) => void handleGenerateReport(selection)}
-                visible={reportVisible}
-              />
+              {reportVisible ? (
+                <CareReportModal
+                  contacts={reportContacts}
+                  events={reportEvents}
+                  filterLabel={selectedDate ? `${filterLabels[filter]} · día seleccionado` : filterLabels[filter]}
+                  isGenerating={isReportGenerating}
+                  isLoading={isReportLoading}
+                  onClose={() => setReportVisible(false)}
+                  onGenerate={(selection) => void handleGenerateReport(selection)}
+                  visible
+                />
+              ) : null}
             </>
           )}
         </View>
