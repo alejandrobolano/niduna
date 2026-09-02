@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+  <html lang="es">
+    <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <title>Informe de Stephanie · Niduna</title>
+      <style>
+        @page { size: A4 portrait; margin: 14mm 13mm; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; background: #fff; color: #18234B; font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        header { align-items: center; border-bottom: 1px solid #E7DFCC; display: flex; justify-content: space-between; margin-bottom: 16px; padding-bottom: 10px; }
+        .brand { align-items: center; display: flex; gap: 9px; }
+        .brand svg { height: 36px; width: 36px; }
+        .brand strong { display: block; font-size: 18px; }
+        .brand span, .context span { color: #66708F; display: block; font-size: 9px; margin-top: 2px; }
+        .context { text-align: right; }
+        .context strong { font-size: 11px; }
+        .eyebrow { color: #FF756B; font-size: 9px; font-weight: 800; letter-spacing: 1.2px; margin: 0 0 5px; }
+        h1 { font-size: 25px; line-height: 1.05; margin: 0; }
+        .lead { color: #66708F; font-size: 10.5px; margin: 7px 0 12px; }
+        .scope { border: 1px solid #D4E8E8; border-radius: 10px; display: grid; grid-template-columns: repeat(4, 1fr); margin-bottom: 13px; overflow: hidden; }
+        .scope div { border-right: 1px solid #D4E8E8; padding: 7px 9px; }
+        .scope div:last-child { border-right: 0; }
+        .scope span { color: #66708F; display: block; font-size: 8px; font-weight: 800; letter-spacing: .5px; margin-bottom: 3px; }
+        .scope strong { font-size: 9.5px; line-height: 1.3; }
+        .summary-grid { display: grid; gap: 7px; grid-template-columns: repeat(4, 1fr); margin-bottom: 13px; }
+        .summary-card { background: #fff; border: 1px solid #E7DFCC; border-radius: 10px; border-top-width: 4px; min-height: 64px; padding: 8px 9px; }
+        .summary-card.coral { border-top-color: #FF8F86; }
+        .summary-card.butter { border-top-color: #F1CF61; }
+        .summary-card.lavender { border-top-color: #B79AE4; }
+        .summary-card.aqua { border-top-color: #82D4D1; }
+        .summary-card span { color: #66708F; display: block; font-size: 7.5px; font-weight: 800; letter-spacing: .4px; }
+        .summary-card strong { display: block; font-size: 14px; margin: 5px 0 3px; }
+        .summary-card p { color: #66708F; font-size: 8px; line-height: 1.25; margin: 0; }
+        h2 { font-size: 13px; margin: 0 0 7px; }
+        .contacts { margin-bottom: 13px; }
+        .contact-grid { display: grid; gap: 7px; grid-template-columns: repeat(2, 1fr); }
+        .contact { border: 1px solid #E7DFCC; border-radius: 8px; padding: 7px 9px; }
+        .contact strong, .contact span { display: block; }
+        .contact span { color: #66708F; font-size: 8.5px; margin-top: 2px; }
+        table { border-collapse: collapse; table-layout: fixed; width: 100%; }
+        thead { display: table-header-group; }
+        tr { break-inside: avoid; page-break-inside: avoid; }
+        th { background: #DFF5F6; color: #18234B; font-size: 8px; letter-spacing: .3px; padding: 7px; text-align: left; text-transform: uppercase; }
+        td { border-bottom: 1px solid #E7DFCC; font-size: 8.7px; line-height: 1.35; padding: 7px; vertical-align: top; word-break: break-word; }
+        tbody tr:nth-child(even) td { background: #FAFAF8; }
+        .date { width: 22%; }
+        .type { width: 17%; }
+        .detail { width: 41%; }
+        .author { width: 20%; }
+        .report-end { break-inside: avoid; margin-top: 18px; page-break-inside: avoid; }
+        .notice { background: #F3ECFF; border-radius: 8px; color: #66708F; font-size: 8px; line-height: 1.35; margin: 0; padding: 8px 10px; }
+        footer { color: #66708F; font-size: 7.5px; margin-top: 14px; }
+        footer .footer-line { border-top: 1px solid #E7DFCC; display: flex; justify-content: space-between; padding-top: 5px; }
+      </style>
+    </head>
+    <body>
+      <header>
+        <div class="brand"><svg aria-hidden="true" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="24" fill="#DFF5F6"/>
+  <rect x="6" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(24 19 68)"/>
+  <rect x="68" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(-24 81 68)"/>
+  <rect x="18" y="18" width="64" height="72" rx="40" fill="#48C9C4"/>
+  <ellipse cx="50" cy="72" rx="16" ry="18" fill="#DDF7F3" opacity=".74"/>
+  <rect x="47" y="2" width="10" height="22" rx="5.5" fill="#FF756B" transform="rotate(-24 45.5 24)"/>
+  <rect x="49" y="3" width="10" height="20" rx="5" fill="#FF756B" transform="rotate(28 55 23)"/>
+  <rect x="33" y="40" width="10" height="13" rx="5" fill="#18234B"/>
+  <rect x="57" y="40" width="10" height="13" rx="5" fill="#18234B"/>
+  <rect x="44" y="56" width="11" height="8" rx="4" fill="#FF756B" transform="rotate(45 49.5 60)"/>
+</svg><div><strong>Niduna</strong><span>Coordinación familiar del cuidado</span></div></div>
+        <div class="context"><strong>Familia de Stephanie</strong><span>Bebé: Stephanie</span></div>
+      </header>
+      <main>
+        <p class="eyebrow">INFORME PERSONALIZADO</p>
+        <h1>Cuidados de Stephanie</h1>
+        <p class="lead">Resumen del relevo compartido por la familia durante el período seleccionado.</p>
+        <section class="scope">
+          <div><span>PERÍODO</span><strong>30 ago 2026 - 2 sept 2026</strong></div>
+          <div><span>FILTRO</span><strong>Todos los cuidados</strong></div>
+          <div><span>REGISTROS</span><strong>34 resultados</strong></div>
+          <div><span>COLUMNAS</span><strong>Fecha, Tipo, Detalle, Registrado por</strong></div>
+        </section>
+        <section class="summary-grid"><article class="summary-card coral">
+          <span>ALIMENTACIÓN</span>
+          <strong>12 tomas</strong>
+          <p>900 ml registrados · intervalo medio 4 h 45 min</p>
+        </article><article class="summary-card butter">
+          <span>PAÑALES</span>
+          <strong>22 cambios</strong>
+          <p>11 pipí · 5 caca · 6 mixtos</p>
+        </article></section>
+        <section class="contacts">
+    <h2>Contactos incluidos</h2>
+    <div class="contact-grid">
+      
+        <article class="contact">
+          <strong>Pediatra</strong>
+          <span>Dra. Laura Martín</span>
+          <span>+34 600 123 456</span>
+          <span>Calle Salud 18, Madrid</span>
+        </article>
+    </div>
+  </section>
+        <h2>Detalle de registros</h2>
+        <table>
+    <thead><tr><th class="date">Fecha</th><th class="type">Tipo</th><th class="detail">Detalle</th><th class="author">Registrado por</th></tr></thead>
+    <tbody>
+      <tr><td class="date">2 sept 2026, 0:00</td><td class="type">Alimentación</td><td class="detail">Fórmula · 60 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 22:25</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 20:50</td><td class="type">Pañal</td><td class="detail">Caca</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 19:15</td><td class="type">Alimentación</td><td class="detail">Fórmula · 90 ml</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 17:40</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 16:05</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 14:30</td><td class="type">Alimentación</td><td class="detail">Fórmula · 80 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 12:55</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 11:20</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 9:45</td><td class="type">Alimentación</td><td class="detail">Fórmula · 70 ml</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 8:10</td><td class="type">Pañal</td><td class="detail">Caca</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 6:35</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 5:00</td><td class="type">Alimentación</td><td class="detail">Fórmula · 60 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 3:25</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">1 sept 2026, 1:50</td><td class="type">Pañal</td><td class="detail">Caca</td><td class="author">Alejandro</td></tr><tr><td class="date">1 sept 2026, 0:15</td><td class="type">Alimentación</td><td class="detail">Fórmula · 90 ml</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 22:40</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 21:05</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 19:30</td><td class="type">Alimentación</td><td class="detail">Fórmula · 80 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 17:55</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 16:20</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 14:45</td><td class="type">Alimentación</td><td class="detail">Fórmula · 70 ml</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 13:10</td><td class="type">Pañal</td><td class="detail">Caca</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 11:35</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 10:00</td><td class="type">Alimentación</td><td class="detail">Fórmula · 60 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 8:25</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 6:50</td><td class="type">Pañal</td><td class="detail">Caca</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 5:15</td><td class="type">Alimentación</td><td class="detail">Fórmula · 90 ml</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 3:40</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">31 ago 2026, 2:05</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">31 ago 2026, 0:30</td><td class="type">Alimentación</td><td class="detail">Fórmula · 80 ml · Blemil Confort</td><td class="author">Alejandro</td></tr><tr><td class="date">30 ago 2026, 22:55</td><td class="type">Pañal</td><td class="detail">Pipí</td><td class="author">Stephanie</td></tr><tr><td class="date">30 ago 2026, 21:20</td><td class="type">Pañal</td><td class="detail">Pipí y caca</td><td class="author">Alejandro</td></tr><tr><td class="date">30 ago 2026, 19:45</td><td class="type">Alimentación</td><td class="detail">Fórmula · 70 ml</td><td class="author">Stephanie</td></tr>
+    </tbody>
+  </table>
+      </main>
+      <section class="report-end">
+        <p class="notice"><strong>Importante:</strong> este informe ayuda a coordinar el cuidado familiar. No sustituye una historia clínica, una valoración médica ni los servicios de emergencia.</p>
+        <footer><div class="footer-line"><span>niduna.com · Generado el 2 sept 2026, 13:45</span><span>Informe de Stephanie</span></div></footer>
+      </section>
+    </body>
+  </html>
