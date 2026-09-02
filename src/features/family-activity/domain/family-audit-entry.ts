@@ -2,6 +2,7 @@ export type FamilyAuditAction = 'created' | 'deleted' | 'updated';
 
 export type FamilyAuditEntityType =
   | 'baby'
+  | 'baby_contact'
   | 'baby_document'
   | 'baby_note'
   | 'care_event'

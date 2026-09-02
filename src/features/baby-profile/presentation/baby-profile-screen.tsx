@@ -3,6 +3,7 @@ import {
   FileText,
   Heart,
   HeartHandshake,
+  MapPinned,
   MoveVertical,
   Plus,
   Sparkles,
@@ -121,6 +122,7 @@ interface BabyProfileScreenProps {
   onArchive?: () => Promise<void>;
   onPhotoChanged?: () => Promise<void> | void;
   onOpenDocuments?: () => void;
+  onOpenContacts?: () => void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -135,6 +137,7 @@ export function BabyProfileScreen({
   onArchive,
   onPhotoChanged,
   onOpenDocuments,
+  onOpenContacts,
   onSaved,
   onUnfollow,
   repository,
@@ -639,6 +642,29 @@ export function BabyProfileScreen({
                 <Text style={styles.photoTitle}>Documentos del bebé</Text>
                 <Text style={styles.photoHint}>
                   Guarda informes, autorizaciones y carnets para toda la familia.
+                </Text>
+              </View>
+              <Text style={styles.documentsLink}>Abrir</Text>
+            </Pressable>
+          ) : null}
+
+          {storedBabyId && onOpenContacts ? (
+            <Pressable
+              accessibilityHint="Abre los contactos y lugares importantes del bebé"
+              accessibilityRole="button"
+              onPress={onOpenContacts}
+              style={({ pressed }) => [
+                styles.documentsCard,
+                pressed && styles.photoActionPressed,
+              ]}
+            >
+              <View style={styles.documentsIcon}>
+                <MapPinned color={colors.primaryPressed} size={24} />
+              </View>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Contactos importantes</Text>
+                <Text style={styles.photoHint}>
+                  Pediatra, hospital, farmacia y otros lugares útiles.
                 </Text>
               </View>
               <Text style={styles.documentsLink}>Abrir</Text>
