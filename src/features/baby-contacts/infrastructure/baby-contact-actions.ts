@@ -2,6 +2,12 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 
+import {
+  babyContactFileName,
+  buildBabyContactVCard,
+} from '@/features/baby-contacts/application/baby-contact-vcard';
+import type { BabyContact } from '@/features/baby-contacts/domain/baby-contact';
+
 export type BabyContactMapTarget = 'google' | 'system';
 
 function openWebUrlInNewTab(url: string): void {
@@ -12,12 +18,55 @@ function openWebUrlInNewTab(url: string): void {
   openedWindow.opener = null;
 }
 
+function downloadWebContact(contact: BabyContact): void {
+  const blob = new Blob([`\uFEFF${buildBabyContactVCard(contact)}`], {
+    type: 'text/vcard;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.download = babyContactFileName(contact);
+  anchor.href = url;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export async function copyBabyContactValue(value: string): Promise<void> {
   await Clipboard.setStringAsync(value);
 }
 
 export async function callBabyContact(phone: string): Promise<void> {
   await Linking.openURL(`tel:${phone.replace(/[^+\d,;#*]/g, '')}`);
+}
+
+export async function saveBabyContactToDevice(contact: BabyContact): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    downloadWebContact(contact);
+    return true;
+  }
+
+  const { Contact } = await import('expo-contacts');
+  return Contact.presentCreateForm({
+    addresses: contact.address
+      ? [{ label: 'work', street: contact.address }]
+      : undefined,
+    company: contact.contactPerson ? contact.name : undefined,
+    givenName: contact.contactPerson || contact.name,
+    note: contact.notes,
+    phones: contact.phone
+      ? [{ label: 'mobile', number: contact.phone }]
+      : undefined,
+    urlAddresses: contact.websiteUrl
+      ? [{
+          label: 'homepage',
+          url: /^https?:\/\//i.test(contact.websiteUrl)
+            ? contact.websiteUrl
+            : `https://${contact.websiteUrl}`,
+        }]
+      : undefined,
+  });
 }
 
 export async function openBabyContactWebsite(url: string): Promise<void> {

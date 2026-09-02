@@ -6,10 +6,12 @@ import {
   MapPin,
   Phone,
   Plus,
+  QrCode,
   RefreshCw,
   RotateCcw,
   Search,
   Star,
+  UserPlus,
   UsersRound,
 } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -44,8 +46,10 @@ import {
   copyBabyContactValue,
   openBabyContactAddress,
   openBabyContactWebsite,
+  saveBabyContactToDevice,
   type BabyContactMapTarget,
 } from '@/features/baby-contacts/infrastructure/baby-contact-actions';
+import { BabyContactQrModal } from '@/features/baby-contacts/presentation/baby-contact-qr-modal';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
 import type { FamilyRole } from '@/features/family/domain/family';
@@ -123,6 +127,7 @@ export function BabyContactsScreen({
   const [validation, setValidation] = useState<Partial<Record<BabyContactField, string>>>({});
   const [copied, setCopied] = useState<string>();
   const [mapAddress, setMapAddress] = useState<string>();
+  const [qrContact, setQrContact] = useState<BabyContact>();
 
   useEffect(() => {
     let active = true;
@@ -238,6 +243,19 @@ export function BabyContactsScreen({
     void runAction(() => openBabyContactAddress(address, target));
   }
 
+  async function saveContact(contact: BabyContact) {
+    try {
+      setError(undefined);
+      const saved = await saveBabyContactToDevice(contact);
+      if (saved) {
+        setCopied(Platform.OS === 'web' ? 'Archivo de contacto descargado' : 'Contacto guardado');
+        setTimeout(() => setCopied(undefined), 1800);
+      }
+    } catch {
+      setError('No pudimos preparar este contacto en el dispositivo.');
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
@@ -327,6 +345,8 @@ export function BabyContactsScreen({
                     onEdit={() => beginEdit(contact)}
                     onOpenAddress={openAddress}
                     onRetire={() => setConfirming(contact)}
+                    onSave={() => void saveContact(contact)}
+                    onShowQr={() => setQrContact(contact)}
                   />
                 ))}
               </View>
@@ -356,6 +376,7 @@ export function BabyContactsScreen({
         onSelect={openAddressWith}
         visible={Boolean(mapAddress)}
       />
+      <BabyContactQrModal contact={qrContact} onClose={() => setQrContact(undefined)} />
     </SafeAreaView>
   );
 }
@@ -364,7 +385,7 @@ function FilterChip({ label, onPress, selected }: { label: string; onPress: () =
   return <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={[styles.filter, selected && styles.filterSelected]}><Text style={[styles.filterText, selected && styles.filterTextSelected]}>{label}</Text></Pressable>;
 }
 
-function ContactCard({ canManage, contact, onAction, onEdit, onOpenAddress, onRetire }: { canManage: boolean; contact: BabyContact; onAction: (action: () => Promise<void>, success?: string) => Promise<void>; onEdit: () => void; onOpenAddress: (address: string) => void; onRetire: () => void }) {
+function ContactCard({ canManage, contact, onAction, onEdit, onOpenAddress, onRetire, onSave, onShowQr }: { canManage: boolean; contact: BabyContact; onAction: (action: () => Promise<void>, success?: string) => Promise<void>; onEdit: () => void; onOpenAddress: (address: string) => void; onRetire: () => void; onSave: () => void; onShowQr: () => void }) {
   const copyAll = [contact.name, contact.contactPerson, contact.phone, contact.address, contact.websiteUrl, contact.notes].filter(Boolean).join('\n');
   return (
     <View style={[styles.contactCard, contact.isFeatured && styles.contactCardFeatured]}>
@@ -377,6 +398,8 @@ function ContactCard({ canManage, contact, onAction, onEdit, onOpenAddress, onRe
       {contact.websiteUrl ? <ContactValue icon={<Globe color={colors.textMuted} size={17} />} label={contact.websiteUrl} onCopy={() => onAction(() => copyBabyContactValue(contact.websiteUrl!), 'Enlace copiado')} onOpen={() => onAction(() => openBabyContactWebsite(contact.websiteUrl!))} /> : null}
       {contact.notes ? <Text style={styles.contactNotes}>{contact.notes}</Text> : null}
       <View style={styles.contactActions}>
+        <Pressable onPress={onSave} style={styles.action}><UserPlus color={colors.primaryPressed} size={16} /><Text style={styles.actionText}>Guardar</Text></Pressable>
+        <Pressable onPress={onShowQr} style={styles.action}><QrCode color={colors.primaryPressed} size={16} /><Text style={styles.actionText}>QR</Text></Pressable>
         <Pressable onPress={() => void onAction(() => copyBabyContactValue(copyAll), 'Contacto copiado')} style={styles.action}><Clipboard color={colors.primaryPressed} size={16} /><Text style={styles.actionText}>Copiar</Text></Pressable>
         {canManage ? <><Pressable disabled={Boolean(contact.retiredAt)} onPress={onEdit} style={[styles.action, contact.retiredAt && styles.disabled]}><ExternalLink color={colors.primaryPressed} size={16} /><Text style={styles.actionText}>Editar</Text></Pressable><Pressable onPress={onRetire} style={styles.action}><Archive color={contact.retiredAt ? colors.primaryPressed : colors.error} size={16} /><Text style={contact.retiredAt ? styles.actionText : styles.dangerText}>{contact.retiredAt ? 'Restaurar' : 'Retirar'}</Text></Pressable></> : null}
       </View>

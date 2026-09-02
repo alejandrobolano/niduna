@@ -16,6 +16,10 @@
     },
     "android": {
       "package": "com.niduna.app",
+      "blockedPermissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ],
       "softwareKeyboardLayoutMode": "resize",
       "googleServicesFile": "./google-services.json",
       "icon": "./assets/images/icon.png",
@@ -37,6 +41,12 @@
         {
           "photosPermission": "Niduna necesita acceso a tus fotos para añadir imágenes privadas del bebé y compartir historias con tu familia.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Niduna necesita acceso a tus contactos para guardar únicamente los contactos que elijas."
         }
       ],
       [
