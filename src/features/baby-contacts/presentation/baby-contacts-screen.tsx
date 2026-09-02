@@ -266,7 +266,7 @@ export function BabyContactsScreen({
             <View style={styles.heroCopy}>
               <Text style={styles.eyebrow}>CONTACTOS IMPORTANTES</Text>
               <Text style={styles.title}>Directorio de {babyName}</Text>
-              <Text style={styles.subtitle}>{familyName} puede encontrar aquí personas y lugares útiles.</Text>
+              <Text style={styles.subtitle}>{familyName} puede encontrar aquí personas y lugares útiles. Podrás compartir información con otras personas.</Text>
             </View>
             <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
               <Text style={styles.backButtonText}>Volver al bebé</Text>

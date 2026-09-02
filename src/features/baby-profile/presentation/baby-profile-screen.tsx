@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import {
   Camera,
   FileText,
@@ -11,7 +12,6 @@ import {
   Trash2,
   X,
 } from 'lucide-react-native';
-import { Image } from 'expo-image';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -24,23 +24,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
   BabyPhotoError,
   type BabyPhotoRepository,
 } from '@/features/baby-profile/application/baby-photo-repository';
+import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
   formatBloodType,
   parseBloodType,
   type BloodTypeSelection,
 } from '@/features/baby-profile/application/parse-blood-type';
 import { validateBabyProfile } from '@/features/baby-profile/application/validate-baby-profile';
-import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
 import type {
   BabyLifeStage,
   BabyProfile,
   SexAtBirth,
 } from '@/features/baby-profile/domain/baby-profile';
+import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SegmentedControl } from '@/features/baby-profile/presentation/segmented-control';
@@ -664,7 +664,7 @@ export function BabyProfileScreen({
               <View style={styles.photoCopy}>
                 <Text style={styles.photoTitle}>Contactos importantes</Text>
                 <Text style={styles.photoHint}>
-                  Pediatra, hospital, farmacia y otros lugares útiles.
+                  Pediatra, hospital, farmacia y otros lugares útiles. Podrás compartir información con otras personas.
                 </Text>
               </View>
               <Text style={styles.documentsLink}>Abrir</Text>
