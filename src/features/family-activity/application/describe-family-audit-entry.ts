@@ -115,6 +115,17 @@ export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
         : entry.action === 'deleted'
           ? 'eliminó una nota familiar'
           : 'actualizó una nota familiar';
+  } else if (entry.entityType === 'baby_contact') {
+    action =
+      changeKind === 'retired'
+        ? 'retiró un contacto importante'
+        : changeKind === 'restored'
+          ? 'restauró un contacto importante'
+          : entry.action === 'created'
+            ? 'añadió un contacto importante'
+            : entry.action === 'deleted'
+              ? 'eliminó definitivamente un contacto importante'
+              : 'actualizó un contacto importante';
   } else if (entry.entityType === 'baby_document') {
     action =
       changeKind === 'retired'

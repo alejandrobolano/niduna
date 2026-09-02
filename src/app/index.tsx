@@ -18,6 +18,8 @@ import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastruct
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
 import { supabaseBabyDocumentRepository } from '@/features/baby-documents/infrastructure/supabase-baby-document-repository';
 import { BabyDocumentsScreen } from '@/features/baby-documents/presentation/baby-documents-screen';
+import { supabaseBabyContactRepository } from '@/features/baby-contacts/infrastructure/supabase-baby-contact-repository';
+import { BabyContactsScreen } from '@/features/baby-contacts/presentation/baby-contacts-screen';
 import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
 import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
@@ -418,6 +420,21 @@ function AuthenticatedApp({
     );
   }
 
+  if (section === 'contacts' && context.activeBaby) {
+    return renderAppScreen(
+      <BabyContactsScreen
+        babyId={context.activeBaby.id}
+        babyName={context.activeBaby.name}
+        familyName={activeFamily.name}
+        familyRole={activeFamily.role}
+        onBack={() => changeSection('baby')}
+        repository={supabaseBabyContactRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
   if (section === 'baby' && !context.activeBaby && !canManageBabies) {
     return renderAppScreen(
       <FamilyScreen
@@ -457,6 +474,7 @@ function AuthenticatedApp({
           ? () => context.refresh({ babyId: activeBabyId, familyId: activeFamily.id })
           : undefined}
         onOpenDocuments={activeBabyId ? () => changeSection('documents') : undefined}
+        onOpenContacts={activeBabyId ? () => changeSection('contacts') : undefined}
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}
@@ -483,6 +501,7 @@ function resolveInitialSection(value: string | undefined): AppSection {
     value === 'summary' ||
     value === 'baby' ||
     value === 'documents' ||
+    value === 'contacts' ||
     value === 'family' ||
     value === 'activity'
     ? value

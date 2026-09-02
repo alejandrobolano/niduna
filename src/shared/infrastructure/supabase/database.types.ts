@@ -15,6 +15,13 @@ type Table<Row, Insert, Update> = {
 
 type BabyLifeStage = 'expected' | 'born';
 type BabyDocumentCategory = 'report' | 'authorization' | 'card' | 'other';
+type BabyContactCategory =
+  | 'health'
+  | 'nutrition'
+  | 'education'
+  | 'activity'
+  | 'emergency'
+  | 'other';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
 type BreastSide = 'left' | 'right' | 'both';
 type CareEventType = 'feeding' | 'diaper' | 'sleep';
@@ -479,6 +486,28 @@ export type Database = {
         Record<string, never>,
         Record<string, never>
       >;
+      baby_contacts: Table<
+        {
+          address: string | null;
+          author_user_id: string | null;
+          baby_id: string;
+          category: BabyContactCategory;
+          contact_person: string | null;
+          created_at: string;
+          family_id: string;
+          id: string;
+          is_featured: boolean;
+          name: string;
+          notes: string | null;
+          phone: string | null;
+          retired_at: string | null;
+          retired_by: string | null;
+          updated_at: string;
+          website_url: string | null;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       family_audit_logs: Table<
         {
           action: 'created' | 'updated' | 'deleted';
@@ -489,6 +518,7 @@ export type Database = {
           entity_id: string | null;
           entity_type:
             | 'baby'
+            | 'baby_contact'
             | 'baby_document'
             | 'baby_note'
             | 'care_event'
@@ -590,6 +620,25 @@ export type Database = {
       };
     };
     Functions: {
+      save_baby_contact: {
+        Args: {
+          target_address: string | null;
+          target_baby_id: string;
+          target_category: BabyContactCategory;
+          target_contact_id: string | null;
+          target_contact_person: string | null;
+          target_is_featured: boolean;
+          target_name: string;
+          target_notes: string | null;
+          target_phone: string | null;
+          target_website_url: string | null;
+        };
+        Returns: string;
+      };
+      set_baby_contact_retired: {
+        Args: { should_retire: boolean; target_contact_id: string };
+        Returns: undefined;
+      };
       prepare_baby_document: {
         Args: {
           target_baby_id: string;
@@ -879,6 +928,7 @@ export type Database = {
       };
     };
     Enums: {
+      baby_contact_category: BabyContactCategory;
       baby_document_category: BabyDocumentCategory;
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;

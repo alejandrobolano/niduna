@@ -1,8 +1,10 @@
+import { Image } from 'expo-image';
 import {
   Camera,
   FileText,
   Heart,
   HeartHandshake,
+  MapPinned,
   MoveVertical,
   Plus,
   Sparkles,
@@ -10,7 +12,6 @@ import {
   Trash2,
   X,
 } from 'lucide-react-native';
-import { Image } from 'expo-image';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
@@ -23,23 +24,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
   BabyPhotoError,
   type BabyPhotoRepository,
 } from '@/features/baby-profile/application/baby-photo-repository';
+import type { BabyProfileRepository } from '@/features/baby-profile/application/baby-profile-repository';
 import {
   formatBloodType,
   parseBloodType,
   type BloodTypeSelection,
 } from '@/features/baby-profile/application/parse-blood-type';
 import { validateBabyProfile } from '@/features/baby-profile/application/validate-baby-profile';
-import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
 import type {
   BabyLifeStage,
   BabyProfile,
   SexAtBirth,
 } from '@/features/baby-profile/domain/baby-profile';
+import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SegmentedControl } from '@/features/baby-profile/presentation/segmented-control';
@@ -121,6 +122,7 @@ interface BabyProfileScreenProps {
   onArchive?: () => Promise<void>;
   onPhotoChanged?: () => Promise<void> | void;
   onOpenDocuments?: () => void;
+  onOpenContacts?: () => void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -135,6 +137,7 @@ export function BabyProfileScreen({
   onArchive,
   onPhotoChanged,
   onOpenDocuments,
+  onOpenContacts,
   onSaved,
   onUnfollow,
   repository,
@@ -639,6 +642,29 @@ export function BabyProfileScreen({
                 <Text style={styles.photoTitle}>Documentos del bebé</Text>
                 <Text style={styles.photoHint}>
                   Guarda informes, autorizaciones y carnets para toda la familia.
+                </Text>
+              </View>
+              <Text style={styles.documentsLink}>Abrir</Text>
+            </Pressable>
+          ) : null}
+
+          {storedBabyId && onOpenContacts ? (
+            <Pressable
+              accessibilityHint="Abre los contactos y lugares importantes del bebé"
+              accessibilityRole="button"
+              onPress={onOpenContacts}
+              style={({ pressed }) => [
+                styles.documentsCard,
+                pressed && styles.photoActionPressed,
+              ]}
+            >
+              <View style={styles.documentsIcon}>
+                <MapPinned color={colors.primaryPressed} size={24} />
+              </View>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Contactos importantes</Text>
+                <Text style={styles.photoHint}>
+                  Pediatra, hospital, farmacia y otros lugares útiles. Podrás compartir información con otras personas.
                 </Text>
               </View>
               <Text style={styles.documentsLink}>Abrir</Text>

@@ -27,6 +27,7 @@ interface FamilyActivityScreenProps {
 
 const entityLabels = {
   baby: 'Bebé',
+  baby_contact: 'Contacto',
   baby_document: 'Documento',
   baby_note: 'Nota',
   care_event: 'Cuidado',
