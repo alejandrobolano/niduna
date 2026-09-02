@@ -55,6 +55,21 @@ function mapRow(row: {
 }
 
 export const supabaseBabyContactRepository: BabyContactRepository = {
+  async loadActive(babyId) {
+    const { data, error } = await supabase
+      .from('baby_contacts')
+      .select(
+        'id, baby_id, author_user_id, name, category, contact_person, phone, address, website_url, notes, is_featured, created_at, updated_at, retired_at',
+      )
+      .eq('baby_id', babyId)
+      .is('retired_at', null)
+      .order('is_featured', { ascending: false })
+      .order('name');
+
+    if (error) throw mapError(error);
+    return (data ?? []).map(mapRow);
+  },
+
   async loadPage(babyId, page, pageSize, filters) {
     const start = (page - 1) * pageSize;
     let query = supabase

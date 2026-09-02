@@ -26,8 +26,14 @@ import {
   createCareHistoryCsv,
   createCareHistoryFileName,
 } from '@/features/care/application/care-history-csv';
+import {
+  createCareReportFileName,
+  createCareReportHtml,
+  type CareReportInput,
+} from '@/features/care/application/care-report';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
+import { exportCareReportFile } from '@/features/care/infrastructure/care-report-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
 import { supabaseFamilyStoryRepository } from '@/features/family-stories/infrastructure/supabase-family-story-repository';
@@ -79,6 +85,13 @@ async function exportCareHistory(
   await exportCareHistoryFile({
     content: createCareHistoryCsv(events),
     fileName: createCareHistoryFileName(babyName),
+  });
+}
+
+async function exportCareReport(input: CareReportInput): Promise<void> {
+  await exportCareReportFile({
+    fileName: createCareReportFileName(input.babyName),
+    html: createCareReportHtml(input),
   });
 }
 
@@ -372,7 +385,10 @@ function AuthenticatedApp({
         babyName={context.activeBaby?.name}
         canManage={canManageBabies}
         canRecord={canRecordCare}
+        contactRepository={supabaseBabyContactRepository}
         exportHistory={exportCareHistory}
+        exportReport={exportCareReport}
+        familyName={activeFamily.name}
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
         onOpenSummary={() => changeSection('summary')}
         repository={supabaseCareRepository}
