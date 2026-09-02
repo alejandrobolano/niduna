@@ -15,6 +15,8 @@ import {
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   Switch,
@@ -42,6 +44,7 @@ import {
   copyBabyContactValue,
   openBabyContactAddress,
   openBabyContactWebsite,
+  type BabyContactMapTarget,
 } from '@/features/baby-contacts/infrastructure/baby-contact-actions';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
@@ -119,6 +122,7 @@ export function BabyContactsScreen({
   const [confirming, setConfirming] = useState<BabyContact>();
   const [validation, setValidation] = useState<Partial<Record<BabyContactField, string>>>({});
   const [copied, setCopied] = useState<string>();
+  const [mapAddress, setMapAddress] = useState<string>();
 
   useEffect(() => {
     let active = true;
@@ -219,6 +223,21 @@ export function BabyContactsScreen({
     }
   }
 
+  function openAddress(address: string) {
+    if (Platform.OS === 'web') {
+      void runAction(() => openBabyContactAddress(address));
+      return;
+    }
+    setMapAddress(address);
+  }
+
+  function openAddressWith(target: BabyContactMapTarget) {
+    if (!mapAddress) return;
+    const address = mapAddress;
+    setMapAddress(undefined);
+    void runAction(() => openBabyContactAddress(address, target));
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
@@ -306,6 +325,7 @@ export function BabyContactsScreen({
                     key={contact.id}
                     onAction={runAction}
                     onEdit={() => beginEdit(contact)}
+                    onOpenAddress={openAddress}
                     onRetire={() => setConfirming(contact)}
                   />
                 ))}
@@ -331,6 +351,11 @@ export function BabyContactsScreen({
         tone={confirming?.retiredAt ? 'primary' : 'danger'}
         visible={Boolean(confirming)}
       />
+      <MapAppChooserModal
+        onCancel={() => setMapAddress(undefined)}
+        onSelect={openAddressWith}
+        visible={Boolean(mapAddress)}
+      />
     </SafeAreaView>
   );
 }
@@ -339,7 +364,7 @@ function FilterChip({ label, onPress, selected }: { label: string; onPress: () =
   return <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={[styles.filter, selected && styles.filterSelected]}><Text style={[styles.filterText, selected && styles.filterTextSelected]}>{label}</Text></Pressable>;
 }
 
-function ContactCard({ canManage, contact, onAction, onEdit, onRetire }: { canManage: boolean; contact: BabyContact; onAction: (action: () => Promise<void>, success?: string) => Promise<void>; onEdit: () => void; onRetire: () => void }) {
+function ContactCard({ canManage, contact, onAction, onEdit, onOpenAddress, onRetire }: { canManage: boolean; contact: BabyContact; onAction: (action: () => Promise<void>, success?: string) => Promise<void>; onEdit: () => void; onOpenAddress: (address: string) => void; onRetire: () => void }) {
   const copyAll = [contact.name, contact.contactPerson, contact.phone, contact.address, contact.websiteUrl, contact.notes].filter(Boolean).join('\n');
   return (
     <View style={[styles.contactCard, contact.isFeatured && styles.contactCardFeatured]}>
@@ -348,7 +373,7 @@ function ContactCard({ canManage, contact, onAction, onEdit, onRetire }: { canMa
         <View style={styles.contactCopy}><Text style={styles.contactName}>{contact.name}</Text><Text style={styles.contactMeta}>{categoryLabels[contact.category]}{contact.contactPerson ? ` · ${contact.contactPerson}` : ''}</Text></View>
       </View>
       {contact.phone ? <ContactValue icon={<Phone color={colors.textMuted} size={17} />} label={contact.phone} onCopy={() => onAction(() => copyBabyContactValue(contact.phone!), 'Teléfono copiado')} onOpen={() => onAction(() => callBabyContact(contact.phone!))} /> : null}
-      {contact.address ? <ContactValue icon={<MapPin color={colors.textMuted} size={17} />} label={contact.address} onCopy={() => onAction(() => copyBabyContactValue(contact.address!), 'Dirección copiada')} onOpen={() => onAction(() => openBabyContactAddress(contact.address!))} /> : null}
+      {contact.address ? <ContactValue icon={<MapPin color={colors.textMuted} size={17} />} label={contact.address} onCopy={() => onAction(() => copyBabyContactValue(contact.address!), 'Dirección copiada')} onOpen={() => onOpenAddress(contact.address!)} /> : null}
       {contact.websiteUrl ? <ContactValue icon={<Globe color={colors.textMuted} size={17} />} label={contact.websiteUrl} onCopy={() => onAction(() => copyBabyContactValue(contact.websiteUrl!), 'Enlace copiado')} onOpen={() => onAction(() => openBabyContactWebsite(contact.websiteUrl!))} /> : null}
       {contact.notes ? <Text style={styles.contactNotes}>{contact.notes}</Text> : null}
       <View style={styles.contactActions}>
@@ -356,6 +381,37 @@ function ContactCard({ canManage, contact, onAction, onEdit, onRetire }: { canMa
         {canManage ? <><Pressable disabled={Boolean(contact.retiredAt)} onPress={onEdit} style={[styles.action, contact.retiredAt && styles.disabled]}><ExternalLink color={colors.primaryPressed} size={16} /><Text style={styles.actionText}>Editar</Text></Pressable><Pressable onPress={onRetire} style={styles.action}><Archive color={contact.retiredAt ? colors.primaryPressed : colors.error} size={16} /><Text style={contact.retiredAt ? styles.actionText : styles.dangerText}>{contact.retiredAt ? 'Restaurar' : 'Retirar'}</Text></Pressable></> : null}
       </View>
     </View>
+  );
+}
+
+function MapAppChooserModal({ onCancel, onSelect, visible }: { onCancel: () => void; onSelect: (target: BabyContactMapTarget) => void; visible: boolean }) {
+  return (
+    <Modal animationType="fade" onRequestClose={onCancel} statusBarTranslucent transparent visible={visible}>
+      <SafeAreaView style={styles.mapModalRoot}>
+        <Pressable accessibilityLabel="Cerrar selector de mapas" accessibilityRole="button" onPress={onCancel} style={styles.mapModalBackdrop} />
+        <View accessibilityLabel="Elegir aplicación de mapas" accessibilityViewIsModal style={styles.mapModalCard}>
+          <View style={styles.mapModalIcon}><MapPin color={colors.primaryPressed} size={24} /></View>
+          <View style={styles.mapModalCopy}>
+            <Text style={styles.mapModalEyebrow}>ABRIR DIRECCIÓN</Text>
+            <Text style={styles.mapModalTitle}>¿Qué mapa quieres usar?</Text>
+            <Text style={styles.mapModalDescription}>Puedes abrir Google Maps o la aplicación de mapas configurada en este dispositivo.</Text>
+          </View>
+          <View style={styles.mapModalActions}>
+            <Pressable accessibilityRole="button" onPress={() => onSelect('google')} style={({ pressed }) => [styles.mapOption, styles.googleMapOption, pressed && styles.pressed]}>
+              <Text style={styles.googleMapOptionText}>Google Maps</Text>
+              <ExternalLink color={colors.onAccent} size={18} />
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => onSelect('system')} style={({ pressed }) => [styles.mapOption, styles.systemMapOption, pressed && styles.pressed]}>
+              <Text style={styles.systemMapOptionText}>Aplicación de mapas</Text>
+              <MapPin color={colors.primaryPressed} size={18} />
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={onCancel} style={({ pressed }) => [styles.cancelMapOption, pressed && styles.pressed]}>
+              <Text style={styles.cancelMapOptionText}>Cancelar</Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
@@ -371,4 +427,5 @@ const styles = createThemedStyleSheet((colors) => ({
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, listHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 }, searchRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.md }, searchRowCompact: { alignItems: 'stretch', flexDirection: 'column' }, searchButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52, paddingHorizontal: spacing.xl }, searchButtonText: { color: colors.onAccent, fontWeight: '900' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, minHeight: 44, paddingHorizontal: spacing.lg, justifyContent: 'center' }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent },
   error: { color: colors.error, fontSize: 13, lineHeight: 19 }, success: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800' }, loader: { marginVertical: spacing.xxl }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg }, gridCompact: { flexDirection: 'column' }, contactCard: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, flexBasis: 420, flexGrow: 1, gap: spacing.md, minWidth: 300, padding: spacing.lg }, contactCardFeatured: { borderColor: colors.butter, borderTopWidth: 5 }, contactHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.md }, contactIcon: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, height: 44, justifyContent: 'center', width: 44 }, contactCopy: { flex: 1 }, contactName: { color: colors.text, fontSize: 17, fontWeight: '900' }, contactMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 }, valueRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm }, valueText: { color: colors.text, flex: 1, fontSize: 13, lineHeight: 18 }, miniAction: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 34, justifyContent: 'center', width: 34 }, contactNotes: { color: colors.textMuted, fontSize: 13, lineHeight: 19 }, contactActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, action: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, minHeight: 40, paddingHorizontal: spacing.md }, actionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '800' }, dangerText: { color: colors.error, fontSize: 12, fontWeight: '800' },
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl }, emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900' }, emptyText: { color: colors.textMuted, textAlign: 'center' }, retiredLink: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800', textAlign: 'center' },
+  mapModalRoot: { alignItems: 'center', backgroundColor: 'rgba(24, 35, 75, 0.58)', flex: 1, justifyContent: 'center', padding: spacing.lg }, mapModalBackdrop: { bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }, mapModalCard: { backgroundColor: colors.surface, borderRadius: radius.lg, elevation: 12, gap: spacing.lg, maxWidth: 460, padding: spacing.xl, shadowColor: colors.text, shadowOffset: { height: 12, width: 0 }, shadowOpacity: 0.2, shadowRadius: 28, width: '100%' }, mapModalIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 48, justifyContent: 'center', width: 48 }, mapModalCopy: { gap: spacing.sm }, mapModalEyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.4 }, mapModalTitle: { color: colors.text, fontSize: 25, fontWeight: '900', letterSpacing: -0.4, lineHeight: 31 }, mapModalDescription: { color: colors.textMuted, fontSize: 15, lineHeight: 22 }, mapModalActions: { gap: spacing.sm }, mapOption: { alignItems: 'center', borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', minHeight: 52, paddingHorizontal: spacing.lg }, googleMapOption: { backgroundColor: colors.primaryPressed }, googleMapOptionText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' }, systemMapOption: { backgroundColor: colors.aquaSoft }, systemMapOptionText: { color: colors.primaryPressed, fontSize: 14, fontWeight: '900' }, cancelMapOption: { alignItems: 'center', minHeight: 44, justifyContent: 'center' }, cancelMapOptionText: { color: colors.textMuted, fontSize: 14, fontWeight: '800' }, pressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
 }));
