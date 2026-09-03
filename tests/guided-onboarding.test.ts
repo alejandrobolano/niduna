@@ -49,19 +49,36 @@ describe('guided onboarding', () => {
     expect(steps[0]?.section).toBe('family');
   });
 
-  it('uses the three product areas, closes with help, and adapts the handoff copy without a baby', () => {
+  it('starts at the baby profile and closes with help when no baby exists', () => {
     const steps = getGuidedOnboardingSteps({
       hasActiveBaby: false,
       hasActiveFamily: true,
     });
 
     expect(steps.map((step) => step.id)).toEqual([
-      'handoff',
-      'history',
+      'baby',
       'family',
       'help',
     ]);
+    expect(steps[0]?.section).toBe('baby');
     expect(steps[0]?.title).toContain('bebé');
     expect(steps.at(-1)?.section).toBeUndefined();
+  });
+
+  it('does not navigate to care history while the active baby is expected', () => {
+    const steps = getGuidedOnboardingSteps({
+      careAvailable: false,
+      hasActiveBaby: true,
+      hasActiveFamily: true,
+    });
+
+    expect(steps.map((step) => step.id)).toEqual([
+      'baby',
+      'family',
+      'help',
+    ]);
+    expect(steps[0]?.title).toBe('Todo listo para su llegada');
+    expect(steps.some((step) => step.section === 'history')).toBe(false);
+    expect(steps.some((step) => step.section === 'handoff')).toBe(false);
   });
 });

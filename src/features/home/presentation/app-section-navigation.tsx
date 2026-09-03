@@ -1,19 +1,11 @@
 import { BabyIcon, ClipboardList, Heart, House, Moon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
+import type { AppSection } from '@/features/home/domain/app-section';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
-export type AppSection =
-  | 'handoff'
-  | 'history'
-  | 'summary'
-  | 'baby'
-  | 'documents'
-  | 'contacts'
-  | 'family'
-  | 'activity';
-
 interface AppSectionNavigationProps {
+  careAvailable?: boolean;
   onChange: (section: AppSection) => void;
   placement?: 'header' | 'bottom';
   value: AppSection;
@@ -31,6 +23,7 @@ const sections = [
 }[];
 
 export function AppSectionNavigation({
+  careAvailable = true,
   onChange,
   placement = 'header',
   value,
@@ -42,11 +35,16 @@ export function AppSectionNavigation({
       accessibilityRole="tablist"
       style={[styles.container, isBottom && styles.containerBottom]}
     >
-      {sections.map((section) => {
+      {sections.filter(
+        (section) =>
+          careAvailable ||
+          (section.value !== 'handoff' && section.value !== 'history'),
+      ).map((section) => {
         const selected =
           value === section.value ||
           (value === 'summary' && section.value === 'history') ||
-          ((value === 'documents' || value === 'contacts') && section.value === 'baby') ||
+          ((value === 'documents' || value === 'contacts') &&
+            section.value === 'baby') ||
           (value === 'activity' && section.value === 'family');
 
         return (

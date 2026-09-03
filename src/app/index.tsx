@@ -52,9 +52,11 @@ import {
 import { FamilyScreen } from '@/features/family/presentation/family-screen';
 import { useFamilyBabyContext } from '@/features/family/presentation/use-family-baby-context';
 import {
-  AppSectionNavigation,
-  type AppSection,
-} from '@/features/home/presentation/app-section-navigation';
+  canAccessCare,
+  resolveAccessibleAppSection,
+} from '@/features/home/domain/app-section-access';
+import type { AppSection } from '@/features/home/domain/app-section';
+import { AppSectionNavigation } from '@/features/home/presentation/app-section-navigation';
 import { AppHeader } from '@/features/home/presentation/app-header';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
@@ -173,13 +175,16 @@ function AuthenticatedApp({
   );
 
   const hasActiveFamily = Boolean(context.activeFamily);
+  const activeBabyLifeStage = context.activeBaby?.lifeStage;
+  const careAvailable = canAccessCare(activeBabyLifeStage);
   const onboardingSteps = useMemo(
     () =>
       getGuidedOnboardingSteps({
+        careAvailable,
         hasActiveBaby: Boolean(context.activeBaby),
         hasActiveFamily,
       }),
-    [context.activeBaby, hasActiveFamily],
+    [careAvailable, context.activeBaby, hasActiveFamily],
   );
   const onboardingShouldStart =
     context.status === 'ready' &&
@@ -190,14 +195,18 @@ function AuthenticatedApp({
 
   const navigateToSection = useCallback(
     (nextSection: AppSection, createBaby = false) => {
-      setSection(nextSection);
+      const accessibleSection = resolveAccessibleAppSection(
+        nextSection,
+        activeBabyLifeStage,
+      );
+      setSection(accessibleSection);
       setIsCreatingBaby(createBaby);
       router.setParams({
         createBaby: createBaby ? '1' : undefined,
-        section: nextSection,
+        section: accessibleSection,
       });
     },
-    [router],
+    [activeBabyLifeStage, router],
   );
 
   const showOnboardingStep = useCallback(
@@ -280,6 +289,10 @@ function AuthenticatedApp({
   }
 
   const activeFamily = context.activeFamily;
+  const activeSection = resolveAccessibleAppSection(
+    section,
+    activeBabyLifeStage,
+  );
   const appBackground = getColors(colorScheme).background;
   const canManageBabies =
     activeFamily?.role === 'owner' || activeFamily?.role === 'admin';
@@ -321,6 +334,7 @@ function AuthenticatedApp({
       accountContent={sessionBanner}
       activeBaby={context.activeBaby}
       activeFamily={activeFamily}
+      careAvailable={careAvailable}
       compact={compactNavigation}
       families={context.families}
       isCreatingBaby={isCreatingBaby}
@@ -328,7 +342,7 @@ function AuthenticatedApp({
       onChangeBaby={changeBaby}
       onChangeFamily={changeFamily}
       onChangeSection={changeSection}
-      section={section}
+      section={activeSection}
     />
   );
   const activeBabyId = context.activeBaby?.id;
@@ -362,16 +376,17 @@ function AuthenticatedApp({
           ]}
         >
           <AppSectionNavigation
+            careAvailable={careAvailable}
             onChange={changeSection}
             placement="bottom"
-            value={section}
+            value={activeSection}
           />
         </View>
       ) : null}
     </View>
   );
 
-  if (section === 'handoff') {
+  if (activeSection === 'handoff') {
     return renderAppScreen(
       <CareHandoffScreen
         babyId={context.activeBaby?.id}
@@ -396,7 +411,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'history') {
+  if (activeSection === 'history') {
     return renderAppScreen(
       <CareHistoryScreen
         babyId={context.activeBaby?.id}
@@ -416,7 +431,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'summary') {
+  if (activeSection === 'summary') {
     return renderAppScreen(
       <DailyCareSummaryScreen
         babyId={context.activeBaby?.id}
@@ -429,7 +444,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'activity' && canManageBabies) {
+  if (activeSection === 'activity' && canManageBabies) {
     return renderAppScreen(
       <FamilyActivityScreen
         familyId={activeFamily.id}
@@ -440,7 +455,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'documents' && context.activeBaby) {
+  if (activeSection === 'documents' && context.activeBaby) {
     return renderAppScreen(
       <BabyDocumentsScreen
         babyId={context.activeBaby.id}
@@ -454,7 +469,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'contacts' && context.activeBaby) {
+  if (activeSection === 'contacts' && context.activeBaby) {
     return renderAppScreen(
       <BabyContactsScreen
         babyId={context.activeBaby.id}
@@ -469,7 +484,7 @@ function AuthenticatedApp({
     );
   }
 
-  if (section === 'baby' && !context.activeBaby && !canManageBabies) {
+  if (activeSection === 'baby' && !context.activeBaby && !canManageBabies) {
     return renderAppScreen(
       <FamilyScreen
         babyGroups={context.families}
@@ -487,7 +502,7 @@ function AuthenticatedApp({
   }
 
   return renderAppScreen(
-    section === 'baby' ? (
+    activeSection === 'baby' ? (
       <BabyProfileScreen
         babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
         babyAvatarRepository={supabaseBabyAvatarRepository}

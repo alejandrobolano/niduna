@@ -4,24 +4,38 @@ import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
-import { resolveStableBabyAvatar, resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
+import {
+  resolveStableBabyAvatar,
+  resolveStableMemberAvatar,
+  type AnimalAvatarVariant,
+} from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 export interface SelectOption<T extends string> {
   avatarSeed?: string;
   avatarType?: 'baby' | 'member';
+  avatarVariant?: AnimalAvatarVariant;
   imageUrl?: string;
   label: string;
   supportingText?: string;
   value: T;
 }
 
-function OptionAvatar<T extends string>({ option, size }: { option: SelectOption<T>; size: number }) {
-  if (!option.avatarSeed || !option.avatarType) return null;
+function getOptionAvatarVariant<T extends string>(
+  option: SelectOption<T>,
+): AnimalAvatarVariant | undefined {
+  if (option.avatarVariant) return option.avatarVariant;
+  if (!option.avatarSeed || !option.avatarType) return undefined;
 
-  const variant = option.avatarType === 'baby'
+  return option.avatarType === 'baby'
     ? resolveStableBabyAvatar(option.avatarSeed)
     : resolveStableMemberAvatar(option.avatarSeed);
+}
+
+function OptionAvatar<T extends string>({ option, size }: { option: SelectOption<T>; size: number }) {
+  const variant = getOptionAvatarVariant(option);
+
+  if (!variant) return null;
 
   return (
     <AnimalAvatar
@@ -90,7 +104,7 @@ export function SelectField<T extends string>({
           pressed && !disabled && styles.triggerPressed,
         ]}
       >
-        {selectedOption?.avatarSeed && selectedOption.avatarType ? (
+        {selectedOption && getOptionAvatarVariant(selectedOption) ? (
           <OptionAvatar option={selectedOption} size={44} />
         ) : selectedOption?.imageUrl ? (
           <Image
@@ -165,7 +179,7 @@ export function SelectField<T extends string>({
                       pressed && styles.pressed,
                     ]}
                   >
-                    {option.avatarSeed && option.avatarType ? (
+                    {getOptionAvatarVariant(option) ? (
                       <OptionAvatar option={option} size={38} />
                     ) : option.imageUrl ? (
                       <Image

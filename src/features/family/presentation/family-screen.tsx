@@ -47,7 +47,7 @@ import type {
   FamilyRole,
   InvitableFamilyRole,
 } from '@/features/family/domain/family';
-import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { getDefaultMemberAvatar, resolveMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
@@ -74,18 +74,47 @@ const invitationRoleOptions = [
 ] satisfies SelectOption<InvitableFamilyRole>[];
 
 const relationshipOptions = [
-  { label: 'Madre', value: 'mother' },
-  { label: 'Padre', value: 'father' },
   {
+    avatarVariant: getDefaultMemberAvatar('mother'),
+    label: 'Madre',
+    value: 'mother',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('father'),
+    label: 'Padre',
+    value: 'father',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('parent'),
     label: 'Otro progenitor/a',
     supportingText: 'Si madre o padre no describen cómo quieres identificarte.',
     value: 'parent',
   },
-  { label: 'Tutor/a', value: 'guardian' },
-  { label: 'Abuelo/a', value: 'grandparent' },
-  { label: 'Familiar', value: 'relative' },
-  { label: 'Cuidador/a profesional', value: 'professional_caregiver' },
-  { label: 'Otra relación', value: 'other' },
+  {
+    avatarVariant: getDefaultMemberAvatar('guardian'),
+    label: 'Tutor/a',
+    value: 'guardian',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('grandparent'),
+    label: 'Abuelo/a',
+    value: 'grandparent',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('relative'),
+    label: 'Familiar',
+    value: 'relative',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('professional_caregiver'),
+    label: 'Cuidador/a profesional',
+    value: 'professional_caregiver',
+  },
+  {
+    avatarVariant: getDefaultMemberAvatar('other'),
+    label: 'Otra relación',
+    value: 'other',
+  },
 ] satisfies SelectOption<FamilyRelationship>[];
 
 const roleLabels: Record<FamilyRole, string> = {
@@ -686,7 +715,7 @@ export function FamilyScreen({
                   label="Nombre de la familia"
                   maxLength={80}
                   onChangeText={setFamilyName}
-                  placeholder="Por ejemplo, Familia Bolaño"
+                  placeholder="Por ejemplo, Familia Pérez"
                   value={familyName}
                 />
                 <ProfileField
