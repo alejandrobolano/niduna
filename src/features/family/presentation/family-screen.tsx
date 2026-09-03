@@ -686,7 +686,7 @@ export function FamilyScreen({
                   label="Nombre de la familia"
                   maxLength={80}
                   onChangeText={setFamilyName}
-                  placeholder="Por ejemplo, Familia Bolaño"
+                  placeholder="Por ejemplo, Familia Pérez"
                   value={familyName}
                 />
                 <ProfileField
