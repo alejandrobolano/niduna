@@ -93,11 +93,23 @@ const bloodTypeOptions = [
 interface SectionHeadingProps {
   accent: string;
   icon?: React.ComponentType<{ color?: string; size?: number }>;
+  lock?: {
+    isLocked: boolean;
+    onToggle?: () => void;
+  };
   optional?: boolean;
   title: string;
 }
 
-function SectionHeading({ accent, icon: Icon, optional = false, title }: SectionHeadingProps) {
+function SectionHeading({
+  accent,
+  icon: Icon,
+  lock,
+  optional = false,
+  title,
+}: SectionHeadingProps) {
+  const LockIcon = lock?.isLocked ? Lock : Unlock;
+
   return (
     <View style={styles.sectionHeading}>
       <View style={styles.sectionTitleRow}>
@@ -106,9 +118,78 @@ function SectionHeading({ accent, icon: Icon, optional = false, title }: Section
         </View>
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
-      {optional ? <Text style={styles.optional}>Opcional</Text> : null}
+      <View style={styles.sectionHeadingActions}>
+        {optional && !lock ? <Text style={styles.optional}>Opcional</Text> : null}
+        {lock ? (
+          <Pressable
+            accessibilityHint={
+              lock.onToggle
+                ? lock.isLocked
+                  ? 'Permite editar los datos de esta sección'
+                  : 'Protege los datos de esta sección'
+                : undefined
+            }
+            accessibilityLabel={lock.isLocked ? `Desbloquear ${title}` : `Bloquear ${title}`}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !lock.onToggle }}
+            disabled={!lock.onToggle}
+            hitSlop={6}
+            onPress={lock.onToggle}
+            style={({ pressed }) => [
+              styles.sectionLockButton,
+              !lock.isLocked && styles.sectionLockButtonUnlocked,
+              pressed && styles.sectionLockButtonPressed,
+            ]}
+          >
+            <LockIcon
+              color={lock.isLocked ? colors.textMuted : colors.coralPressed}
+              size={18}
+            />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
+}
+
+type LockableProfileSection = 'birthMeasurements' | 'gestation' | 'health' | 'main';
+
+function hasSectionData(
+  profile: BabyProfile | undefined,
+  section: LockableProfileSection,
+): boolean {
+  if (!profile) {
+    return false;
+  }
+
+  if (section === 'main') {
+    return Boolean(
+      profile.name.trim() ||
+        profile.birthDate ||
+        profile.expectedDueDate ||
+        (profile.sexAtBirth && profile.sexAtBirth !== 'unknown'),
+    );
+  }
+
+  if (section === 'gestation') {
+    return (
+      profile.gestationalAgeWeeks !== undefined ||
+      profile.gestationalAgeDays !== undefined
+    );
+  }
+
+  if (section === 'birthMeasurements') {
+    const measurement = profile.birthMeasurement;
+
+    return Boolean(
+      measurement &&
+        (measurement.weightGrams !== undefined ||
+          measurement.lengthCentimeters !== undefined ||
+          measurement.headCircumferenceCentimeters !== undefined),
+    );
+  }
+
+  return Boolean(profile.bloodGroup || profile.rhesusFactor || profile.notes?.trim());
 }
 
 function parseOptionalNumber(value: string): number | undefined {
@@ -184,6 +265,9 @@ export function BabyProfileScreen({
   const [isConfirmingPhotoRemoval, setIsConfirmingPhotoRemoval] = useState(false);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const [isLifeStageUnlocked, setIsLifeStageUnlocked] = useState(false);
+  const [unlockedSections, setUnlockedSections] = useState<
+    ReadonlySet<LockableProfileSection>
+  >(() => new Set());
   const isReadOnly = !canManageBabies;
   const isBornLifeStageLocked =
     lastSavedProfile?.lifeStage === 'born' && !isLifeStageUnlocked;
@@ -239,6 +323,7 @@ export function BabyProfileScreen({
         setNotes(loadedProfile.notes ?? '');
         setLastSavedProfile(loadedProfile);
         setIsLifeStageUnlocked(false);
+        setUnlockedSections(new Set());
       })
       .catch(() => {
         if (active) {
@@ -453,6 +538,35 @@ export function BabyProfileScreen({
     JSON.stringify(profile) !== JSON.stringify(lastSavedProfile);
   const isSaved = Boolean(lastSavedProfile) && !hasUnsavedChanges;
 
+  function isSectionLocked(section: LockableProfileSection): boolean {
+    return hasSectionData(lastSavedProfile, section) && !unlockedSections.has(section);
+  }
+
+  function getSectionLock(section: LockableProfileSection) {
+    if (!hasSectionData(lastSavedProfile, section)) {
+      return undefined;
+    }
+
+    return {
+      isLocked: isSectionLocked(section),
+      onToggle: isReadOnly
+        ? undefined
+        : () => {
+            setUnlockedSections((current) => {
+              const next = new Set(current);
+
+              if (next.has(section)) {
+                next.delete(section);
+              } else {
+                next.add(section);
+              }
+
+              return next;
+            });
+          },
+    };
+  }
+
   function getError(field: keyof BabyProfile | 'birthMeasurement'): string | undefined {
     return validationErrors.find((error) => error.field === field)?.message;
   }
@@ -478,6 +592,7 @@ export function BabyProfileScreen({
       setNotes(storedProfile.profile.notes ?? '');
       setLastSavedProfile(storedProfile.profile);
       setIsLifeStageUnlocked(false);
+      setUnlockedSections(new Set());
       onSaved?.(storedProfile.id);
     } catch {
       setSaveError(true);
@@ -736,42 +851,31 @@ export function BabyProfileScreen({
             </Pressable>
           ) : null}
 
+          {lastSavedProfile && !isReadOnly ? (
+            <View style={styles.fieldsProtectionLegend}>
+              <Lock color={colors.textMuted} size={15} />
+              <Text style={styles.fieldsProtectionLegendText}>
+                Los datos guardados están protegidos. Toca el candado de una sección para editarlos.
+              </Text>
+            </View>
+          ) : null}
+
           <View style={[styles.section, styles.momentSection]}>
-            <SectionHeading accent={colors.butter} icon={Sun} title="Momento" />
-            {lastSavedProfile?.lifeStage === 'born' && !isReadOnly ? (
-              <View style={styles.lifeStageProtection}>
-                <View style={styles.lifeStageProtectionCopy}>
-                  {isBornLifeStageLocked ? (
-                    <Lock color={colors.textMuted} size={16} />
-                  ) : (
-                    <Unlock color={colors.coralPressed} size={16} />
-                  )}
-                  <View style={styles.lifeStageProtectionText}>
-                    <Text style={styles.lifeStageProtectionTitle}>
-                      {isBornLifeStageLocked ? 'Estado protegido' : 'Cambio habilitado'}
-                    </Text>
-                    <Text style={styles.lifeStageProtectionHint}>
-                      {isBornLifeStageLocked
-                        ? 'Evita cambiar por error a “Aún por nacer”.'
-                        : 'Revisa la fecha antes de guardar el cambio.'}
-                    </Text>
-                  </View>
-                </View>
-                <Pressable
-                  accessibilityLabel={isBornLifeStageLocked ? 'Desbloquear momento' : 'Bloquear momento'}
-                  accessibilityRole="button"
-                  onPress={() => setIsLifeStageUnlocked((value) => !value)}
-                  style={({ pressed }) => [
-                    styles.lifeStageLockButton,
-                    pressed && styles.photoActionPressed,
-                  ]}
-                >
-                  <Text style={styles.lifeStageLockButtonText}>
-                    {isBornLifeStageLocked ? 'Desbloquear' : 'Bloquear'}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
+            <SectionHeading
+              accent={colors.butter}
+              icon={Sun}
+              lock={
+                lastSavedProfile?.lifeStage === 'born'
+                  ? {
+                      isLocked: isBornLifeStageLocked,
+                      onToggle: isReadOnly
+                        ? undefined
+                        : () => setIsLifeStageUnlocked((value) => !value),
+                    }
+                  : undefined
+              }
+              title="Momento"
+            />
             <SegmentedControl
               disabled={isReadOnly || isBornLifeStageLocked}
               onChange={(value) => {
@@ -785,10 +889,15 @@ export function BabyProfileScreen({
           </View>
 
           <View style={styles.section}>
-            <SectionHeading accent={colors.aquaSoft} icon={Heart} title="Datos principales" />
+            <SectionHeading
+              accent={colors.aquaSoft}
+              icon={Heart}
+              lock={getSectionLock('main')}
+              title="Datos principales"
+            />
             <ProfileField
               autoCapitalize="words"
-              disabled={isReadOnly}
+              disabled={isReadOnly || isSectionLocked('main')}
               error={getError('name')}
               label="Nombre"
               onChangeText={setName}
@@ -796,7 +905,7 @@ export function BabyProfileScreen({
               value={name}
             />
             <DatePickerField
-              disabled={isReadOnly}
+              disabled={isReadOnly || isSectionLocked('main')}
               error={getError(lifeStage === 'expected' ? 'expectedDueDate' : 'birthDate')}
               label={lifeStage === 'expected' ? 'Fecha probable de parto' : 'Fecha de nacimiento'}
               maximumDate={lifeStage === 'born' ? dateToIso(new Date()) : undefined}
@@ -806,7 +915,7 @@ export function BabyProfileScreen({
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>Sexo registrado al nacer</Text>
               <SegmentedControl
-                disabled={isReadOnly}
+                disabled={isReadOnly || isSectionLocked('main')}
                 onChange={setSexAtBirth}
                 options={sexOptions}
                 value={sexAtBirth}
@@ -821,12 +930,13 @@ export function BabyProfileScreen({
             <SectionHeading
               accent={colors.lavenderSoft}
               icon={Sparkles}
+              lock={getSectionLock('gestation')}
               optional
               title="Gestación"
             />
             <View style={styles.inlineFields}>
               <ProfileField
-                disabled={isReadOnly}
+                disabled={isReadOnly || isSectionLocked('gestation')}
                 error={getError('gestationalAgeWeeks')}
                 keyboardType="number-pad"
                 label="Semanas"
@@ -836,7 +946,7 @@ export function BabyProfileScreen({
                 value={gestationalWeeks}
               />
               <ProfileField
-                disabled={isReadOnly}
+                disabled={isReadOnly || isSectionLocked('gestation')}
                 error={getError('gestationalAgeDays')}
                 keyboardType="number-pad"
                 label="Días"
@@ -856,11 +966,12 @@ export function BabyProfileScreen({
               <SectionHeading
                 accent={colors.butterSoft}
                 icon={MoveVertical}
+                lock={getSectionLock('birthMeasurements')}
                 optional
                 title="Medidas al nacer"
               />
               <ProfileField
-                disabled={isReadOnly}
+                disabled={isReadOnly || isSectionLocked('birthMeasurements')}
                 error={getError('birthMeasurement')}
                 keyboardType="decimal-pad"
                 label="Peso"
@@ -871,7 +982,7 @@ export function BabyProfileScreen({
               />
               <View style={styles.inlineFields}>
                 <ProfileField
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isSectionLocked('birthMeasurements')}
                   keyboardType="decimal-pad"
                   label="Longitud"
                   onChangeText={setLengthCentimeters}
@@ -880,7 +991,7 @@ export function BabyProfileScreen({
                   value={lengthCentimeters}
                 />
                 <ProfileField
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isSectionLocked('birthMeasurements')}
                   keyboardType="decimal-pad"
                   label="Perímetro cefálico"
                   onChangeText={setHeadCircumference}
@@ -896,11 +1007,12 @@ export function BabyProfileScreen({
             <SectionHeading
               accent={colors.peach}
               icon={Plus}
+              lock={getSectionLock('health')}
               optional
               title="Información de salud"
             />
             <SelectField
-              disabled={isReadOnly}
+              disabled={isReadOnly || isSectionLocked('health')}
               eyebrow="INFORMACIÓN DE SALUD"
               hint="No lo deduzcas. Déjalo vacío si no aparece en documentación clínica."
               label="Grupo sanguíneo y Rh"
@@ -911,7 +1023,7 @@ export function BabyProfileScreen({
               value={bloodType}
             />
             <ProfileField
-              disabled={isReadOnly}
+              disabled={isReadOnly || isSectionLocked('health')}
               label="Observaciones"
               multiline
               numberOfLines={4}
@@ -1332,43 +1444,46 @@ const styles = createThemedStyleSheet((colors) => ({
     padding: spacing.xl,
   },
   momentSection: { backgroundColor: colors.butterSoft },
-  lifeStageProtection: {
+  fieldsProtectionLegend: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-    padding: spacing.md,
-  },
-  lifeStageProtectionCopy: {
-    alignItems: 'center',
-    flex: 1,
     flexDirection: 'row',
     gap: spacing.sm,
-    minWidth: 220,
+    paddingHorizontal: spacing.sm,
   },
-  lifeStageProtectionText: { flex: 1 },
-  lifeStageProtectionTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
-  lifeStageProtectionHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
-  lifeStageLockButton: {
-    borderColor: colors.border,
+  fieldsProtectionLegendText: {
+    color: colors.textMuted,
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  sectionHeadingActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexShrink: 0,
+    gap: spacing.sm,
+  },
+  sectionLockButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    minHeight: 40,
     justifyContent: 'center',
-    paddingHorizontal: spacing.md,
+    minHeight: 44,
+    minWidth: 44,
   },
-  lifeStageLockButtonText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
+  sectionLockButtonUnlocked: { backgroundColor: colors.peach },
+  sectionLockButtonPressed: { opacity: 0.68, transform: [{ scale: 0.96 }] },
   sectionHeading: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  sectionTitleRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  sectionTitleRow: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.md,
+    minWidth: 0,
+  },
   sectionIcon: {
     alignItems: 'center',
     borderRadius: radius.md,
@@ -1376,7 +1491,7 @@ const styles = createThemedStyleSheet((colors) => ({
     justifyContent: 'center',
     width: 36,
   },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '800' },
+  sectionTitle: { color: colors.text, flexShrink: 1, fontSize: 18, fontWeight: '800' },
   optional: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
   fieldGroup: { gap: spacing.sm },
   fieldLabel: { color: colors.text, fontSize: 14, fontWeight: '700' },

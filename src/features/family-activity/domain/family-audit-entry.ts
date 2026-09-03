@@ -1,3 +1,6 @@
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship } from '@/features/family/domain/family';
+
 export type FamilyAuditAction = 'created' | 'deleted' | 'updated';
 
 export type FamilyAuditEntityType =
@@ -21,5 +24,3 @@ export interface FamilyAuditEntry {
   entityType: FamilyAuditEntityType;
   id: number;
 }
-import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
-import type { FamilyRelationship } from '@/features/family/domain/family';

@@ -3,7 +3,7 @@ import { supabase } from '@/shared/infrastructure/supabase/client';
 const bucket = 'profile-photos';
 const signedUrlLifetimeSeconds = 60 * 60;
 
-export async function createProfilePhotoUrls(paths: Array<string | null | undefined>): Promise<Map<string, string>> {
+export async function createProfilePhotoUrls(paths: (string | null | undefined)[]): Promise<Map<string, string>> {
   const uniquePaths = [...new Set(paths.filter((path): path is string => Boolean(path)))];
   if (uniquePaths.length === 0) return new Map();
 

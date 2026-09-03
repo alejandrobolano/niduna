@@ -1,8 +1,9 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -153,9 +154,22 @@ function AuthenticatedApp({
   const [replayRequested, setReplayRequested] = useState(() =>
     consumeGuidedOnboardingReplay(user.id),
   );
+  const hasCompletedInitialFocus = useRef(false);
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
+  );
+  const refreshFamilyBabyContext = context.refresh;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasCompletedInitialFocus.current) {
+        hasCompletedInitialFocus.current = true;
+        return;
+      }
+
+      void refreshFamilyBabyContext();
+    }, [refreshFamilyBabyContext]),
   );
 
   const hasActiveFamily = Boolean(context.activeFamily);
