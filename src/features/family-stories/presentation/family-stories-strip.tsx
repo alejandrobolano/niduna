@@ -150,7 +150,7 @@ function StoryViewer({
         </View>
         <View style={styles.viewerHeader}>
           <View style={styles.viewerAuthorBadge}>
-            <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} size={38} variant={resolveMemberAvatar(group.author.id)} />
+            <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} photoUrl={group.author.avatarUrl} size={38} variant={resolveMemberAvatar(group.author.avatarKey, group.author.relationship)} />
           </View>
           <View style={styles.viewerAuthorCopy}>
             <Text style={styles.viewerAuthorName}>{group.author.displayName}</Text>
@@ -380,7 +380,7 @@ export function FamilyStoriesStrip({
           <Pressable key={group.author.id} onPress={() => setSelectedGroup(group)} style={styles.bubbleAction}>
             <View style={[styles.storyRing, group.hasUnseenStories ? styles.unseenRing : styles.seenRing]}>
               <View style={styles.avatar}>
-                <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} size={50} variant={resolveMemberAvatar(group.author.id)} />
+                <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} photoUrl={group.author.avatarUrl} size={50} variant={resolveMemberAvatar(group.author.avatarKey, group.author.relationship)} />
               </View>
             </View>
             <Text numberOfLines={1} style={styles.bubbleLabel}>{group.author.id === userId ? 'Tú' : group.author.displayName}</Text>

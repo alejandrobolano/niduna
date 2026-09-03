@@ -10,11 +10,16 @@ export type FamilyAuditEntityType =
   | 'measurement';
 
 export interface FamilyAuditEntry {
+  actorAvatarKey?: MemberAvatarVariant;
+  actorAvatarUrl?: string;
   action: FamilyAuditAction;
   actorId?: string;
   actorName?: string;
+  actorRelationship?: FamilyRelationship;
   createdAt: string;
   details: unknown;
   entityType: FamilyAuditEntityType;
   id: number;
 }
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship } from '@/features/family/domain/family';

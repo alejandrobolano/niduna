@@ -4,6 +4,7 @@ import {
 } from '@/features/family/application/family-baby-context-repository';
 import { mapFamilyBabyGroups } from '@/features/family/infrastructure/family-baby-context-mapper';
 import { supabase } from '@/shared/infrastructure/supabase/client';
+import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 
 const babyPhotosBucket = 'baby-photos';
 const signedPhotoLifetimeSeconds = 60 * 60;
@@ -21,7 +22,7 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
     async load(userId) {
       const { data: memberships, error: membershipError } = await supabase
         .from('family_members')
-        .select('id, family_id, role, created_at')
+        .select('id, family_id, role, relationship, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
@@ -35,7 +36,7 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
         return [];
       }
 
-      const [familiesResult, babiesResult, followersResult, archivedResult] =
+      const [familiesResult, babiesResult, followersResult, archivedResult, profileResult] =
         await Promise.all([
           supabase
             .from('families')
@@ -43,7 +44,7 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
             .in('id', familyIds),
           supabase
             .from('babies')
-            .select('id, family_id, life_stage, name, photo_path, created_at')
+            .select('id, family_id, life_stage, name, sex_at_birth, avatar_key, photo_path, created_at')
             .in('family_id', familyIds)
             .order('created_at', { ascending: true }),
           supabase
@@ -51,12 +52,13 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
             .select('baby_id')
             .eq('user_id', userId),
           supabase.rpc('list_archived_babies'),
+          supabase.from('profiles').select('avatar_key, avatar_path').eq('id', userId).single(),
         ]);
       const error =
         familiesResult.error ??
         babiesResult.error ??
         followersResult.error ??
-        archivedResult.error;
+        archivedResult.error ?? profileResult.error;
 
       if (error) {
         throw new FamilyBabyContextPersistenceError();
@@ -66,6 +68,7 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
       const photoUrls = await createSignedPhotoUrls(
         babies.flatMap((baby) => baby.photo_path ? [baby.photo_path] : []),
       );
+      const profilePhotoUrls = await createProfilePhotoUrls([profileResult.data?.avatar_path]);
 
       return mapFamilyBabyGroups(
         memberships,
@@ -78,6 +81,12 @@ export const supabaseFamilyBabyContextRepository: FamilyBabyContextRepository =
         })),
         followersResult.data ?? [],
         archivedResult.data ?? [],
+        {
+          avatar_key: profileResult.data?.avatar_key,
+          avatar_url: profileResult.data?.avatar_path
+            ? profilePhotoUrls.get(profileResult.data.avatar_path)
+            : undefined,
+        },
       );
     },
 

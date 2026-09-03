@@ -9,6 +9,7 @@ describe('Supabase baby profile mapping', () => {
   it('maps stored birth measurements to domain units', () => {
     const stored = mapStoredProfile(
       {
+        avatar_key: null,
         archived_at: null,
         archived_by: null,
         birth_date: '2026-07-29',

@@ -948,7 +948,8 @@ export function FamilyScreen({
                       <AnimalAvatar
                         accessibilityLabel={`Avatar de ${member.displayName ?? 'miembro de la familia'}`}
                         size={48}
-                        variant={resolveMemberAvatar(member.userId)}
+                        photoUrl={member.avatarUrl}
+                        variant={resolveMemberAvatar(member.avatarKey, member.relationship)}
                       />
                       <View style={styles.memberCopy}>
                         <Text style={styles.memberName}>

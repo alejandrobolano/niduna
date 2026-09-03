@@ -43,8 +43,10 @@ import type {
   SexAtBirth,
 } from '@/features/baby-profile/domain/baby-profile';
 import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
-import { resolveBabyAvatar } from '@/features/avatars/domain/avatar';
+import type { BabyAvatarRepository } from '@/features/avatars/application/baby-avatar-repository';
+import { babyAvatarVariants, resolveBabyAvatar, type BabyAvatarVariant } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
+import { AvatarPickerModal } from '@/features/avatars/presentation/avatar-picker-modal';
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SegmentedControl } from '@/features/baby-profile/presentation/segmented-control';
@@ -120,6 +122,7 @@ function parseOptionalNumber(value: string): number | undefined {
 
 interface BabyProfileScreenProps {
   babyId?: string;
+  babyAvatarRepository: BabyAvatarRepository;
   babyPhotoRepository: BabyPhotoRepository;
   canManageBabies?: boolean;
   familyId: string;
@@ -135,6 +138,7 @@ interface BabyProfileScreenProps {
 
 export function BabyProfileScreen({
   babyId: selectedBabyId,
+  babyAvatarRepository,
   babyPhotoRepository,
   canManageBabies = false,
   familyId,
@@ -172,6 +176,8 @@ export function BabyProfileScreen({
   const [isChangingAccess, setIsChangingAccess] = useState(false);
   const [accessError, setAccessError] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>();
+  const [avatarKey, setAvatarKey] = useState<BabyAvatarVariant>();
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isPhotoLoading, setIsPhotoLoading] = useState(Boolean(selectedBabyId));
   const [isPhotoSaving, setIsPhotoSaving] = useState(false);
   const [photoError, setPhotoError] = useState<string>();
@@ -281,6 +287,32 @@ export function BabyProfileScreen({
       active = false;
     };
   }, [babyPhotoRepository, selectedBabyId]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!selectedBabyId) return () => { active = false; };
+
+    void babyAvatarRepository.load(selectedBabyId).then((storedAvatar) => {
+      if (active) setAvatarKey(storedAvatar);
+    }).catch(() => {
+      if (active) setPhotoError('No pudimos cargar el animalito del bebé.');
+    });
+
+    return () => { active = false; };
+  }, [babyAvatarRepository, selectedBabyId]);
+
+  async function handleSelectAvatar(nextAvatar: BabyAvatarVariant) {
+    if (!storedBabyId) return;
+
+    try {
+      await babyAvatarRepository.save(storedBabyId, nextAvatar);
+      setAvatarKey(nextAvatar);
+      void onPhotoChanged?.();
+    } catch {
+      setPhotoError('No pudimos guardar el animalito. Inténtalo de nuevo.');
+    }
+  }
 
   async function handlePickPhoto() {
     if (!storedBabyId) {
@@ -545,7 +577,7 @@ export function BabyProfileScreen({
                   <AnimalAvatar
                     accessibilityLabel={`Avatar de ${name || 'bebé'}`}
                     size={64}
-                    variant={resolveBabyAvatar(storedBabyId ?? `${familyId}:${name}`)}
+                    variant={resolveBabyAvatar(avatarKey, sexAtBirth)}
                   />
                 )}
               </Pressable>
@@ -558,6 +590,15 @@ export function BabyProfileScreen({
                 </Text>
                 {canManageBabies ? (
                   <View style={styles.photoActions}>
+                    <Pressable
+                      accessibilityRole="button"
+                      disabled={!storedBabyId}
+                      onPress={() => setIsAvatarPickerOpen(true)}
+                      style={({ pressed }) => [styles.photoAction, pressed && styles.photoActionPressed, !storedBabyId && styles.photoActionDisabled]}
+                    >
+                      <Sparkles color={colors.primaryPressed} size={16} />
+                      <Text style={styles.photoActionText}>Elegir animalito</Text>
+                    </Pressable>
                     <Pressable
                       accessibilityRole="button"
                       disabled={isPhotoSaving || !storedBabyId}
@@ -637,6 +678,17 @@ export function BabyProfileScreen({
               </Text>
             ) : null}
           </View>
+
+          <AvatarPickerModal
+            current={resolveBabyAvatar(avatarKey, sexAtBirth)}
+            hasPhoto={Boolean(photoUrl)}
+            onClose={() => setIsAvatarPickerOpen(false)}
+            onPickPhoto={handlePickPhoto}
+            onSelect={handleSelectAvatar}
+            title="Elige su animalito"
+            variants={babyAvatarVariants}
+            visible={isAvatarPickerOpen}
+          />
 
           {storedBabyId && onOpenDocuments ? (
             <Pressable

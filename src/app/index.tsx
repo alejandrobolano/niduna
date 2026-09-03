@@ -15,6 +15,7 @@ import { AuthScreen } from '@/features/auth/presentation/auth-screen';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
+import { supabaseBabyAvatarRepository } from '@/features/avatars/infrastructure/supabase-baby-avatar-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
 import { supabaseBabyDocumentRepository } from '@/features/baby-documents/infrastructure/supabase-baby-document-repository';
 import { BabyDocumentsScreen } from '@/features/baby-documents/presentation/baby-documents-screen';
@@ -272,8 +273,10 @@ function AuthenticatedApp({
     canManageBabies || activeFamily?.role === 'caregiver';
   const sessionBanner = (
     <SessionBanner
+      avatarKey={activeFamily?.currentUserAvatarKey}
+      avatarUrl={activeFamily?.currentUserAvatarUrl}
       email={user.email}
-      userId={user.id}
+      relationship={activeFamily?.currentUserRelationship}
       onOpenAccountSettings={() => router.push('/settings')}
       onOpenFamilyActivity={
         canManageBabies ? () => changeSection('activity') : undefined
@@ -473,6 +476,7 @@ function AuthenticatedApp({
     section === 'baby' ? (
       <BabyProfileScreen
         babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+        babyAvatarRepository={supabaseBabyAvatarRepository}
         babyPhotoRepository={supabaseBabyPhotoRepository}
         canManageBabies={canManageBabies}
         familyId={activeFamily.id}

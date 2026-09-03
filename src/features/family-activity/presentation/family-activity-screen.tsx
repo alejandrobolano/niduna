@@ -123,7 +123,7 @@ export function FamilyActivityScreen({
                   <View key={entry.id} style={styles.mobileEntry}>
                     <View style={styles.mobileEntryHeader}>
                       <View style={styles.actorIdentity}>
-                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} size={32} variant={resolveMemberAvatar(entry.actorId)} /> : null}
+                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} photoUrl={entry.actorAvatarUrl} size={32} variant={resolveMemberAvatar(entry.actorAvatarKey, entry.actorRelationship)} /> : null}
                         <Text style={styles.mobileActor}>{entry.actorName ?? 'Un familiar'}</Text>
                       </View>
                       <Text style={styles.mobileEntity}>{entityLabels[entry.entityType]}</Text>
@@ -161,7 +161,7 @@ export function FamilyActivityScreen({
                         }).format(new Date(entry.createdAt))}
                       </Text>
                       <View style={[styles.cell, styles.actorCell, styles.actorIdentity]}>
-                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} size={32} variant={resolveMemberAvatar(entry.actorId)} /> : null}
+                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} photoUrl={entry.actorAvatarUrl} size={32} variant={resolveMemberAvatar(entry.actorAvatarKey, entry.actorRelationship)} /> : null}
                         <Text style={styles.actorText}>{entry.actorName ?? 'Un familiar'}</Text>
                       </View>
                       <Text style={[styles.cell, styles.activityCell]}>

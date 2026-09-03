@@ -35,7 +35,7 @@ import type {
   FeedingEvent,
   MeasurementEvent,
 } from '@/features/care/domain/care-event';
-import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import {
   CareActionSheet,
@@ -330,7 +330,7 @@ function TimelineEvent({
           <Text style={styles.timelineNote}>“{event.notes}”</Text>
         ) : null}
         <View style={styles.timelineAuthorRow}>
-          <AnimalAvatar accessibilityLabel={`Avatar de ${event.recordedByName || 'un familiar'}`} size={24} variant={resolveMemberAvatar(event.recordedById)} />
+          <AnimalAvatar accessibilityLabel={`Avatar de ${event.recordedByName || 'un familiar'}`} size={24} variant={resolveStableMemberAvatar(event.recordedById)} />
           <Text style={styles.timelineAuthor}>Registrado por {event.recordedByName || 'un familiar'}</Text>
         </View>
       </View>

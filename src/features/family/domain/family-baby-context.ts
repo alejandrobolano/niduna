@@ -1,11 +1,14 @@
-import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
-import type { FamilyRole } from '@/features/family/domain/family';
+import type { BabyLifeStage, SexAtBirth } from '@/features/baby-profile/domain/baby-profile';
+import type { BabyAvatarVariant, MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship, FamilyRole } from '@/features/family/domain/family';
 
 export interface FamilyBabySummary {
+  avatarKey?: BabyAvatarVariant;
   id: string;
   lifeStage: BabyLifeStage;
   name: string;
   photoUrl?: string;
+  sexAtBirth?: SexAtBirth;
 }
 
 export interface ArchivedBabySummary {
@@ -17,6 +20,9 @@ export interface ArchivedBabySummary {
 export interface FamilyBabyGroup {
   archivedBabies: ArchivedBabySummary[];
   babies: FamilyBabySummary[];
+  currentUserAvatarKey?: MemberAvatarVariant;
+  currentUserAvatarUrl?: string;
+  currentUserRelationship?: FamilyRelationship;
   id: string;
   name: string;
   role: FamilyRole;

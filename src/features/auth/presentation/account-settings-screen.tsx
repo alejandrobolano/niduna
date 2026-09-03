@@ -13,16 +13,13 @@ import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
-import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
-import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 interface AccountSettingsScreenProps {
   appearanceContent: ReactNode;
   dangerContent: ReactNode;
   dataContent: ReactNode;
   deviceContent?: ReactNode;
-  email: string;
-  userId: string;
+  profileContent: ReactNode;
   notificationContent?: ReactNode;
   onBack: () => void;
   onOpenHelp: () => void;
@@ -54,8 +51,7 @@ export function AccountSettingsScreen({
   dangerContent,
   dataContent,
   deviceContent,
-  email,
-  userId,
+  profileContent,
   notificationContent,
   onBack,
   onOpenHelp,
@@ -95,17 +91,7 @@ export function AccountSettingsScreen({
           </View>
 
           <SettingsSection icon={UserRound} title="Perfil">
-            <View style={styles.identity}>
-              <AnimalAvatar accessibilityLabel="Tu avatar" size={52} variant={resolveMemberAvatar(userId)} />
-              <View style={styles.identityCopy}>
-                <Text numberOfLines={2} style={styles.email}>
-                  {email}
-                </Text>
-                <Text style={styles.caption}>
-                  Sesión protegida en este dispositivo
-                </Text>
-              </View>
-            </View>
+            {profileContent}
           </SettingsSection>
 
           <SettingsSection icon={Bell} title="Preferencias">
@@ -228,28 +214,6 @@ const styles = createThemedStyleSheet((colors) => ({
     width: 40,
   },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
-  identity: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: colors.lavenderSoft,
-    borderRadius: radius.md,
-    height: 52,
-    justifyContent: 'center',
-    width: 52,
-  },
-  avatarText: { color: colors.lavender, fontSize: 20, fontWeight: '900' },
-  identityCopy: { flex: 1 },
-  email: { color: colors.text, fontSize: 14, fontWeight: '900' },
-  caption: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: spacing.xs,
-  },
   onboardingAction: {
     alignItems: 'center',
     flexDirection: 'row',

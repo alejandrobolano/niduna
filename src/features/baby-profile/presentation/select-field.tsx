@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
-import { resolveBabyAvatar, resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { resolveStableBabyAvatar, resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 export interface SelectOption<T extends string> {
@@ -20,8 +20,8 @@ function OptionAvatar<T extends string>({ option, size }: { option: SelectOption
   if (!option.avatarSeed || !option.avatarType) return null;
 
   const variant = option.avatarType === 'baby'
-    ? resolveBabyAvatar(option.avatarSeed)
-    : resolveMemberAvatar(option.avatarSeed);
+    ? resolveStableBabyAvatar(option.avatarSeed)
+    : resolveStableMemberAvatar(option.avatarSeed);
 
   return (
     <AnimalAvatar

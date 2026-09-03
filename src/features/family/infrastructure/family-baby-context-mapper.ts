@@ -1,9 +1,11 @@
-import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
-import type { FamilyRole } from '@/features/family/domain/family';
+import type { BabyLifeStage, SexAtBirth } from '@/features/baby-profile/domain/baby-profile';
+import type { BabyAvatarVariant, MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship, FamilyRole } from '@/features/family/domain/family';
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
 
 interface MembershipRow {
   family_id: string;
+  relationship?: FamilyRelationship;
   role: FamilyRole;
 }
 
@@ -13,11 +15,18 @@ interface FamilyRow {
 }
 
 interface BabyRow {
+  avatar_key?: BabyAvatarVariant | null;
   family_id: string;
   id: string;
   life_stage: BabyLifeStage;
   name: string;
   photo_url?: string;
+  sex_at_birth?: SexAtBirth | null;
+}
+
+interface CurrentProfileRow {
+  avatar_key?: MemberAvatarVariant | null;
+  avatar_url?: string;
 }
 
 interface FollowerRow {
@@ -37,6 +46,7 @@ export function mapFamilyBabyGroups(
   babies: BabyRow[],
   followers: FollowerRow[],
   archivedBabies: ArchivedBabyRow[],
+  currentProfile: CurrentProfileRow = {},
 ): FamilyBabyGroup[] {
   const familiesById = new Map(families.map((family) => [family.id, family]));
   const followedBabyIds = new Set(
@@ -66,6 +76,9 @@ export function mapFamilyBabyGroups(
         babies: familyBabies
           .filter((baby) => followedBabyIds.has(baby.id))
           .map(mapBaby),
+        currentUserAvatarKey: currentProfile.avatar_key ?? undefined,
+        currentUserAvatarUrl: currentProfile.avatar_url,
+        currentUserRelationship: membership.relationship ?? 'other',
         id: family.id,
         name: family.name,
         role: membership.role,
@@ -79,9 +92,11 @@ export function mapFamilyBabyGroups(
 
 function mapBaby(baby: BabyRow) {
   return {
+    avatarKey: baby.avatar_key ?? undefined,
     id: baby.id,
     lifeStage: baby.life_stage,
     name: baby.name,
     photoUrl: baby.photo_url,
+    sexAtBirth: baby.sex_at_birth ?? undefined,
   };
 }

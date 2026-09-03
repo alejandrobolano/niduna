@@ -6,6 +6,7 @@ import type {
   FamilyRole,
   InvitableFamilyRole,
 } from '@/features/family/domain/family';
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 
 export interface FamilyRow {
   created_at: string;
@@ -22,6 +23,8 @@ export interface FamilyMemberRow {
 }
 
 export interface ProfileRow {
+  avatar_key?: MemberAvatarVariant | null;
+  avatar_url?: string;
   display_name: string | null;
   id: string;
 }
@@ -41,15 +44,15 @@ export function mapFamilies(
   invitations: FamilyInvitationRow[],
   currentUserId: string,
 ): Family[] {
-  const displayNameByUserId = new Map(
-    profiles.map((profile) => [profile.id, profile.display_name ?? undefined]),
-  );
+  const profilesByUserId = new Map(profiles.map((profile) => [profile.id, profile]));
 
   return families.flatMap((family) => {
     const familyMembers: FamilyMember[] = members
       .filter((member) => member.family_id === family.id)
       .map((member) => ({
-        displayName: displayNameByUserId.get(member.user_id),
+        avatarKey: profilesByUserId.get(member.user_id)?.avatar_key ?? undefined,
+        avatarUrl: profilesByUserId.get(member.user_id)?.avatar_url,
+        displayName: profilesByUserId.get(member.user_id)?.display_name ?? undefined,
         id: member.id,
         isCurrentUser: member.user_id === currentUserId,
         relationship: member.relationship,

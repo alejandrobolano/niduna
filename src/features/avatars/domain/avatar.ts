@@ -1,3 +1,6 @@
+import type { SexAtBirth } from '@/features/baby-profile/domain/baby-profile';
+import type { FamilyRelationship } from '@/features/family/domain/family';
+
 export const memberAvatarVariants = [
   'rabbit',
   'bear',
@@ -7,7 +10,17 @@ export const memberAvatarVariants = [
   'owl',
 ] as const;
 
-export const babyAvatarVariants = ['chick', 'lamb', 'seal'] as const;
+export const babyAvatarVariants = [
+  'chick',
+  'lamb',
+  'seal',
+  'rabbit',
+  'bear',
+  'fox',
+  'koala',
+  'otter',
+  'owl',
+] as const;
 
 export type MemberAvatarVariant = (typeof memberAvatarVariants)[number];
 export type BabyAvatarVariant = (typeof babyAvatarVariants)[number];
@@ -24,10 +37,52 @@ function stableIndex(seed: string, length: number): number {
   return (hash >>> 0) % length;
 }
 
-export function resolveMemberAvatar(seed: string): MemberAvatarVariant {
+const defaultMemberAvatarByRelationship: Record<FamilyRelationship, MemberAvatarVariant> = {
+  mother: 'rabbit',
+  father: 'bear',
+  parent: 'fox',
+  guardian: 'owl',
+  grandparent: 'koala',
+  relative: 'otter',
+  professional_caregiver: 'fox',
+  other: 'owl',
+};
+
+const defaultBabyAvatarBySex: Record<SexAtBirth, BabyAvatarVariant> = {
+  female: 'lamb',
+  male: 'chick',
+  intersex: 'seal',
+  unknown: 'seal',
+};
+
+export function getDefaultMemberAvatar(
+  relationship?: FamilyRelationship,
+): MemberAvatarVariant {
+  return relationship ? defaultMemberAvatarByRelationship[relationship] : 'owl';
+}
+
+export function getDefaultBabyAvatar(sexAtBirth?: SexAtBirth): BabyAvatarVariant {
+  return sexAtBirth ? defaultBabyAvatarBySex[sexAtBirth] : 'seal';
+}
+
+export function resolveMemberAvatar(
+  selectedAvatar?: MemberAvatarVariant,
+  relationship?: FamilyRelationship,
+): MemberAvatarVariant {
+  return selectedAvatar ?? getDefaultMemberAvatar(relationship);
+}
+
+export function resolveBabyAvatar(
+  selectedAvatar?: BabyAvatarVariant,
+  sexAtBirth?: SexAtBirth,
+): BabyAvatarVariant {
+  return selectedAvatar ?? getDefaultBabyAvatar(sexAtBirth);
+}
+
+export function resolveStableMemberAvatar(seed: string): MemberAvatarVariant {
   return memberAvatarVariants[stableIndex(seed, memberAvatarVariants.length)];
 }
 
-export function resolveBabyAvatar(seed: string): BabyAvatarVariant {
+export function resolveStableBabyAvatar(seed: string): BabyAvatarVariant {
   return babyAvatarVariants[stableIndex(seed, babyAvatarVariants.length)];
 }

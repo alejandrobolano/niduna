@@ -1,3 +1,5 @@
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+
 export type FamilyRole = 'owner' | 'admin' | 'caregiver' | 'viewer';
 
 export type InvitableFamilyRole = Exclude<FamilyRole, 'owner'>;
@@ -13,6 +15,8 @@ export type FamilyRelationship =
   | 'other';
 
 export interface FamilyMember {
+  avatarKey?: MemberAvatarVariant;
+  avatarUrl?: string;
   displayName?: string;
   id: string;
   isCurrentUser: boolean;

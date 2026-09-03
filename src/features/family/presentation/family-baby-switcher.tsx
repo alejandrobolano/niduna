@@ -87,7 +87,7 @@ export function FamilyBabySwitcher({
             accessibilityLabel={activeBaby.photoUrl ? `Foto de ${activeBaby.name}` : `Avatar de ${activeBaby.name}`}
             photoUrl={activeBaby.photoUrl}
             size={34}
-            variant={resolveBabyAvatar(activeBaby.id)}
+            variant={resolveBabyAvatar(activeBaby.avatarKey, activeBaby.sexAtBirth)}
           />
         ) : (
           <View style={styles.contextAvatar}><Text style={styles.contextAvatarText}>{initial}</Text></View>
