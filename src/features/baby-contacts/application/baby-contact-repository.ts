@@ -36,6 +36,7 @@ export class BabyContactError extends Error {
 }
 
 export interface BabyContactRepository {
+  loadActive(babyId: string): Promise<BabyContact[]>;
   loadPage(
     babyId: string,
     page: number,

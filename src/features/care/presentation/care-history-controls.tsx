@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Download, FileText } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -25,9 +25,12 @@ interface CareHistoryControlsProps {
   events: CareEvent[];
   exportCount: number;
   isExporting: boolean;
+  isReportPreparing: boolean;
+  isSelectionExport: boolean;
   onChangeDate: (dateKey: string | undefined) => void;
   onChangeFilter: (filter: CareEventFilter) => void;
   onExport: () => void;
+  onOpenReport: () => void;
   selectedDate?: string;
 }
 
@@ -36,9 +39,12 @@ export function CareHistoryControls({
   events,
   exportCount,
   isExporting,
+  isReportPreparing,
+  isSelectionExport,
   onChangeDate,
   onChangeFilter,
   onExport,
+  onOpenReport,
   selectedDate,
 }: CareHistoryControlsProps) {
   const initialDate = events[0] ? new Date(events[0].occurredAt) : new Date();
@@ -66,24 +72,48 @@ export function CareHistoryControls({
           <Text style={styles.title}>Consultar registros</Text>
           <Text style={styles.subtitle}>Filtra por tipo o selecciona una fecha.</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          disabled={isExporting || exportCount === 0}
-          onPress={onExport}
-          style={({ pressed }) => [
-            styles.exportButton,
-            pressed && styles.pressed,
-            (isExporting || exportCount === 0) && styles.disabled,
-          ]}
-        >
-          <Download color={colors.primaryPressed} size={18} />
-          <View>
-            <Text style={styles.exportLabel}>
-              {isExporting ? 'Preparando…' : 'Exportar para Excel'}
-            </Text>
-            <Text style={styles.exportHint}>{exportCount} registros · CSV</Text>
-          </View>
-        </Pressable>
+        <View style={styles.exportActions}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isExporting || exportCount === 0}
+            onPress={onExport}
+            style={({ pressed }) => [
+              styles.exportButton,
+              pressed && styles.pressed,
+              (isExporting || exportCount === 0) && styles.disabled,
+            ]}
+          >
+            <Download color={colors.primaryPressed} size={18} />
+            <View>
+              <Text style={styles.exportLabel}>
+                {isExporting ? 'Preparando…' : 'Excel'}
+              </Text>
+              <Text style={styles.exportHint}>
+                {exportCount} {isSelectionExport ? 'seleccionados' : 'registros'} · CSV
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isReportPreparing || exportCount === 0}
+            onPress={onOpenReport}
+            style={({ pressed }) => [
+              styles.reportButton,
+              pressed && styles.pressed,
+              (isReportPreparing || exportCount === 0) && styles.disabled,
+            ]}
+          >
+            <FileText color={colors.onAccent} size={18} />
+            <View>
+              <Text style={styles.reportLabel}>
+                {isReportPreparing ? 'Preparando…' : 'Informe PDF'}
+              </Text>
+              <Text style={styles.reportHint}>
+                {isSelectionExport ? `${exportCount} seleccionados` : 'Personalizar'}
+              </Text>
+            </View>
+          </Pressable>
+        </View>
       </View>
 
       <View accessibilityRole="tablist" style={styles.filters}>
@@ -207,8 +237,20 @@ const styles = createThemedStyleSheet((colors) => ({
     minHeight: 52,
     paddingHorizontal: spacing.md,
   },
+  exportActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   exportLabel: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
   exportHint: { color: colors.textMuted, fontSize: 10, marginTop: 2 },
+  reportButton: {
+    alignItems: 'center',
+    backgroundColor: colors.primaryPressed,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+  },
+  reportLabel: { color: colors.onAccent, fontSize: 13, fontWeight: '900' },
+  reportHint: { color: colors.onAccent, fontSize: 10, marginTop: 2, opacity: 0.76 },
   disabled: { opacity: 0.45 },
   pressed: { opacity: 0.68, transform: [{ scale: 0.99 }] },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },

@@ -4,12 +4,14 @@ import {
   FileText,
   Heart,
   HeartHandshake,
+  Lock,
   MapPinned,
   MoveVertical,
   Plus,
   Sparkles,
   Sun,
   Trash2,
+  Unlock,
   X,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -173,7 +175,10 @@ export function BabyProfileScreen({
   const [photoError, setPhotoError] = useState<string>();
   const [isConfirmingPhotoRemoval, setIsConfirmingPhotoRemoval] = useState(false);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
+  const [isLifeStageUnlocked, setIsLifeStageUnlocked] = useState(false);
   const isReadOnly = !canManageBabies;
+  const isBornLifeStageLocked =
+    lastSavedProfile?.lifeStage === 'born' && !isLifeStageUnlocked;
   const parsedWeightGrams = parseKilogramsToGrams(
     weightKilograms,
     0.3,
@@ -225,6 +230,7 @@ export function BabyProfileScreen({
         );
         setNotes(loadedProfile.notes ?? '');
         setLastSavedProfile(loadedProfile);
+        setIsLifeStageUnlocked(false);
       })
       .catch(() => {
         if (active) {
@@ -437,6 +443,7 @@ export function BabyProfileScreen({
       setName(storedProfile.profile.name);
       setNotes(storedProfile.profile.notes ?? '');
       setLastSavedProfile(storedProfile.profile);
+      setIsLifeStageUnlocked(false);
       onSaved?.(storedProfile.id);
     } catch {
       setSaveError(true);
@@ -673,8 +680,42 @@ export function BabyProfileScreen({
 
           <View style={[styles.section, styles.momentSection]}>
             <SectionHeading accent={colors.butter} icon={Sun} title="Momento" />
+            {lastSavedProfile?.lifeStage === 'born' && !isReadOnly ? (
+              <View style={styles.lifeStageProtection}>
+                <View style={styles.lifeStageProtectionCopy}>
+                  {isBornLifeStageLocked ? (
+                    <Lock color={colors.textMuted} size={16} />
+                  ) : (
+                    <Unlock color={colors.coralPressed} size={16} />
+                  )}
+                  <View style={styles.lifeStageProtectionText}>
+                    <Text style={styles.lifeStageProtectionTitle}>
+                      {isBornLifeStageLocked ? 'Estado protegido' : 'Cambio habilitado'}
+                    </Text>
+                    <Text style={styles.lifeStageProtectionHint}>
+                      {isBornLifeStageLocked
+                        ? 'Evita cambiar por error a “Aún por nacer”.'
+                        : 'Revisa la fecha antes de guardar el cambio.'}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  accessibilityLabel={isBornLifeStageLocked ? 'Desbloquear momento' : 'Bloquear momento'}
+                  accessibilityRole="button"
+                  onPress={() => setIsLifeStageUnlocked((value) => !value)}
+                  style={({ pressed }) => [
+                    styles.lifeStageLockButton,
+                    pressed && styles.photoActionPressed,
+                  ]}
+                >
+                  <Text style={styles.lifeStageLockButtonText}>
+                    {isBornLifeStageLocked ? 'Desbloquear' : 'Bloquear'}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
             <SegmentedControl
-              disabled={isReadOnly}
+              disabled={isReadOnly || isBornLifeStageLocked}
               onChange={(value) => {
                 setLifeStage(value);
                 setDate('');
@@ -1233,6 +1274,37 @@ const styles = createThemedStyleSheet((colors) => ({
     padding: spacing.xl,
   },
   momentSection: { backgroundColor: colors.butterSoft },
+  lifeStageProtection: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+    padding: spacing.md,
+  },
+  lifeStageProtectionCopy: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    minWidth: 220,
+  },
+  lifeStageProtectionText: { flex: 1 },
+  lifeStageProtectionTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  lifeStageProtectionHint: { color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 2 },
+  lifeStageLockButton: {
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    minHeight: 40,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  lifeStageLockButtonText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
   sectionHeading: {
     alignItems: 'center',
     flexDirection: 'row',

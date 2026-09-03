@@ -17,20 +17,31 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { BabyContactRepository } from '@/features/baby-contacts/application/baby-contact-repository';
+import type { BabyContact } from '@/features/baby-contacts/domain/baby-contact';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
+import {
+  careEventLabels,
+  describeCareEvent,
+} from '@/features/care/application/care-event-description';
 import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/application/care-history';
 import { getCareRecordRetention } from '@/features/care/application/care-record-retention';
 import {
   canEditCareRecord,
+  getCareEventsForExport,
   getCareRecordKey,
   getSelectableCareRecordKeys,
   reconcileCareRecordSelection,
 } from '@/features/care/application/care-record-management';
 import { CareOperationError, type CareHistoryPage, type CareRepository } from '@/features/care/application/care-repository';
-import { getDurationMinutes } from '@/features/care/application/care-snapshot';
+import type { CareReportInput } from '@/features/care/application/care-report';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
 import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
+import {
+  CareReportModal,
+  type CareReportSelection,
+} from '@/features/care/presentation/care-report-modal';
 import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { DataPagination } from '@/shared/presentation/data-pagination';
@@ -42,48 +53,34 @@ interface CareHistoryScreenProps {
   babyName?: string;
   canManage: boolean;
   canRecord: boolean;
+  contactRepository: BabyContactRepository;
   exportHistory: (events: CareEvent[], babyName: string) => Promise<void>;
+  exportReport: (input: CareReportInput) => Promise<void>;
+  familyName: string;
   onOpenSummary: () => void;
   repository: CareRepository;
   topContent?: ReactNode;
   userId: string;
 }
 
-const eventLabels: Record<CareEvent['type'], string> = {
-  diaper: 'Pañal',
+const filterLabels: Record<CareEventFilter, string> = {
+  all: 'Todos los cuidados',
+  diaper: 'Pañales',
   feeding: 'Alimentación',
   measurement: 'Medidas',
-  note: 'Nota',
+  note: 'Notas',
   sleep: 'Sueño',
 };
-
-function describeEvent(event: CareEvent): string {
-  if (event.type === 'feeding') {
-    const method = event.method === 'breast' ? 'Pecho' : event.method === 'formula' ? 'Fórmula' : event.method === 'mixed' ? 'Mixta' : 'Leche extraída';
-    return [method, event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined, event.notes].filter(Boolean).join(' · ');
-  }
-  if (event.type === 'diaper') {
-    const condition = event.condition === 'wet' ? 'Pipí' : event.condition === 'dirty' ? 'Caca' : 'Pipí y caca';
-    return [condition, event.notes].filter(Boolean).join(' · ');
-  }
-  if (event.type === 'sleep') {
-    return event.endedAt ? `${getDurationMinutes(event.occurredAt, event.endedAt)} min` : 'Sueño en curso';
-  }
-  if (event.type === 'note') return event.content;
-  return [
-    event.weightGrams !== undefined ? `${new Intl.NumberFormat('es-ES', { minimumFractionDigits: 3 }).format(event.weightGrams / 1000)} kg` : undefined,
-    event.lengthMillimeters !== undefined ? `${event.lengthMillimeters / 10} cm` : undefined,
-    event.headCircumferenceMillimeters !== undefined ? `PC ${event.headCircumferenceMillimeters / 10} cm` : undefined,
-    event.notes,
-  ].filter(Boolean).join(' · ');
-}
 
 export function CareHistoryScreen({
   babyId,
   babyName,
   canManage,
   canRecord,
+  contactRepository,
   exportHistory,
+  exportReport,
+  familyName,
   onOpenSummary,
   repository,
   topContent,
@@ -106,6 +103,11 @@ export function CareHistoryScreen({
   const [showBulkConfirmation, setShowBulkConfirmation] = useState(false);
   const [isRetiring, setIsRetiring] = useState(false);
   const [showRetired, setShowRetired] = useState(false);
+  const [reportContacts, setReportContacts] = useState<BabyContact[]>([]);
+  const [reportEvents, setReportEvents] = useState<CareEvent[]>([]);
+  const [reportVisible, setReportVisible] = useState(false);
+  const [isReportLoading, setIsReportLoading] = useState(false);
+  const [isReportGenerating, setIsReportGenerating] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -187,12 +189,22 @@ export function CareHistoryScreen({
     setShowBulkConfirmation(false);
   }
 
+  const visibleEvents = history?.events ?? [];
+  const selectedEvents = visibleEvents.filter((event) =>
+    selectedKeys.has(getCareRecordKey(event)),
+  );
+  const exportEvents = getCareEventsForExport(visibleEvents, selectedKeys);
+  const isSelectionExport = selectedKeys.size > 0;
+  const exportCount = isSelectionExport ? exportEvents.length : history?.total ?? 0;
+
   async function handleExport() {
     if (!babyId || !babyName) return;
     setIsExporting(true);
     setError(undefined);
     try {
-      const events = await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
+      const events = isSelectionExport
+        ? exportEvents
+        : await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       await exportHistory(events, babyName);
     } catch {
       setError('No pudimos preparar el archivo para Excel.');
@@ -201,8 +213,56 @@ export function CareHistoryScreen({
     }
   }
 
-  const visibleEvents = history?.events ?? [];
-  const selectedEvents = visibleEvents.filter((event) => selectedKeys.has(getCareRecordKey(event)));
+  async function handleOpenReport() {
+    if (!babyId) return;
+    setIsReportLoading(true);
+    setError(undefined);
+
+    try {
+      const eventsPromise = isSelectionExport
+        ? Promise.resolve(exportEvents)
+        : repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
+      const [events, contacts] = await Promise.all([
+        eventsPromise,
+        contactRepository.loadActive(babyId),
+      ]);
+      setReportEvents(events);
+      setReportContacts(contacts);
+      setReportVisible(true);
+    } catch {
+      setReportVisible(false);
+      setError('No pudimos preparar los datos del informe.');
+    } finally {
+      setIsReportLoading(false);
+    }
+  }
+
+  async function handleGenerateReport(selection: CareReportSelection) {
+    if (!babyName) return;
+    setIsReportGenerating(true);
+    setError(undefined);
+
+    try {
+      await exportReport({
+        babyName,
+        columns: selection.columns,
+        contacts: selection.contacts,
+        events: reportEvents,
+        familyName,
+        filterLabel: isSelectionExport
+          ? `Selección manual · ${reportEvents.length} registros`
+          : selectedDate
+          ? `${filterLabels[filter]} · ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'long' }).format(new Date(`${selectedDate}T12:00:00`))}`
+          : filterLabels[filter],
+      });
+      setReportVisible(false);
+    } catch {
+      setError('No pudimos generar el informe PDF.');
+    } finally {
+      setIsReportGenerating(false);
+    }
+  }
+
   const pendingSingleEvent = visibleEvents.find(
     (event) => getCareRecordKey(event) === pendingRetireId,
   );
@@ -267,7 +327,7 @@ export function CareHistoryScreen({
           <Text style={styles.actionText}>Editar</Text>
         </Pressable>
         <Pressable
-          accessibilityLabel={`Quitar registro de ${eventLabels[event.type]} del relevo`}
+          accessibilityLabel={`Quitar registro de ${careEventLabels[event.type]} del relevo`}
           accessibilityRole="button"
           onPress={() => setPendingRetireId(key)}
           style={styles.actionLink}
@@ -290,12 +350,12 @@ export function CareHistoryScreen({
         <View key={key} style={styles.mobileRecord}>
           <View style={styles.mobileRecordHeader}>
             <View style={styles.mobileRecordIdentity}>
-              <Text style={styles.mobileType}>{eventLabels[event.type]}</Text>
+              <Text style={styles.mobileType}>{careEventLabels[event.type]}</Text>
               <Text style={styles.mobileDate}>{occurredAt}</Text>
             </View>
             {selection}
           </View>
-          <Text style={styles.mobileDetail}>{describeEvent(event)}</Text>
+          <Text style={styles.mobileDetail}>{describeCareEvent(event)}</Text>
           {retentionLabel ? (
             <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>
               {retentionLabel}
@@ -316,11 +376,11 @@ export function CareHistoryScreen({
         {selection}
         <Text style={[styles.cell, styles.dateCell]}>{occurredAt}</Text>
         <Text style={[styles.cell, styles.typeCell, styles.typeText]}>
-          {eventLabels[event.type]}
+          {careEventLabels[event.type]}
         </Text>
         <View style={[styles.cell, styles.detailCell]}>
           <Text numberOfLines={3} style={styles.detailText}>
-            {describeEvent(event)}
+            {describeCareEvent(event)}
           </Text>
           {retentionLabel ? (
             <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>
@@ -370,11 +430,14 @@ export function CareHistoryScreen({
                 <CareHistoryControls
                   eventFilter={filter}
                   events={visibleEvents}
-                  exportCount={history?.total ?? 0}
+                  exportCount={exportCount}
                   isExporting={isExporting}
+                  isReportPreparing={isReportLoading}
+                  isSelectionExport={isSelectionExport}
                   onChangeDate={(date) => resetPage(() => setSelectedDate(date))}
                   onChangeFilter={(value) => resetPage(() => setFilter(value))}
                   onExport={() => void handleExport()}
+                  onOpenReport={() => void handleOpenReport()}
                   selectedDate={selectedDate}
                 />
               ) : null}
@@ -465,6 +528,22 @@ export function CareHistoryScreen({
               </View>
               {editingEvent ? (
                 <CareEditSheet key={getCareRecordKey(editingEvent)} event={editingEvent} onClose={() => setEditingEvent(undefined)} onSaved={() => setLoadVersion((value) => value + 1)} repository={repository} />
+              ) : null}
+              {reportVisible ? (
+                <CareReportModal
+                  contacts={reportContacts}
+                  events={reportEvents}
+                  filterLabel={isSelectionExport
+                    ? `Selección manual · ${reportEvents.length} registros`
+                    : selectedDate
+                      ? `${filterLabels[filter]} · día seleccionado`
+                      : filterLabels[filter]}
+                  isGenerating={isReportGenerating}
+                  isLoading={isReportLoading}
+                  onClose={() => setReportVisible(false)}
+                  onGenerate={(selection) => void handleGenerateReport(selection)}
+                  visible
+                />
               ) : null}
             </>
           )}
