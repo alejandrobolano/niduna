@@ -5,7 +5,7 @@ import type { AppSection } from '@/features/home/domain/app-section';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface AppSectionNavigationProps {
-  careHistoryAvailable?: boolean;
+  careAvailable?: boolean;
   onChange: (section: AppSection) => void;
   placement?: 'header' | 'bottom';
   value: AppSection;
@@ -23,7 +23,7 @@ const sections = [
 }[];
 
 export function AppSectionNavigation({
-  careHistoryAvailable = true,
+  careAvailable = true,
   onChange,
   placement = 'header',
   value,
@@ -36,7 +36,9 @@ export function AppSectionNavigation({
       style={[styles.container, isBottom && styles.containerBottom]}
     >
       {sections.filter(
-        (section) => careHistoryAvailable || section.value !== 'history',
+        (section) =>
+          careAvailable ||
+          (section.value !== 'handoff' && section.value !== 'history'),
       ).map((section) => {
         const selected =
           value === section.value ||

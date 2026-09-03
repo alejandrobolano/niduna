@@ -15,7 +15,7 @@ interface AppHeaderProps {
   accountContent: ReactNode;
   activeBaby?: FamilyBabySummary;
   activeFamily: FamilyBabyGroup;
-  careHistoryAvailable: boolean;
+  careAvailable: boolean;
   compact: boolean;
   families: FamilyBabyGroup[];
   isCreatingBaby: boolean;
@@ -30,7 +30,7 @@ export function AppHeader({
   accountContent,
   activeBaby,
   activeFamily,
-  careHistoryAvailable,
+  careAvailable,
   compact,
   families,
   isCreatingBaby,
@@ -46,7 +46,7 @@ export function AppHeader({
       {compact ? null : (
         <View style={styles.navigation}>
           <AppSectionNavigation
-            careHistoryAvailable={careHistoryAvailable}
+            careAvailable={careAvailable}
             onChange={onChangeSection}
             value={section}
           />

@@ -1,4 +1,4 @@
-import { CircleHelp, ClipboardList, Moon, Users, X } from 'lucide-react-native';
+import { CircleHelp, ClipboardList, Heart, Moon, Users, X } from 'lucide-react-native';
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -23,6 +23,7 @@ interface GuidedOnboardingOverlayProps {
 }
 
 const stepIcons = {
+  baby: Heart,
   family: Users,
   handoff: Moon,
   help: CircleHelp,

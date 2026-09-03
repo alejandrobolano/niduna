@@ -52,7 +52,7 @@ import {
 import { FamilyScreen } from '@/features/family/presentation/family-screen';
 import { useFamilyBabyContext } from '@/features/family/presentation/use-family-baby-context';
 import {
-  canAccessCareHistory,
+  canAccessCare,
   resolveAccessibleAppSection,
 } from '@/features/home/domain/app-section-access';
 import type { AppSection } from '@/features/home/domain/app-section';
@@ -176,15 +176,15 @@ function AuthenticatedApp({
 
   const hasActiveFamily = Boolean(context.activeFamily);
   const activeBabyLifeStage = context.activeBaby?.lifeStage;
-  const careHistoryAvailable = canAccessCareHistory(activeBabyLifeStage);
+  const careAvailable = canAccessCare(activeBabyLifeStage);
   const onboardingSteps = useMemo(
     () =>
       getGuidedOnboardingSteps({
-        careHistoryAvailable,
+        careAvailable,
         hasActiveBaby: Boolean(context.activeBaby),
         hasActiveFamily,
       }),
-    [careHistoryAvailable, context.activeBaby, hasActiveFamily],
+    [careAvailable, context.activeBaby, hasActiveFamily],
   );
   const onboardingShouldStart =
     context.status === 'ready' &&
@@ -334,7 +334,7 @@ function AuthenticatedApp({
       accountContent={sessionBanner}
       activeBaby={context.activeBaby}
       activeFamily={activeFamily}
-      careHistoryAvailable={careHistoryAvailable}
+      careAvailable={careAvailable}
       compact={compactNavigation}
       families={context.families}
       isCreatingBaby={isCreatingBaby}
@@ -376,7 +376,7 @@ function AuthenticatedApp({
           ]}
         >
           <AppSectionNavigation
-            careHistoryAvailable={careHistoryAvailable}
+            careAvailable={careAvailable}
             onChange={changeSection}
             placement="bottom"
             value={activeSection}

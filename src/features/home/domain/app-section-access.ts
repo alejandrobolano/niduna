@@ -1,20 +1,20 @@
 import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
 import type { AppSection } from '@/features/home/domain/app-section';
 
-const careHistorySections = new Set<AppSection>(['history', 'summary']);
+const careSections = new Set<AppSection>(['handoff', 'history', 'summary']);
 
-export function canAccessCareHistory(
+export function canAccessCare(
   lifeStage: BabyLifeStage | undefined,
 ): boolean {
-  return lifeStage !== 'expected';
+  return lifeStage === 'born';
 }
 
 export function resolveAccessibleAppSection(
   section: AppSection,
   lifeStage: BabyLifeStage | undefined,
 ): AppSection {
-  if (!canAccessCareHistory(lifeStage) && careHistorySections.has(section)) {
-    return 'handoff';
+  if (!canAccessCare(lifeStage) && careSections.has(section)) {
+    return 'baby';
   }
 
   return section;

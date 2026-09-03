@@ -15,17 +15,17 @@ export interface GuidedOnboardingState {
 export interface GuidedOnboardingStep {
   description: string;
   eyebrow: string;
-  id: 'family' | 'handoff' | 'help' | 'history';
+  id: 'baby' | 'family' | 'handoff' | 'help' | 'history';
   section?: AppSection;
   title: string;
 }
 
 export function getGuidedOnboardingSteps({
-  careHistoryAvailable = true,
   hasActiveBaby,
+  careAvailable = hasActiveBaby,
   hasActiveFamily,
 }: {
-  careHistoryAvailable?: boolean;
+  careAvailable?: boolean;
   hasActiveBaby: boolean;
   hasActiveFamily: boolean;
 }): GuidedOnboardingStep[] {
@@ -45,16 +45,16 @@ export function getGuidedOnboardingSteps({
   const steps: GuidedOnboardingStep[] = [
     {
       description: !hasActiveBaby
-        ? 'Añade el perfil del bebé y después podrás registrar alimentación, pañal, sueño, medidas y notas aquí.'
-        : careHistoryAvailable
+        ? 'Añade el perfil del bebé y después podrás registrar alimentación, pañal, sueño, medidas y notas.'
+        : careAvailable
           ? 'Registra alimentación, pañal, sueño, medidas y notas sin abandonar esta pantalla.'
           : 'Consulta el estado prenatal y abre el perfil cuando necesites actualizar los datos antes del nacimiento.',
-      eyebrow: 'RELEVO',
-      id: 'handoff',
-      section: 'handoff',
+      eyebrow: careAvailable ? 'RELEVO' : 'BEBÉ',
+      id: careAvailable ? 'handoff' : 'baby',
+      section: careAvailable ? 'handoff' : 'baby',
       title: !hasActiveBaby
         ? 'Primero, añade al bebé'
-        : careHistoryAvailable
+        : careAvailable
           ? 'Deja constancia en segundos'
           : 'Todo listo para su llegada',
     },
@@ -75,7 +75,7 @@ export function getGuidedOnboardingSteps({
     },
   ];
 
-  if (careHistoryAvailable) {
+  if (careAvailable) {
     steps.splice(1, 0, {
       description: hasActiveBaby
         ? 'Consulta y filtra los cuidados. También podrás corregir, retirar y exportar los registros cuando lo necesites.'
