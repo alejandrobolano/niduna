@@ -6,10 +6,8 @@ import type {
   FamilyBabySummary,
 } from '@/features/family/domain/family-baby-context';
 import { FamilyBabySwitcher } from '@/features/family/presentation/family-baby-switcher';
-import {
-  AppSectionNavigation,
-  type AppSection,
-} from '@/features/home/presentation/app-section-navigation';
+import type { AppSection } from '@/features/home/domain/app-section';
+import { AppSectionNavigation } from '@/features/home/presentation/app-section-navigation';
 import { NidunaBrand } from '@/shared/presentation/niduna-mark';
 import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
@@ -17,6 +15,7 @@ interface AppHeaderProps {
   accountContent: ReactNode;
   activeBaby?: FamilyBabySummary;
   activeFamily: FamilyBabyGroup;
+  careHistoryAvailable: boolean;
   compact: boolean;
   families: FamilyBabyGroup[];
   isCreatingBaby: boolean;
@@ -31,6 +30,7 @@ export function AppHeader({
   accountContent,
   activeBaby,
   activeFamily,
+  careHistoryAvailable,
   compact,
   families,
   isCreatingBaby,
@@ -45,7 +45,11 @@ export function AppHeader({
       <NidunaBrand compact={compact} />
       {compact ? null : (
         <View style={styles.navigation}>
-          <AppSectionNavigation onChange={onChangeSection} value={section} />
+          <AppSectionNavigation
+            careHistoryAvailable={careHistoryAvailable}
+            onChange={onChangeSection}
+            value={section}
+          />
         </View>
       )}
       <View style={[styles.context, compact && styles.contextCompact]}>

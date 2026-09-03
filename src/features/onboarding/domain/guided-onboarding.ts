@@ -1,4 +1,4 @@
-import type { AppSection } from '@/features/home/presentation/app-section-navigation';
+import type { AppSection } from '@/features/home/domain/app-section';
 
 export const guidedOnboardingVersion = 1;
 
@@ -21,9 +21,11 @@ export interface GuidedOnboardingStep {
 }
 
 export function getGuidedOnboardingSteps({
+  careHistoryAvailable = true,
   hasActiveBaby,
   hasActiveFamily,
 }: {
+  careHistoryAvailable?: boolean;
   hasActiveBaby: boolean;
   hasActiveFamily: boolean;
 }): GuidedOnboardingStep[] {
@@ -40,24 +42,21 @@ export function getGuidedOnboardingSteps({
     ];
   }
 
-  return [
+  const steps: GuidedOnboardingStep[] = [
     {
-      description: hasActiveBaby
-        ? 'Registra alimentación, pañal, sueño, medidas y notas sin abandonar esta pantalla.'
-        : 'Añade el perfil del bebé y después podrás registrar alimentación, pañal, sueño, medidas y notas aquí.',
+      description: !hasActiveBaby
+        ? 'Añade el perfil del bebé y después podrás registrar alimentación, pañal, sueño, medidas y notas aquí.'
+        : careHistoryAvailable
+          ? 'Registra alimentación, pañal, sueño, medidas y notas sin abandonar esta pantalla.'
+          : 'Consulta el estado prenatal y abre el perfil cuando necesites actualizar los datos antes del nacimiento.',
       eyebrow: 'RELEVO',
       id: 'handoff',
       section: 'handoff',
-      title: hasActiveBaby ? 'Deja constancia en segundos' : 'Primero, añade al bebé',
-    },
-    {
-      description: hasActiveBaby
-        ? 'Consulta y filtra los cuidados. También podrás corregir, retirar y exportar los registros cuando lo necesites.'
-        : 'Cuando exista el primer cuidado, aquí podrás consultarlo, filtrarlo, corregirlo, retirarlo o exportarlo.',
-      eyebrow: 'REGISTRO',
-      id: 'history',
-      section: 'history',
-      title: 'Todo el historial, en orden',
+      title: !hasActiveBaby
+        ? 'Primero, añade al bebé'
+        : careHistoryAvailable
+          ? 'Deja constancia en segundos'
+          : 'Todo listo para su llegada',
     },
     {
       description:
@@ -75,6 +74,20 @@ export function getGuidedOnboardingSteps({
       title: 'La ayuda no termina aquí',
     },
   ];
+
+  if (careHistoryAvailable) {
+    steps.splice(1, 0, {
+      description: hasActiveBaby
+        ? 'Consulta y filtra los cuidados. También podrás corregir, retirar y exportar los registros cuando lo necesites.'
+        : 'Cuando exista el primer cuidado, aquí podrás consultarlo, filtrarlo, corregirlo, retirarlo o exportarlo.',
+      eyebrow: 'REGISTRO',
+      id: 'history',
+      section: 'history',
+      title: 'Todo el historial, en orden',
+    });
+  }
+
+  return steps;
 }
 
 export function shouldStartGuidedOnboarding(

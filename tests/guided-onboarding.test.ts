@@ -64,4 +64,20 @@ describe('guided onboarding', () => {
     expect(steps[0]?.title).toContain('bebé');
     expect(steps.at(-1)?.section).toBeUndefined();
   });
+
+  it('does not navigate to care history while the active baby is expected', () => {
+    const steps = getGuidedOnboardingSteps({
+      careHistoryAvailable: false,
+      hasActiveBaby: true,
+      hasActiveFamily: true,
+    });
+
+    expect(steps.map((step) => step.id)).toEqual([
+      'handoff',
+      'family',
+      'help',
+    ]);
+    expect(steps[0]?.title).toBe('Todo listo para su llegada');
+    expect(steps.some((step) => step.section === 'history')).toBe(false);
+  });
 });
