@@ -4,17 +4,21 @@ import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
+import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   email: string;
+  userId: string;
   onOpenAccountSettings: () => void;
   onOpenFamilyActivity?: () => void;
 }
 
 export function SessionBanner({
   email,
+  userId,
   onOpenAccountSettings,
   onOpenFamilyActivity,
 }: SessionBannerProps) {
@@ -47,9 +51,7 @@ export function SessionBanner({
           pressed && styles.buttonPressed,
         ]}
       >
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{email.slice(0, 1).toUpperCase()}</Text>
-        </View>
+        <AnimalAvatar accessibilityLabel="Tu avatar" size={34} variant={resolveMemberAvatar(userId)} />
       </Pressable>
       <Modal
         animationType="fade"
@@ -78,11 +80,7 @@ export function SessionBanner({
             </View>
             <View style={styles.panelContent}>
               <View style={styles.identity}>
-                <View style={styles.panelAvatar}>
-                  <Text style={styles.panelAvatarText}>
-                    {email.slice(0, 1).toUpperCase()}
-                  </Text>
-                </View>
+                <AnimalAvatar accessibilityLabel="Tu avatar" size={52} variant={resolveMemberAvatar(userId)} />
                 <View style={styles.copy}>
                   <Text numberOfLines={2} style={styles.email}>
                     {email}

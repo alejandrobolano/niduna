@@ -273,6 +273,7 @@ function AuthenticatedApp({
   const sessionBanner = (
     <SessionBanner
       email={user.email}
+      userId={user.id}
       onOpenAccountSettings={() => router.push('/settings')}
       onOpenFamilyActivity={
         canManageBabies ? () => changeSection('activity') : undefined

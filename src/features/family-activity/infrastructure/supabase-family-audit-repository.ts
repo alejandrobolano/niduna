@@ -54,6 +54,7 @@ export const supabaseFamilyAuditRepository: FamilyAuditRepository = {
     return {
       entries: (rows ?? []).map((row) => ({
         action: row.action,
+        actorId: row.actor_user_id ?? undefined,
         actorName: row.actor_user_id
           ? actorNames.get(row.actor_user_id)
           : undefined,

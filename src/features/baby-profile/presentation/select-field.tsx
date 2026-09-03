@@ -4,12 +4,33 @@ import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { resolveBabyAvatar, resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 export interface SelectOption<T extends string> {
+  avatarSeed?: string;
+  avatarType?: 'baby' | 'member';
   imageUrl?: string;
   label: string;
   supportingText?: string;
   value: T;
+}
+
+function OptionAvatar<T extends string>({ option, size }: { option: SelectOption<T>; size: number }) {
+  if (!option.avatarSeed || !option.avatarType) return null;
+
+  const variant = option.avatarType === 'baby'
+    ? resolveBabyAvatar(option.avatarSeed)
+    : resolveMemberAvatar(option.avatarSeed);
+
+  return (
+    <AnimalAvatar
+      accessibilityLabel={`Avatar de ${option.label}`}
+      photoUrl={option.imageUrl}
+      size={size}
+      variant={variant}
+    />
+  );
 }
 
 function getOptionMark(label: string): string {
@@ -69,7 +90,9 @@ export function SelectField<T extends string>({
           pressed && !disabled && styles.triggerPressed,
         ]}
       >
-        {selectedOption?.imageUrl ? (
+        {selectedOption?.avatarSeed && selectedOption.avatarType ? (
+          <OptionAvatar option={selectedOption} size={44} />
+        ) : selectedOption?.imageUrl ? (
           <Image
             accessibilityLabel={`Foto de ${selectedOption.label}`}
             cachePolicy="memory-disk"
@@ -142,7 +165,9 @@ export function SelectField<T extends string>({
                       pressed && styles.pressed,
                     ]}
                   >
-                    {option.imageUrl ? (
+                    {option.avatarSeed && option.avatarType ? (
+                      <OptionAvatar option={option} size={38} />
+                    ) : option.imageUrl ? (
                       <Image
                         accessibilityLabel={`Foto de ${option.label}`}
                         cachePolicy="memory-disk"

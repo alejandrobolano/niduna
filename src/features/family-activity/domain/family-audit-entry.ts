@@ -11,6 +11,7 @@ export type FamilyAuditEntityType =
 
 export interface FamilyAuditEntry {
   action: FamilyAuditAction;
+  actorId?: string;
   actorName?: string;
   createdAt: string;
   details: unknown;

@@ -125,6 +125,7 @@ function AuthenticatedSettings({
       }
       deviceContent={deviceContent}
       email={email}
+      userId={userId}
       notificationContent={
         activeFamily && visibility.showNotifications ? (
           <NotificationSettingsPanel

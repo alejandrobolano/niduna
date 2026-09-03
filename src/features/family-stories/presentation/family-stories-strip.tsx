@@ -23,6 +23,8 @@ import {
 } from '@/features/family-stories/domain/family-story';
 import { pickAndPrepareStoryImage } from '@/features/family-stories/infrastructure/story-image-picker';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 const storyDurationMilliseconds = 5_000;
 
@@ -148,7 +150,7 @@ function StoryViewer({
         </View>
         <View style={styles.viewerHeader}>
           <View style={styles.viewerAuthorBadge}>
-            <Image cachePolicy="memory" contentFit="cover" source={story.imageUrl} style={styles.viewerAuthorImage} />
+            <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} size={38} variant={resolveMemberAvatar(group.author.id)} />
           </View>
           <View style={styles.viewerAuthorCopy}>
             <Text style={styles.viewerAuthorName}>{group.author.displayName}</Text>
@@ -378,12 +380,7 @@ export function FamilyStoriesStrip({
           <Pressable key={group.author.id} onPress={() => setSelectedGroup(group)} style={styles.bubbleAction}>
             <View style={[styles.storyRing, group.hasUnseenStories ? styles.unseenRing : styles.seenRing]}>
               <View style={styles.avatar}>
-                <Image
-                  cachePolicy="memory"
-                  contentFit="cover"
-                  source={group.stories.at(-1)?.imageUrl}
-                  style={styles.avatarImage}
-                />
+                <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} size={50} variant={resolveMemberAvatar(group.author.id)} />
               </View>
             </View>
             <Text numberOfLines={1} style={styles.bubbleLabel}>{group.author.id === userId ? 'Tú' : group.author.displayName}</Text>

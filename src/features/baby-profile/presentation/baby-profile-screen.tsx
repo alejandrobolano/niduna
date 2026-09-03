@@ -43,6 +43,8 @@ import type {
   SexAtBirth,
 } from '@/features/baby-profile/domain/baby-profile';
 import { pickAndPrepareBabyPhoto } from '@/features/baby-profile/infrastructure/baby-photo-image-picker';
+import { resolveBabyAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SegmentedControl } from '@/features/baby-profile/presentation/segmented-control';
@@ -540,7 +542,11 @@ export function BabyProfileScreen({
                     transition={180}
                   />
                 ) : (
-                  <Heart color={colors.coral} size={24} />
+                  <AnimalAvatar
+                    accessibilityLabel={`Avatar de ${name || 'bebé'}`}
+                    size={64}
+                    variant={resolveBabyAvatar(storedBabyId ?? `${familyId}:${name}`)}
+                  />
                 )}
               </Pressable>
               <View style={styles.photoCopy}>

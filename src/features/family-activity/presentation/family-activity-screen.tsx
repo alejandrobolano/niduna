@@ -17,6 +17,8 @@ import type {
 } from '@/features/family-activity/application/family-audit-repository';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 interface FamilyActivityScreenProps {
   familyId: string;
@@ -120,7 +122,10 @@ export function FamilyActivityScreen({
                 {(result?.entries ?? []).map((entry) => (
                   <View key={entry.id} style={styles.mobileEntry}>
                     <View style={styles.mobileEntryHeader}>
-                      <Text style={styles.mobileActor}>{entry.actorName ?? 'Un familiar'}</Text>
+                      <View style={styles.actorIdentity}>
+                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} size={32} variant={resolveMemberAvatar(entry.actorId)} /> : null}
+                        <Text style={styles.mobileActor}>{entry.actorName ?? 'Un familiar'}</Text>
+                      </View>
                       <Text style={styles.mobileEntity}>{entityLabels[entry.entityType]}</Text>
                     </View>
                     <Text style={styles.mobileActivity}>{describeFamilyAuditAction(entry)}</Text>
@@ -155,9 +160,10 @@ export function FamilyActivityScreen({
                           timeStyle: 'short',
                         }).format(new Date(entry.createdAt))}
                       </Text>
-                      <Text style={[styles.cell, styles.actorCell, styles.actorText]}>
-                        {entry.actorName ?? 'Un familiar'}
-                      </Text>
+                      <View style={[styles.cell, styles.actorCell, styles.actorIdentity]}>
+                        {entry.actorId ? <AnimalAvatar accessibilityLabel={`Avatar de ${entry.actorName ?? 'un familiar'}`} size={32} variant={resolveMemberAvatar(entry.actorId)} /> : null}
+                        <Text style={styles.actorText}>{entry.actorName ?? 'Un familiar'}</Text>
+                      </View>
                       <Text style={[styles.cell, styles.activityCell]}>
                         {describeFamilyAuditAction(entry)}
                       </Text>
@@ -238,6 +244,7 @@ const styles = createThemedStyleSheet((colors) => ({
     justifyContent: 'space-between',
   },
   mobileActor: { color: colors.text, flex: 1, fontSize: 14, fontWeight: '900' },
+  actorIdentity: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: spacing.sm },
   mobileEntity: {
     backgroundColor: colors.lavenderSoft,
     borderRadius: radius.pill,
@@ -256,7 +263,7 @@ const styles = createThemedStyleSheet((colors) => ({
   headerText: { color: colors.textMuted, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
   dateCell: { width: 155 },
   actorCell: { width: 165 },
-  actorText: { fontWeight: '900' },
+  actorText: { color: colors.text, flex: 1, fontSize: 14, fontWeight: '900' },
   activityCell: { flex: 1, minWidth: 370 },
   entityCell: { width: 120 },
   noRows: { color: colors.textMuted, padding: spacing.xl, textAlign: 'center' },

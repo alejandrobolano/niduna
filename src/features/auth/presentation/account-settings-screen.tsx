@@ -13,6 +13,8 @@ import { BackHandler, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 interface AccountSettingsScreenProps {
   appearanceContent: ReactNode;
@@ -20,6 +22,7 @@ interface AccountSettingsScreenProps {
   dataContent: ReactNode;
   deviceContent?: ReactNode;
   email: string;
+  userId: string;
   notificationContent?: ReactNode;
   onBack: () => void;
   onOpenHelp: () => void;
@@ -52,6 +55,7 @@ export function AccountSettingsScreen({
   dataContent,
   deviceContent,
   email,
+  userId,
   notificationContent,
   onBack,
   onOpenHelp,
@@ -92,11 +96,7 @@ export function AccountSettingsScreen({
 
           <SettingsSection icon={UserRound} title="Perfil">
             <View style={styles.identity}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {email.slice(0, 1).toUpperCase()}
-                </Text>
-              </View>
+              <AnimalAvatar accessibilityLabel="Tu avatar" size={52} variant={resolveMemberAvatar(userId)} />
               <View style={styles.identityCopy}>
                 <Text numberOfLines={2} style={styles.email}>
                   {email}
