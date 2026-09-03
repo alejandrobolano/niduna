@@ -9,6 +9,7 @@ import {
   type FamilyInvitationRow,
 } from '@/features/family/infrastructure/supabase-family-mapper';
 import { supabase } from '@/shared/infrastructure/supabase/client';
+import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 
 function mapErrorReason(message: string): FamilyOperationErrorReason {
   if (message.includes('invalid_invitation_code')) {
@@ -94,17 +95,22 @@ export const supabaseFamilyRepository: FamilyRepository = {
     const userIds = [...new Set(members.map((member) => member.user_id))];
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, display_name')
+      .select('id, display_name, avatar_key, avatar_path')
       .in('id', userIds);
 
     if (profilesError) {
       throwOperationError(profilesError.message);
     }
 
+    const profilePhotoUrls = await createProfilePhotoUrls(profiles.flatMap((profile) => profile.avatar_path ? [profile.avatar_path] : []));
+
     return mapFamilies(
       families,
       members,
-      profiles,
+      profiles.map((profile) => ({
+        ...profile,
+        avatar_url: profile.avatar_path ? profilePhotoUrls.get(profile.avatar_path) : undefined,
+      })),
       invitations as FamilyInvitationRow[],
       userId,
     );

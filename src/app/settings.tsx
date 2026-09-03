@@ -11,6 +11,8 @@ import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-scr
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { AuthScreen } from '@/features/auth/presentation/auth-screen';
 import { AccountSettingsScreen } from '@/features/auth/presentation/account-settings-screen';
+import { supabaseProfileAvatarRepository } from '@/features/avatars/infrastructure/supabase-profile-avatar-repository';
+import { ProfileAvatarEditor } from '@/features/avatars/presentation/profile-avatar-editor';
 import { supabaseDataExportRepository } from '@/features/data-export/infrastructure/supabase-data-export-repository';
 import { DataExportAction } from '@/features/data-export/presentation/data-export-action';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
@@ -124,7 +126,14 @@ function AuthenticatedSettings({
         />
       }
       deviceContent={deviceContent}
-      email={email}
+      profileContent={
+        <ProfileAvatarEditor
+          email={email}
+          relationship={activeFamily?.currentUserRelationship}
+          repository={supabaseProfileAvatarRepository}
+          userId={userId}
+        />
+      }
       notificationContent={
         activeFamily && visibility.showNotifications ? (
           <NotificationSettingsPanel

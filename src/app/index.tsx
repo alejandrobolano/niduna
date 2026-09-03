@@ -1,8 +1,9 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   type ReactNode,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -15,6 +16,7 @@ import { AuthScreen } from '@/features/auth/presentation/auth-screen';
 import { SessionBanner } from '@/features/auth/presentation/session-banner';
 import { supabaseBabyProfileRepository } from '@/features/baby-profile/infrastructure/supabase-baby-profile-repository';
 import { supabaseBabyPhotoRepository } from '@/features/baby-profile/infrastructure/supabase-baby-photo-repository';
+import { supabaseBabyAvatarRepository } from '@/features/avatars/infrastructure/supabase-baby-avatar-repository';
 import { BabyProfileScreen } from '@/features/baby-profile/presentation/baby-profile-screen';
 import { supabaseBabyDocumentRepository } from '@/features/baby-documents/infrastructure/supabase-baby-document-repository';
 import { BabyDocumentsScreen } from '@/features/baby-documents/presentation/baby-documents-screen';
@@ -152,9 +154,22 @@ function AuthenticatedApp({
   const [replayRequested, setReplayRequested] = useState(() =>
     consumeGuidedOnboardingReplay(user.id),
   );
+  const hasCompletedInitialFocus = useRef(false);
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
+  );
+  const refreshFamilyBabyContext = context.refresh;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasCompletedInitialFocus.current) {
+        hasCompletedInitialFocus.current = true;
+        return;
+      }
+
+      void refreshFamilyBabyContext();
+    }, [refreshFamilyBabyContext]),
   );
 
   const hasActiveFamily = Boolean(context.activeFamily);
@@ -272,7 +287,10 @@ function AuthenticatedApp({
     canManageBabies || activeFamily?.role === 'caregiver';
   const sessionBanner = (
     <SessionBanner
+      avatarKey={activeFamily?.currentUserAvatarKey}
+      avatarUrl={activeFamily?.currentUserAvatarUrl}
       email={user.email}
+      relationship={activeFamily?.currentUserRelationship}
       onOpenAccountSettings={() => router.push('/settings')}
       onOpenFamilyActivity={
         canManageBabies ? () => changeSection('activity') : undefined
@@ -472,6 +490,7 @@ function AuthenticatedApp({
     section === 'baby' ? (
       <BabyProfileScreen
         babyId={isCreatingBaby ? undefined : context.activeBaby?.id}
+        babyAvatarRepository={supabaseBabyAvatarRepository}
         babyPhotoRepository={supabaseBabyPhotoRepository}
         canManageBabies={canManageBabies}
         familyId={activeFamily.id}

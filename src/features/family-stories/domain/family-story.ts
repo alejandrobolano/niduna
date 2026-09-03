@@ -1,7 +1,13 @@
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship } from '@/features/family/domain/family';
+
 export interface FamilyStory {
   author: {
+    avatarKey?: MemberAvatarVariant;
+    avatarUrl?: string;
     displayName: string;
     id: string;
+    relationship?: FamilyRelationship;
   };
   createdAt: string;
   expiresAt: string;

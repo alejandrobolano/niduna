@@ -19,7 +19,7 @@ interface AccountSettingsScreenProps {
   dangerContent: ReactNode;
   dataContent: ReactNode;
   deviceContent?: ReactNode;
-  email: string;
+  profileContent: ReactNode;
   notificationContent?: ReactNode;
   onBack: () => void;
   onOpenHelp: () => void;
@@ -51,7 +51,7 @@ export function AccountSettingsScreen({
   dangerContent,
   dataContent,
   deviceContent,
-  email,
+  profileContent,
   notificationContent,
   onBack,
   onOpenHelp,
@@ -91,21 +91,7 @@ export function AccountSettingsScreen({
           </View>
 
           <SettingsSection icon={UserRound} title="Perfil">
-            <View style={styles.identity}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {email.slice(0, 1).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.identityCopy}>
-                <Text numberOfLines={2} style={styles.email}>
-                  {email}
-                </Text>
-                <Text style={styles.caption}>
-                  Sesión protegida en este dispositivo
-                </Text>
-              </View>
-            </View>
+            {profileContent}
           </SettingsSection>
 
           <SettingsSection icon={Bell} title="Preferencias">
@@ -228,28 +214,6 @@ const styles = createThemedStyleSheet((colors) => ({
     width: 40,
   },
   sectionTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
-  identity: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: colors.lavenderSoft,
-    borderRadius: radius.md,
-    height: 52,
-    justifyContent: 'center',
-    width: 52,
-  },
-  avatarText: { color: colors.lavender, fontSize: 20, fontWeight: '900' },
-  identityCopy: { flex: 1 },
-  email: { color: colors.text, fontSize: 14, fontWeight: '900' },
-  caption: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: spacing.xs,
-  },
   onboardingAction: {
     alignItems: 'center',
     flexDirection: 'row',

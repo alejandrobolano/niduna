@@ -5,6 +5,7 @@ import {
 import type { FamilyStory } from '@/features/family-stories/domain/family-story';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
+import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 
 const signedUrlLifetimeSeconds = 5 * 60;
 
@@ -69,7 +70,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
   async load(babyId, userId) {
     const { data: rows, error } = await supabase
       .from('family_stories')
-      .select('id, author_user_id, created_at, expires_at, storage_path')
+      .select('id, author_user_id, family_id, created_at, expires_at, storage_path')
       .eq('baby_id', babyId)
       .order('created_at', { ascending: true });
 
@@ -83,11 +84,16 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
 
     const authorIds = [...new Set(rows.map((row) => row.author_user_id))];
     const storyIds = rows.map((row) => row.id);
-    const [profilesResult, viewsResult, urlsResult] = await Promise.all([
+    const [profilesResult, membershipsResult, viewsResult, urlsResult] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, display_name')
+        .select('id, display_name, avatar_key, avatar_path')
         .in('id', authorIds),
+      supabase
+        .from('family_members')
+        .select('user_id, relationship')
+        .eq('family_id', rows[0].family_id)
+        .in('user_id', authorIds),
       supabase
         .from('family_story_views')
         .select('story_id')
@@ -101,7 +107,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         ),
     ]);
     const relatedError =
-      profilesResult.error ?? viewsResult.error ?? urlsResult.error;
+      profilesResult.error ?? membershipsResult.error ?? viewsResult.error ?? urlsResult.error;
 
     if (relatedError) {
       throw mapError('code' in relatedError ? relatedError.code : undefined);
@@ -113,6 +119,9 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         profile.display_name?.trim() || 'Familiar',
       ]),
     );
+    const profiles = new Map((profilesResult.data ?? []).map((profile) => [profile.id, profile]));
+    const relationships = new Map((membershipsResult.data ?? []).map((membership) => [membership.user_id, membership.relationship]));
+    const avatarUrls = await createProfilePhotoUrls((profilesResult.data ?? []).map((profile) => profile.avatar_path));
     const viewedIds = new Set(
       (viewsResult.data ?? []).map((view) => view.story_id),
     );
@@ -126,8 +135,13 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
 
       return [{
         author: {
+          avatarKey: profiles.get(row.author_user_id)?.avatar_key ?? undefined,
+          avatarUrl: profiles.get(row.author_user_id)?.avatar_path
+            ? avatarUrls.get(profiles.get(row.author_user_id)!.avatar_path!)
+            : undefined,
           displayName: names.get(row.author_user_id) ?? 'Familiar',
           id: row.author_user_id,
+          relationship: relationships.get(row.author_user_id),
         },
         createdAt: row.created_at,
         expiresAt: row.expires_at,

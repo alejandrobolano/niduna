@@ -4,17 +4,26 @@ import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
+import { resolveMemberAvatar, type MemberAvatarVariant } from '@/features/avatars/domain/avatar';
+import type { FamilyRelationship } from '@/features/family/domain/family';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   email: string;
+  avatarKey?: MemberAvatarVariant;
+  avatarUrl?: string;
+  relationship?: FamilyRelationship;
   onOpenAccountSettings: () => void;
   onOpenFamilyActivity?: () => void;
 }
 
 export function SessionBanner({
   email,
+  avatarKey,
+  avatarUrl,
+  relationship,
   onOpenAccountSettings,
   onOpenFamilyActivity,
 }: SessionBannerProps) {
@@ -47,9 +56,7 @@ export function SessionBanner({
           pressed && styles.buttonPressed,
         ]}
       >
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{email.slice(0, 1).toUpperCase()}</Text>
-        </View>
+        <AnimalAvatar accessibilityLabel="Tu avatar" photoUrl={avatarUrl} size={34} variant={resolveMemberAvatar(avatarKey, relationship)} />
       </Pressable>
       <Modal
         animationType="fade"
@@ -78,11 +85,7 @@ export function SessionBanner({
             </View>
             <View style={styles.panelContent}>
               <View style={styles.identity}>
-                <View style={styles.panelAvatar}>
-                  <Text style={styles.panelAvatarText}>
-                    {email.slice(0, 1).toUpperCase()}
-                  </Text>
-                </View>
+                <AnimalAvatar accessibilityLabel="Tu avatar" photoUrl={avatarUrl} size={52} variant={resolveMemberAvatar(avatarKey, relationship)} />
                 <View style={styles.copy}>
                   <Text numberOfLines={2} style={styles.email}>
                     {email}

@@ -39,12 +39,15 @@ type FamilyRelationship =
 type FamilyRole = 'owner' | 'admin' | 'caregiver' | 'viewer';
 type RhesusFactor = 'positive' | 'negative';
 type SexAtBirth = 'female' | 'male' | 'intersex' | 'unknown';
+type MemberAvatarKey = 'rabbit' | 'bear' | 'fox' | 'koala' | 'otter' | 'owl';
+type BabyAvatarKey = MemberAvatarKey | 'chick' | 'lamb' | 'seal';
 
 export type Database = {
   public: {
     Tables: {
       profiles: Table<
         {
+          avatar_key: MemberAvatarKey | null;
           avatar_path: string | null;
           created_at: string;
           display_name: string | null;
@@ -52,11 +55,13 @@ export type Database = {
           updated_at: string;
         },
         {
+          avatar_key?: MemberAvatarKey | null;
           avatar_path?: string | null;
           display_name?: string | null;
           id: string;
         },
         {
+          avatar_key?: MemberAvatarKey | null;
           avatar_path?: string | null;
           display_name?: string | null;
         }
@@ -357,6 +362,7 @@ export type Database = {
       >;
       babies: Table<
         {
+          avatar_key: BabyAvatarKey | null;
           archived_at: string | null;
           archived_by: string | null;
           birth_date: string | null;
@@ -377,6 +383,7 @@ export type Database = {
           updated_at: string;
         },
         {
+          avatar_key?: BabyAvatarKey | null;
           birth_date?: string | null;
           blood_group?: BloodGroup | null;
           expected_due_date?: string | null;
@@ -391,6 +398,7 @@ export type Database = {
           sex_at_birth?: SexAtBirth | null;
         },
         {
+          avatar_key?: BabyAvatarKey | null;
           birth_date?: string | null;
           blood_group?: BloodGroup | null;
           expected_due_date?: string | null;

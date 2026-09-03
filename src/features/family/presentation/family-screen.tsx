@@ -47,6 +47,8 @@ import type {
   FamilyRole,
   InvitableFamilyRole,
 } from '@/features/family/domain/family';
+import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-context';
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
@@ -943,13 +945,12 @@ export function FamilyScreen({
                 <View style={styles.memberList}>
                   {selectedFamily.members.map((member) => (
                     <View key={member.id} style={styles.memberRow}>
-                      <View style={styles.memberAvatar}>
-                        <Text style={styles.memberAvatarText}>
-                          {(member.displayName ?? (member.isCurrentUser ? 'Tú' : 'M'))
-                            .slice(0, 1)
-                            .toUpperCase()}
-                        </Text>
-                      </View>
+                      <AnimalAvatar
+                        accessibilityLabel={`Avatar de ${member.displayName ?? 'miembro de la familia'}`}
+                        size={48}
+                        photoUrl={member.avatarUrl}
+                        variant={resolveMemberAvatar(member.avatarKey, member.relationship)}
+                      />
                       <View style={styles.memberCopy}>
                         <Text style={styles.memberName}>
                           {member.displayName ??
