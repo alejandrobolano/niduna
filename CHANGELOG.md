@@ -33,6 +33,11 @@ versión correspondiente.
 - El centro de ayuda y las pantallas de exportación distinguen entre la copia
   personal y la copia completa de una familia.
 
+### Fixed
+
+- La navegación inferior web se mantiene ajustada al viewport visible y aplica
+  una sola vez el área segura de Safari y las PWA instaladas en iPhone.
+
 ## [1.0.0] - 2026-08-25
 
 ### Added

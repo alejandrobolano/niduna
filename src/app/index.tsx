@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { Platform, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AuthenticatedUser } from '@/features/auth/domain/auth';
@@ -370,9 +370,11 @@ function AuthenticatedApp({
       {onboardingOverlay}
       {compactNavigation ? (
         <View
+          nativeID={Platform.OS === 'web' ? 'niduna-bottom-navigation' : undefined}
           style={[
             styles.bottomNavigation,
-            { paddingBottom: insets.bottom },
+            Platform.OS !== 'web' && styles.bottomNavigationNative,
+            { paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom },
           ]}
         >
           <AppSectionNavigation
@@ -565,10 +567,12 @@ const styles = createThemedStyleSheet((colors) => ({
     backgroundColor: colors.surface,
     borderTopColor: colors.border,
     borderTopWidth: 1,
+    zIndex: 2,
+  },
+  bottomNavigationNative: {
     bottom: 0,
     left: 0,
     position: 'absolute',
     right: 0,
-    zIndex: 2,
   },
 }));
