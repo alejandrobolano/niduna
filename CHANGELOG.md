@@ -9,13 +9,16 @@ versión correspondiente.
 
 ### Added
 
-- Gestión privada de documentos del bebé con acceso temporal para los miembros
-  autorizados de la familia.
-- Directorio de contactos del bebé con enlaces externos, ubicaciones, archivos
-  vCard y códigos QR para guardarlos en otros dispositivos.
-- Informes PDF personalizados a partir de los registros seleccionados.
-- Avatares de animales Nuni asignados automáticamente y personalizables para
-  bebés y miembros de la familia.
+- Gestión privada de documentos PDF, JPG y PNG del bebé, organizados por
+  categoría y fecha, con opciones para abrir, guardar, editar, retirar y
+  restaurar según los permisos familiares.
+- Directorio de contactos del bebé con acceso a llamadas, correo y ubicación,
+  apertura en aplicaciones de mapas y opciones vCard y QR para guardarlos o
+  compartirlos desde otros dispositivos.
+- Informes PDF personalizados a partir de los registros seleccionados, con
+  columnas y contactos configurables antes de guardarlos o compartirlos.
+- Avatares de animales Nuni asignados según la relación familiar o los datos
+  del bebé, con posibilidad de elegir otro animal o utilizar una fotografía.
 - Las copias personales incluyen los contactos, los metadatos de documentos y
   los archivos publicados aportados por la persona que solicita la descarga.
 - Las copias familiares incluyen los contactos, documentos y archivos
@@ -23,10 +26,10 @@ versión correspondiente.
 
 ### Changed
 
-- Los apartados del perfil del bebé que ya contienen información se protegen
-  frente a modificaciones accidentales mediante controles de desbloqueo.
-- Relevo y Registro solo se muestran cuando la familia tiene un bebé nacido al
-  que se pueda realizar seguimiento.
+- Los apartados cumplimentados del perfil del bebé se protegen frente a cambios
+  accidentales mediante controles de bloqueo independientes.
+- Relevo, Registro y sus pasos del recorrido guiado solo están disponibles
+  cuando la familia tiene un bebé nacido al que se pueda realizar seguimiento.
 - El centro de ayuda y las pantallas de exportación distinguen entre la copia
   personal y la copia completa de una familia.
 
