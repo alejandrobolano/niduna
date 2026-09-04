@@ -1,8 +1,34 @@
 # Changelog
 
 Todos los cambios relevantes de Niduna se documentan en este archivo mediante
-versionado semántico. Las próximas entradas se generarán desde commits
-convencionales mediante una pull request de publicación.
+versionado semántico. Cada pull request de producto añade sus cambios a la
+sección `Unreleased`; la pull request de publicación los consolida bajo la
+versión correspondiente.
+
+## [Unreleased]
+
+### Added
+
+- Gestión privada de documentos del bebé con acceso temporal para los miembros
+  autorizados de la familia.
+- Directorio de contactos del bebé con enlaces externos, ubicaciones, archivos
+  vCard y códigos QR para guardarlos en otros dispositivos.
+- Informes PDF personalizados a partir de los registros seleccionados.
+- Avatares de animales Nuni asignados automáticamente y personalizables para
+  bebés y miembros de la familia.
+- Las copias personales incluyen los contactos, los metadatos de documentos y
+  los archivos publicados aportados por la persona que solicita la descarga.
+- Las copias familiares incluyen los contactos, documentos y archivos
+  publicados de toda la familia para propietarios y administradores.
+
+### Changed
+
+- Los apartados del perfil del bebé que ya contienen información se protegen
+  frente a modificaciones accidentales mediante controles de desbloqueo.
+- Relevo y Registro solo se muestran cuando la familia tiene un bebé nacido al
+  que se pueda realizar seguimiento.
+- El centro de ayuda y las pantallas de exportación distinguen entre la copia
+  personal y la copia completa de una familia.
 
 ## [1.0.0] - 2026-08-25
 

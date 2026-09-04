@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: 11.9.0
@@ -28,6 +30,13 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Verify changelog update
+        if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+        run: |
+          git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" | grep -Fxq CHANGELOG.md || {
+            echo "Every product pull request must update CHANGELOG.md under Unreleased."
+            exit 1
+          }
       - run: pnpm version:check
       - run: pnpm exec expo customize tsconfig.json
       - run: pnpm typecheck

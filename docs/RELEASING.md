@@ -15,10 +15,13 @@ contains a version-bumping change.
 
 ## Automated flow
 
-1. Product pull requests are merged into `master`.
-2. Release Please creates or updates one release pull request.
-3. The release pull request shows the next version and generated changelog.
-4. Merging it creates the GitHub tag and release.
+1. Every product pull request adds a concise user-facing entry under
+   `Unreleased` in `CHANGELOG.md`.
+2. Product pull requests are merged into `master`.
+3. Release Please creates or updates one release pull request.
+4. The release pull request assigns the pending entries to the next version,
+   removes duplicate generated notes and synchronizes all version files.
+5. Merging it creates the GitHub tag and release.
 
 Release Please uses the repository `GITHUB_TOKEN` by default. An optional
 `RELEASE_PLEASE_TOKEN` fine-grained personal access token, with read/write
@@ -43,6 +46,7 @@ Run `pnpm version:check` locally whenever version files are changed manually.
 The existing `pnpm version:set <version>` command remains available for recovery
 or an explicitly coordinated manual release.
 
-Do not bump the version in ordinary product pull requests. Conventional commits
-accumulate in the release pull request, which updates `package.json`, `app.json`,
-`.release-please-manifest.json` and `CHANGELOG.md` together.
+Do not bump the version in ordinary product pull requests. Update only the
+`Unreleased` section of `CHANGELOG.md`. Conventional commits accumulate in the
+release pull request, which assigns the final version and updates `package.json`,
+`app.json`, `.release-please-manifest.json` and `CHANGELOG.md` together.
