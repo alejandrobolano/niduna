@@ -2,6 +2,37 @@ export type PortableExportRequest =
   | { type: 'personal' }
   | { familyId: string; type: 'family' };
 
+export interface PortableExportFile {
+  fileName?: string;
+  path: string;
+}
+
+export function canExportFamily(role: unknown): boolean {
+  return role === 'owner' || role === 'admin';
+}
+
+export function getActiveDocumentFiles(
+  documents: Record<string, unknown>[],
+): PortableExportFile[] {
+  return documents.flatMap((document) => {
+    if (
+      document.status !== 'published' ||
+      document.retired_at !== null ||
+      typeof document.storage_path !== 'string' ||
+      typeof document.original_file_name !== 'string'
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        fileName: document.original_file_name,
+        path: document.storage_path,
+      },
+    ];
+  });
+}
+
 export function parsePortableExportRequest(
   value: unknown,
 ): PortableExportRequest | undefined {

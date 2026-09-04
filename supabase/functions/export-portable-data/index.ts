@@ -3,8 +3,11 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.110.8';
 import JSZip from 'npm:jszip@3.10.1';
 
 import {
+  canExportFamily,
   createPortableCsv,
+  getActiveDocumentFiles,
   parsePortableExportRequest,
+  type PortableExportFile,
   type PortableExportRequest,
 } from '../_shared/data-export-rules.ts';
 
@@ -55,7 +58,11 @@ async function loadPersonalData(
   client: SupabaseClient,
   userId: string,
   email: string | undefined,
-): Promise<{ data: ExportData; storyPaths: string[] }> {
+): Promise<{
+  data: ExportData;
+  documentFiles: PortableExportFile[];
+  storyFiles: PortableExportFile[];
+}> {
   const memberships = await selectRows(
     client
       .from('family_members')
@@ -64,8 +71,17 @@ async function loadPersonalData(
   );
   const familyIds = memberships.map((membership) => String(membership.family_id));
   const now = new Date().toISOString();
-  const [profiles, families, preferences, careEvents, notes, measurements, stories] =
-    await Promise.all([
+  const [
+    profiles,
+    families,
+    preferences,
+    careEvents,
+    notes,
+    measurements,
+    stories,
+    documents,
+    contacts,
+  ] = await Promise.all([
       selectRows(
         client
           .from('profiles')
@@ -105,11 +121,29 @@ async function loadPersonalData(
           .eq('cleanup_status', 'not_due')
           .gt('expires_at', now),
       ),
+      selectRows(
+        client
+          .from('baby_documents')
+          .select(
+            'id, family_id, baby_id, author_user_id, display_name, description, category, document_date, original_file_name, storage_path, mime_type, file_size_bytes, status, created_at, updated_at, published_at, retired_at, retired_by',
+          )
+          .eq('author_user_id', userId),
+      ),
+      selectRows(
+        client
+          .from('baby_contacts')
+          .select(
+            'id, family_id, baby_id, author_user_id, name, category, contact_person, phone, address, website_url, notes, is_featured, created_at, updated_at, retired_at, retired_by',
+          )
+          .eq('author_user_id', userId),
+      ),
     ]);
 
   return {
     data: {
       account: [{ email: email ?? null, user_id: userId }],
+      baby_contacts: contacts,
+      baby_documents: documents,
       care_events: careEvents,
       families,
       family_memberships: memberships,
@@ -119,28 +153,28 @@ async function loadPersonalData(
       notification_preferences: preferences,
       profile: profiles,
     },
-    storyPaths: stories.map((story) => String(story.storage_path)),
+    documentFiles: getActiveDocumentFiles(documents),
+    storyFiles: stories.map((story) => ({ path: String(story.storage_path) })),
   };
 }
 
-async function requireFamilyOwner(
+async function canManageFamilyExport(
   client: SupabaseClient,
   familyId: string,
   userId: string,
 ): Promise<boolean> {
   const { data, error } = await client
     .from('family_members')
-    .select('id')
+    .select('role')
     .eq('family_id', familyId)
     .eq('user_id', userId)
-    .eq('role', 'owner')
     .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return Boolean(data);
+  return canExportFamily(data?.role);
 }
 
 async function loadFamilyData(
@@ -149,8 +183,9 @@ async function loadFamilyData(
 ): Promise<{
   babyPhotoPaths: string[];
   data: ExportData;
+  documentFiles: PortableExportFile[];
   familyName: string;
-  storyPaths: string[];
+  storyFiles: PortableExportFile[];
 }> {
   const [families, memberships, babies] = await Promise.all([
     selectRows(
@@ -178,7 +213,15 @@ async function loadFamilyData(
   const memberIds = memberships.map((membership) => String(membership.user_id));
   const babyIds = babies.map((baby) => String(baby.id));
   const now = new Date().toISOString();
-  const [profiles, careEvents, notes, measurements, stories] = await Promise.all([
+  const [
+    profiles,
+    careEvents,
+    notes,
+    measurements,
+    stories,
+    documents,
+    contacts,
+  ] = await Promise.all([
     memberIds.length === 0
       ? Promise.resolve([])
       : selectRows(
@@ -210,6 +253,22 @@ async function loadFamilyData(
         .eq('cleanup_status', 'not_due')
         .gt('expires_at', now),
     ),
+    selectRows(
+      client
+        .from('baby_documents')
+        .select(
+          'id, family_id, baby_id, author_user_id, display_name, description, category, document_date, original_file_name, storage_path, mime_type, file_size_bytes, status, created_at, updated_at, published_at, retired_at, retired_by',
+        )
+        .eq('family_id', familyId),
+    ),
+    selectRows(
+      client
+        .from('baby_contacts')
+        .select(
+          'id, family_id, baby_id, author_user_id, name, category, contact_person, phone, address, website_url, notes, is_featured, created_at, updated_at, retired_at, retired_by',
+        )
+        .eq('family_id', familyId),
+    ),
   ]);
 
   return {
@@ -218,6 +277,8 @@ async function loadFamilyData(
       .filter((path): path is string => typeof path === 'string'),
     data: {
       babies,
+      baby_contacts: contacts,
+      baby_documents: documents,
       care_events: careEvents,
       families,
       family_members: memberships,
@@ -226,8 +287,9 @@ async function loadFamilyData(
       notes,
       profiles,
     },
+    documentFiles: getActiveDocumentFiles(documents),
     familyName: String(family.name),
-    storyPaths: stories.map((story) => String(story.storage_path)),
+    storyFiles: stories.map((story) => ({ path: String(story.storage_path) })),
   };
 }
 
@@ -250,14 +312,17 @@ async function addStorageFiles(
   zip: JSZip,
   client: SupabaseClient,
   bucket: string,
-  paths: string[],
+  files: PortableExportFile[],
   targetFolder: string,
   currentBytes: number,
 ): Promise<number> {
   let totalBytes = currentBytes;
+  const uniqueFiles = [
+    ...new Map(files.map((file) => [file.path, file])).values(),
+  ];
 
-  for (const [index, path] of [...new Set(paths)].entries()) {
-    const { data, error } = await client.storage.from(bucket).download(path);
+  for (const [index, file] of uniqueFiles.entries()) {
+    const { data, error } = await client.storage.from(bucket).download(file.path);
 
     if (error || !data) {
       throw new Error(error?.message ?? 'storage_download_failed');
@@ -269,7 +334,7 @@ async function addStorageFiles(
     }
 
     zip.file(
-      `files/${targetFolder}/${index + 1}-${storageFileName(path)}`,
+      `files/${targetFolder}/${index + 1}-${storageFileName(file.fileName ?? file.path)}`,
       new Uint8Array(await data.arrayBuffer()),
     );
   }
@@ -281,8 +346,9 @@ async function createZip(
   client: SupabaseClient,
   scope: PortableExportRequest,
   data: ExportData,
-  babyPhotoPaths: string[],
-  storyPaths: string[],
+  babyPhotoFiles: PortableExportFile[],
+  documentFiles: PortableExportFile[],
+  storyFiles: PortableExportFile[],
 ): Promise<Uint8Array> {
   const zip = new JSZip();
   const generatedAt = new Date().toISOString();
@@ -307,6 +373,9 @@ async function createZip(
       `Generada: ${generatedAt}`,
       'Formato: JSON y CSV con fechas ISO 8601.',
       'Los archivos multimedia incluidos estaban activos en el momento de la descarga.',
+      scope.type === 'personal'
+        ? 'La copia personal contiene solamente tu perfil y tus aportaciones.'
+        : 'La copia familiar contiene la información compartida de la familia seleccionada.',
       'Esta copia sirve para consultar y conservar tus datos; no es restaurable automáticamente en Niduna.',
     ].join('\n'),
   );
@@ -320,7 +389,7 @@ async function createZip(
     zip,
     client,
     'baby-photos',
-    babyPhotoPaths,
+    babyPhotoFiles,
     'baby-photos',
     0,
   );
@@ -328,8 +397,16 @@ async function createZip(
     zip,
     client,
     'family-stories',
-    storyPaths,
+    storyFiles,
     'stories',
+    binaryBytes,
+  );
+  await addStorageFiles(
+    zip,
+    client,
+    'baby-documents',
+    documentFiles,
+    'documents',
     binaryBytes,
   );
 
@@ -356,8 +433,9 @@ const authenticatedHandler = withSupabase(
 
     try {
       let data: ExportData;
-      let babyPhotoPaths: string[] = [];
-      let storyPaths: string[];
+      let babyPhotoFiles: PortableExportFile[] = [];
+      let documentFiles: PortableExportFile[];
+      let storyFiles: PortableExportFile[];
       let fileStem: string;
 
       if (scope.type === 'personal') {
@@ -367,17 +445,19 @@ const authenticatedHandler = withSupabase(
           claims.email,
         );
         data = personalExport.data;
-        storyPaths = personalExport.storyPaths;
+        documentFiles = personalExport.documentFiles;
+        storyFiles = personalExport.storyFiles;
         fileStem = 'niduna-mis-datos';
       } else {
-        if (!(await requireFamilyOwner(context.supabase, scope.familyId, userId))) {
-          return jsonResponse({ error: 'family_owner_required' }, 403);
+        if (!(await canManageFamilyExport(context.supabase, scope.familyId, userId))) {
+          return jsonResponse({ error: 'family_manager_required' }, 403);
         }
 
         const familyExport = await loadFamilyData(context.supabase, scope.familyId);
         data = familyExport.data;
-        babyPhotoPaths = familyExport.babyPhotoPaths;
-        storyPaths = familyExport.storyPaths;
+        babyPhotoFiles = familyExport.babyPhotoPaths.map((path) => ({ path }));
+        documentFiles = familyExport.documentFiles;
+        storyFiles = familyExport.storyFiles;
         fileStem = `niduna-familia-${safeFileName(familyExport.familyName)}`;
       }
 
@@ -385,8 +465,9 @@ const authenticatedHandler = withSupabase(
         context.supabase,
         scope,
         data,
-        babyPhotoPaths,
-        storyPaths,
+        babyPhotoFiles,
+        documentFiles,
+        storyFiles,
       );
       const date = new Date().toISOString().slice(0, 10);
 

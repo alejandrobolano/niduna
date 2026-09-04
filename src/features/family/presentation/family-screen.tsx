@@ -1168,7 +1168,7 @@ export function FamilyScreen({
                 </View>
               ) : null}
 
-              {selectedFamily.currentUserRole === 'owner' ? (
+              {canManageFamily ? (
                 <View style={styles.section}>
                   <View style={styles.sectionHeading}>
                     <View style={[styles.sectionIcon, styles.aquaIcon]}>
@@ -1177,12 +1177,12 @@ export function FamilyScreen({
                     <View style={styles.sectionHeadingCopy}>
                       <Text style={styles.sectionTitle}>Copia de la familia</Text>
                       <Text style={styles.sectionSubtitle}>
-                        Disponible solo para quien tenga la propiedad.
+                        Disponible para propietarios y administradores.
                       </Text>
                     </View>
                   </View>
                   <DataExportAction
-                    description="Bebés, miembros, cuidados, medidas y archivos activos."
+                    description="Bebés, miembros, cuidados, contactos, documentos y archivos activos."
                     label="Exportar datos de esta familia"
                     repository={dataExportRepository}
                     scope={{ familyId: selectedFamily.id, type: 'family' }}

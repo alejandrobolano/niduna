@@ -119,7 +119,7 @@ function AuthenticatedSettings({
       }
       dataContent={
         <DataExportAction
-          description="Perfil, preferencias, familias y aportaciones realizadas por ti."
+          description="Perfil, preferencias y aportaciones realizadas por ti, incluidos tus contactos y documentos."
           label="Descargar mis datos"
           repository={supabaseDataExportRepository}
           scope={{ type: 'personal' }}
