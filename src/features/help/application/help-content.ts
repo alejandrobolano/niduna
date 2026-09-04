@@ -99,7 +99,8 @@ export const helpGuides: HelpGuide[] = [
     description: 'Controla apariencia, exportación y privacidad desde Ajustes.',
     steps: [
       'Abre tu avatar y entra en Mi cuenta y ajustes.',
-      'Desde allí puedes cambiar el tema, descargar una copia de tus datos y repetir la introducción.',
+      'Desde allí puedes cambiar el tema, descargar una copia de tus aportaciones —incluidos tus contactos y documentos— y repetir la introducción.',
+      'El propietario y los administradores también pueden exportar una copia compartida de toda la familia desde Familia.',
       'La eliminación de cuenta está separada del resto de acciones para evitar borrados accidentales.',
     ],
   },
