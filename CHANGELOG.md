@@ -156,6 +156,8 @@ versión correspondiente.
 
 - La pantalla móvil de Relevo prioriza el registro rápido y ofrece un acceso
   flotante a las acciones cuando el bloque principal queda fuera de la vista.
+- Los encabezados de Relevo, Registro, Bebé, Familia y sus apartados relacionados
+  comparten ahora el mismo componente y comportamiento adaptable.
 - Los apartados cumplimentados del perfil del bebé se protegen frente a cambios
   accidentales mediante controles de bloqueo independientes.
 - Relevo, Registro y sus pasos del recorrido guiado solo están disponibles

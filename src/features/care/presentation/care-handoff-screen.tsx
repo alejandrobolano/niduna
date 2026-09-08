@@ -27,9 +27,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { CareRepository } from '@/features/care/application/care-repository';
-import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
+import { resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
+import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { getBabyWeightProgress } from '@/features/care/application/baby-weight-progress';
+import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
+import type { CareRepository } from '@/features/care/application/care-repository';
 import {
   getCareSnapshot,
   getDurationMinutes,
@@ -41,14 +43,13 @@ import type {
   FeedingEvent,
   MeasurementEvent,
 } from '@/features/care/domain/care-event';
-import { resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
-import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const feedingLabels: Record<FeedingEvent['method'], string> = {
@@ -495,12 +496,12 @@ function QuickActionPicker({
   onSelect: (action: CareAction) => void;
   visible: boolean;
 }) {
-  const quickActionOptions: ReadonlyArray<{
+  const quickActionOptions: readonly {
     action: CareAction;
     accent: string;
     icon: LucideIcon;
     label: string;
-  }> = [
+  }[] = [
     { action: 'feeding', accent: colors.coral, icon: Milk, label: 'Alimentación' },
     { action: 'diaper', accent: colors.butter, icon: BabyIcon, label: 'Pañal' },
     { action: 'sleep', accent: colors.lavender, icon: Moon, label: 'Sueño' },
@@ -612,42 +613,38 @@ function DashboardContent({
 
   return (
     <>
-      <View style={[styles.hero, isCompact && styles.heroCompact]}>
-        <View style={styles.heroCopy}>
-          <Text style={styles.eyebrow}>Relevo familiar</Text>
-          <Text style={[styles.heroTitle, isCompact && styles.heroTitleCompact]}>
-            {isExpected
-              ? `Preparando el relevo de ${dashboard.baby.name}`
-              : `Así está ${dashboard.baby.name}`}
-          </Text>
-          <Text style={[styles.heroText, isCompact && styles.heroTextCompact]}>
-            {isExpected
-              ? 'Aquí tendréis lo esencial para coordinar los cuidados desde el primer día.'
-              : isCompact && ageLabel
-                ? `${ageLabel} de vida.`
-                : ageLabel
-                ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
-                : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
-          </Text>
-          {!isExpected && weightProgress ? (
-            <View style={styles.weightProgress}>
-              <View style={styles.weightProgressIcon}>
-                <Scale color={colors.primaryPressed} size={17} />
-              </View>
-              <View style={styles.weightProgressCopy}>
-                <Text style={styles.weightProgressWeight}>
-                  {dashboard.baby.name} pesa ahora{' '}
-                  {formatWeight(weightProgress.currentWeightGrams)}.
-                </Text>
-                <Text style={styles.weightProgressChange}>
-                  {getWeightProgressDescription(weightProgress.differenceGrams)}
-                </Text>
-              </View>
+      <ScreenHero
+        eyebrow="Relevo familiar"
+        subtitle={
+          isExpected
+            ? 'Aquí tendréis lo esencial para coordinar los cuidados desde el primer día.'
+            : ageLabel
+              ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
+              : 'Lo esencial para continuar los cuidados sin depender de la memoria.'
+        }
+        title={
+          isExpected
+            ? `Preparando el relevo de ${dashboard.baby.name}`
+            : `Así está ${dashboard.baby.name}`
+        }
+      >
+        {!isExpected && weightProgress ? (
+          <View style={styles.weightProgress}>
+            <View style={styles.weightProgressIcon}>
+              <Scale color={colors.primaryPressed} size={17} />
             </View>
-          ) : null}
-        </View>
-        <NuniMascot size={isCompact ? 78 : 138} />
-      </View>
+            <View style={styles.weightProgressCopy}>
+              <Text style={styles.weightProgressWeight}>
+                {dashboard.baby.name} pesa ahora{' '}
+                {formatWeight(weightProgress.currentWeightGrams)}.
+              </Text>
+              <Text style={styles.weightProgressChange}>
+                {getWeightProgressDescription(weightProgress.differenceGrams)}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+      </ScreenHero>
 
       {!isExpected && dashboard.canRecord && isCompact ? (
         <View
@@ -1089,48 +1086,12 @@ const styles = createThemedStyleSheet((colors) => ({
     maxWidth: 920,
     width: '100%',
   },
-  hero: {
-    alignItems: 'center',
-    backgroundColor: colors.sky,
-    borderRadius: radius.lg,
-    flexDirection: 'row',
-    minHeight: 190,
-    overflow: 'hidden',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-  },
-  heroCompact: {
-    minHeight: 148,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  heroCopy: { flex: 1, gap: spacing.sm },
   eyebrow: {
     color: colors.primaryPressed,
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1,
     textTransform: 'uppercase',
-  },
-  heroTitle: {
-    color: colors.text,
-    fontSize: 32,
-    fontWeight: '900',
-    lineHeight: 38,
-  },
-  heroTitleCompact: {
-    fontSize: 25,
-    lineHeight: 30,
-  },
-  heroText: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 22,
-    maxWidth: 470,
-  },
-  heroTextCompact: {
-    fontSize: 13,
-    lineHeight: 18,
   },
   weightProgress: {
     alignItems: 'center',

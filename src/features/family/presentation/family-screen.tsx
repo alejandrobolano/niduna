@@ -53,6 +53,7 @@ import type { FamilyBabyGroup } from '@/features/family/domain/family-baby-conte
 import { FamilyBabyManagement } from '@/features/family/presentation/family-baby-management';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const invitationRoleOptions = [
@@ -665,19 +666,12 @@ export function FamilyScreen({
         >
           {topContent}
 
-          <View style={styles.hero}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>TU RED DE CUIDADOS</Text>
-              <Text style={styles.title}>La familia, coordinada</Text>
-              <Text style={styles.subtitle}>
-                Cada persona usa su cuenta y ve únicamente las familias a las que
-                pertenece.
-              </Text>
-            </View>
-            <View style={styles.mascot}>
-              <NuniMascot size={150} />
-            </View>
-          </View>
+          <ScreenHero
+            eyebrow="Tu red de cuidados"
+            subtitle="Cada persona usa su cuenta y ve únicamente las familias a las que pertenece."
+            title="La familia, coordinada"
+            tone="family"
+          />
 
           {operationMessage ? (
             <View
@@ -1232,30 +1226,6 @@ const styles = createThemedStyleSheet((colors) => ({
     paddingTop: spacing.lg,
     width: '100%',
   },
-  hero: {
-    backgroundColor: colors.lavenderSoft,
-    borderRadius: 32,
-    minHeight: 220,
-    overflow: 'hidden',
-    padding: spacing.xl,
-  },
-  heroCopy: { maxWidth: 390, zIndex: 2 },
-  eyebrow: {
-    color: colors.lavender,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 2.2,
-    marginBottom: spacing.sm,
-  },
-  title: { color: colors.text, fontSize: 33, fontWeight: '900', letterSpacing: -1 },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 21,
-    marginTop: spacing.sm,
-    maxWidth: 330,
-  },
-  mascot: { alignSelf: 'flex-end', marginBottom: -18, marginRight: -8, marginTop: -28 },
   section: {
     backgroundColor: colors.surface,
     borderColor: colors.border,

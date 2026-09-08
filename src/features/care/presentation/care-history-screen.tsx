@@ -45,7 +45,7 @@ import {
 import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { DataPagination } from '@/shared/presentation/data-pagination';
-import { NuniMascot } from '@/shared/presentation/nuni-mascot';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface CareHistoryScreenProps {
@@ -407,16 +407,11 @@ export function CareHistoryScreen({
             }}
             value="history"
           />
-          <View style={[styles.hero, isCompact && styles.heroCompact]}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>Registro completo</Text>
-              <Text style={[styles.title, isCompact && styles.titleCompact]}>
-                Historial de {babyName ?? 'la familia'}
-              </Text>
-              <Text style={styles.subtitle}>Consulta todos los cuidados con paginación real, filtros y exportación.</Text>
-            </View>
-            <NuniMascot size={isCompact ? 82 : 116} />
-          </View>
+          <ScreenHero
+            eyebrow="Registro completo"
+            subtitle="Consulta todos los cuidados con paginación real, filtros y exportación."
+            title={`Historial de ${babyName ?? 'la familia'}`}
+          />
 
           {!babyId ? (
             <View style={styles.empty}>
@@ -564,13 +559,6 @@ const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
-  hero: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', minHeight: 160, overflow: 'hidden', padding: spacing.xl },
-  heroCompact: { minHeight: 140, padding: spacing.lg },
-  heroCopy: { flex: 1, gap: spacing.sm },
-  eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
-  title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
-  titleCompact: { fontSize: 24, lineHeight: 29 },
-  subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 600 },
   tableCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   tableHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   tableHeadingCompact: { alignItems: 'flex-start', flexWrap: 'wrap', gap: spacing.md },

@@ -9,7 +9,7 @@ import {
   TrendingUp,
 } from 'lucide-react-native';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
@@ -25,7 +25,7 @@ import {
 import { CareTrendChart } from '@/features/care-summary/presentation/care-trend-chart';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { MeasurementEvolutionChart } from '@/features/care-summary/presentation/measurement-evolution-chart';
-import { NuniMascot } from '@/shared/presentation/nuni-mascot';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface DailyCareSummaryScreenProps {
@@ -97,8 +97,6 @@ export function DailyCareSummaryScreen({
   repository,
   topContent,
 }: DailyCareSummaryScreenProps) {
-  const { width } = useWindowDimensions();
-  const compact = width < 720;
   const [period, setPeriod] = useState<CareSummaryPeriod>('24h');
   const [report, setReport] = useState<CareSummaryReport>();
   const [isLoading, setIsLoading] = useState(Boolean(babyId));
@@ -157,18 +155,11 @@ export function DailyCareSummaryScreen({
             }}
             value="summary"
           />
-          <View style={[styles.hero, compact && styles.heroCompact]}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>Resumen y tendencias</Text>
-              <Text style={[styles.title, compact && styles.titleCompact]}>
-                Así va el día de {babyName ?? 'tu bebé'}
-              </Text>
-              <Text style={styles.subtitle}>
-                Consulta las últimas 24 horas, los últimos días y el crecimiento desde el nacimiento.
-              </Text>
-            </View>
-            <NuniMascot size={compact ? 82 : 116} />
-          </View>
+          <ScreenHero
+            eyebrow="Resumen y tendencias"
+            subtitle="Consulta las últimas 24 horas, los últimos días y el crecimiento desde el nacimiento."
+            title={`Así va el día de ${babyName ?? 'tu bebé'}`}
+          />
 
           {!babyId ? (
             <View style={styles.empty}>
@@ -359,10 +350,6 @@ const styles = createThemedStyleSheet((colors) => ({
   emptyText: { color: colors.textMuted, fontSize: 13 },
   emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
   error: { color: colors.error, fontSize: 12 },
-  eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
-  hero: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', minHeight: 160, overflow: 'hidden', padding: spacing.xl },
-  heroCompact: { minHeight: 140, padding: spacing.lg },
-  heroCopy: { flex: 1, gap: spacing.sm },
   loading: { color: colors.textMuted, fontSize: 13, paddingVertical: spacing.xl, textAlign: 'center' },
   loadingInline: { color: colors.textMuted, fontSize: 12, textAlign: 'center' },
   measurementCard: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, flexDirection: 'row', gap: spacing.lg, padding: spacing.lg },
@@ -382,9 +369,6 @@ const styles = createThemedStyleSheet((colors) => ({
   sectionHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' },
   sectionSubtitle: { color: colors.textMuted, fontSize: 12 },
   sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
-  subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 600 },
   summarySection: { gap: spacing.lg },
   trendIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 46, justifyContent: 'center', width: 46 },
-  title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
-  titleCompact: { fontSize: 24, lineHeight: 29 },
 }));
