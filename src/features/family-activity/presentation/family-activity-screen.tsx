@@ -16,6 +16,7 @@ import type {
   FamilyAuditRepository,
 } from '@/features/family-activity/application/family-audit-repository';
 import { DataPagination } from '@/shared/presentation/data-pagination';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
@@ -78,21 +79,14 @@ export function FamilyActivityScreen({
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
-          <View style={[styles.hero, isCompact && styles.heroCompact]}>
-            <View style={[styles.heroIcon, isCompact && styles.heroIconCompact]}>
-              <History color={colors.lavender} size={30} />
-            </View>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>Solo administradores</Text>
-              <Text style={[styles.title, isCompact && styles.titleCompact]}>
-                Actividad de {familyName}
-              </Text>
-              <Text style={styles.subtitle}>
-                Este registro de acciones se conserva durante 180 días. Su
-                limpieza no elimina los cuidados, notas ni medidas reales.
-              </Text>
-            </View>
-          </View>
+          <ScreenHero
+            eyebrow="Solo administradores"
+            leading={<View style={[styles.heroIcon, isCompact && styles.heroIconCompact]}><History color={colors.lavender} size={30} /></View>}
+            mascot={false}
+            subtitle="Este registro de acciones se conserva durante 180 días. Su limpieza no elimina los cuidados, notas ni medidas reales."
+            title={`Actividad de ${familyName}`}
+            tone="family"
+          />
 
           <View style={styles.tableCard}>
             <View style={styles.tableHeading}>
@@ -204,22 +198,8 @@ const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
-  hero: {
-    alignItems: 'center',
-    backgroundColor: colors.lavenderSoft,
-    borderRadius: radius.lg,
-    flexDirection: 'row',
-    gap: spacing.lg,
-    padding: spacing.xl,
-  },
-  heroCompact: { gap: spacing.md, padding: spacing.lg },
   heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md, height: 64, justifyContent: 'center', width: 64 },
   heroIconCompact: { height: 48, width: 48 },
-  heroCopy: { flex: 1, gap: spacing.sm },
-  eyebrow: { color: colors.lavender, fontSize: 11, fontWeight: '900', letterSpacing: 1.2, textTransform: 'uppercase' },
-  title: { color: colors.text, fontSize: 30, fontWeight: '900', lineHeight: 36 },
-  titleCompact: { fontSize: 24, lineHeight: 29 },
-  subtitle: { color: colors.textMuted, fontSize: 14, lineHeight: 21, maxWidth: 650 },
   tableCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   tableHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   tableTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },

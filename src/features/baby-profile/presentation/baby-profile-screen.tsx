@@ -60,6 +60,7 @@ import {
 } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const lifeStageOptions = [
@@ -656,18 +657,11 @@ export function BabyProfileScreen({
           showsVerticalScrollIndicator={false}
         >
           {topContent}
-          <View style={styles.hero}>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>NIDUNA</Text>
-              <Text style={styles.title}>Perfil del bebé</Text>
-              <Text style={styles.subtitle}>
-                Su información importante, clara y cerca de toda la familia.
-              </Text>
-            </View>
-            <View style={styles.mascot}>
-              <NuniMascot size={220} />
-            </View>
-          </View>
+          <ScreenHero
+            eyebrow="Niduna"
+            subtitle="Su información importante, clara y cerca de toda la familia."
+            title="Perfil del bebé"
+          />
 
           <View style={styles.photoCard}>
             <View style={styles.photoMain}>
@@ -1269,30 +1263,6 @@ const styles = createThemedStyleSheet((colors) => ({
     paddingTop: spacing.lg,
     width: '100%',
   },
-  hero: {
-    backgroundColor: colors.sky,
-    borderRadius: 32,
-    minHeight: 230,
-    overflow: 'hidden',
-    padding: spacing.xl,
-  },
-  heroCopy: { maxWidth: 360, zIndex: 2 },
-  eyebrow: {
-    color: colors.coral,
-    fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 2.4,
-    marginBottom: spacing.sm,
-  },
-  title: { color: colors.text, fontSize: 34, fontWeight: '900', letterSpacing: -1 },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 15,
-    lineHeight: 21,
-    marginTop: spacing.sm,
-    maxWidth: 290,
-  },
-  mascot: { alignSelf: 'flex-end', marginBottom: -14, marginRight: -10, marginTop: -15 },
   photoCard: {
     backgroundColor: colors.surface,
     borderColor: colors.border,

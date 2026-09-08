@@ -1,4 +1,5 @@
 import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 import { type LucideIcon } from 'lucide-react-native';
 
 export type FeedingMethod =
@@ -24,6 +25,8 @@ interface BaseCareEvent {
   notes?: string;
   occurredAt: string;
   recordedById: string;
+  recordedByAvatarKey?: MemberAvatarVariant;
+  recordedByAvatarUrl?: string;
   recordedByName?: string;
   sourceType: 'baby_note' | 'care_event' | 'measurement';
 }

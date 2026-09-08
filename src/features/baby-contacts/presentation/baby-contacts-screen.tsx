@@ -56,6 +56,7 @@ import type { FamilyRole } from '@/features/family/domain/family';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 
 const categoryOptions = [
   { label: 'Salud', value: 'health' },
@@ -261,17 +262,15 @@ export function BabyContactsScreen({
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           {topContent}
-          <View style={[styles.hero, compact && styles.heroCompact]}>
-            <View style={styles.heroIcon}><UsersRound color={colors.aqua} size={30} /></View>
-            <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>CONTACTOS IMPORTANTES</Text>
-              <Text style={styles.title}>Directorio de {babyName}</Text>
-              <Text style={styles.subtitle}>{familyName} puede encontrar aquí personas y lugares útiles. Podrás compartir información con otras personas.</Text>
-            </View>
-            <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
-              <Text style={styles.backButtonText}>Volver al bebé</Text>
-            </Pressable>
-          </View>
+          <ScreenHero
+            compactStack
+            eyebrow="Contactos importantes"
+            leading={<View style={styles.heroIcon}><UsersRound color={colors.aqua} size={30} /></View>}
+            mascot={false}
+            subtitle={`${familyName} puede encontrar aquí personas y lugares útiles. Podrás compartir información con otras personas.`}
+            title={`Directorio de ${babyName}`}
+            trailing={<Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}><Text style={styles.backButtonText}>Volver al bebé</Text></Pressable>}
+          />
 
           {!retired ? (
             <View style={styles.createArea}>
@@ -444,7 +443,7 @@ function ContactValue({ icon, label, onCopy, onOpen }: { icon: ReactNode; label:
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 }, page: { flexGrow: 1, paddingBottom: 120 }, content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
-  hero: { alignItems: 'center', backgroundColor: colors.lavenderSoft, borderRadius: radius.lg, flexDirection: 'row', gap: spacing.lg, padding: spacing.xl }, heroCompact: { alignItems: 'flex-start', flexDirection: 'column' }, heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 58, justifyContent: 'center', width: 58 }, heroCopy: { flex: 1 }, eyebrow: { color: colors.primaryPressed, fontSize: 11, fontWeight: '900', letterSpacing: 1.5 }, title: { color: colors.text, fontSize: 30, fontWeight: '900', letterSpacing: -0.6, lineHeight: 36 }, subtitle: { color: colors.textMuted, fontSize: 15, lineHeight: 22, marginTop: spacing.xs }, backButton: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.md }, backButtonText: { color: colors.primaryPressed, fontWeight: '900' },
+  heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 58, justifyContent: 'center', width: 58 }, backButton: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.md }, backButtonText: { color: colors.primaryPressed, fontWeight: '900' },
   createArea: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 3 }, addButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.lg }, addButtonText: { color: colors.onAccent, fontWeight: '900' },
   formCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, cancelText: { color: colors.error, fontWeight: '800' }, formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, notesInput: { minHeight: 78, textAlignVertical: 'top' }, featuredRow: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', padding: spacing.lg }, featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '900' }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.45 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, listHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 }, searchRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.md }, searchRowCompact: { alignItems: 'stretch', flexDirection: 'column' }, searchButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52, paddingHorizontal: spacing.xl }, searchButtonText: { color: colors.onAccent, fontWeight: '900' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, minHeight: 44, paddingHorizontal: spacing.lg, justifyContent: 'center' }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent },

@@ -154,6 +154,12 @@ versión correspondiente.
 
 ### Changed
 
+- La pantalla de Relevo prioriza el registro rápido en todos los tamaños y ofrece
+  un acceso flotante en móvil cuando el bloque principal queda fuera de la vista.
+- Los encabezados de Relevo, Registro, Bebé, Familia y sus apartados relacionados
+  comparten ahora el mismo componente y comportamiento adaptable.
+- La actividad reciente muestra el animal o la foto de perfil vigente de quien
+  registró cada cuidado.
 - Los apartados cumplimentados del perfil del bebé se protegen frente a cambios
   accidentales mediante controles de bloqueo independientes.
 - Relevo, Registro y sus pasos del recorrido guiado solo están disponibles
