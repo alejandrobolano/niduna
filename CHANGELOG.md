@@ -154,8 +154,8 @@ versión correspondiente.
 
 ### Changed
 
-- La pantalla móvil de Relevo prioriza el registro rápido y ofrece un acceso
-  flotante a las acciones cuando el bloque principal queda fuera de la vista.
+- La pantalla de Relevo prioriza el registro rápido en todos los tamaños y ofrece
+  un acceso flotante en móvil cuando el bloque principal queda fuera de la vista.
 - Los encabezados de Relevo, Registro, Bebé, Familia y sus apartados relacionados
   comparten ahora el mismo componente y comportamiento adaptable.
 - La actividad reciente muestra el animal o la foto de perfil vigente de quien

@@ -651,12 +651,12 @@ function DashboardContent({
         ) : null}
       </ScreenHero>
 
-      {!isExpected && dashboard.canRecord && isCompact ? (
+      {!isExpected && dashboard.canRecord ? (
         <View
           onLayout={(event) => onQuickActionsLayout?.(event.nativeEvent.layout)}
         >
           <QuickActionsSection
-            compact
+            compact={isCompact}
             isSleeping={Boolean(openSleep)}
             onAction={onAction}
           />
@@ -744,14 +744,7 @@ function DashboardContent({
             <Text style={styles.expectedButtonText}>Ver perfil</Text>
           </Pressable>
         </View>
-      ) : dashboard.canRecord ? (
-        !isCompact ? (
-          <QuickActionsSection
-            isSleeping={Boolean(openSleep)}
-            onAction={onAction}
-          />
-        ) : null
-      ) : (
+      ) : !dashboard.canRecord ? (
         <View style={styles.readOnlyNotice}>
           <Text style={styles.readOnlyTitle}>Vista de solo lectura</Text>
           <Text style={styles.readOnlyText}>
@@ -759,7 +752,7 @@ function DashboardContent({
             necesitas registrar cuidados.
           </Text>
         </View>
-      )}
+      ) : null}
 
       <View style={styles.section}>
         <View style={styles.sectionHeading}>
