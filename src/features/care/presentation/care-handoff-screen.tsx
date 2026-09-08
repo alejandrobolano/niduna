@@ -338,7 +338,12 @@ function TimelineEvent({
           <Text style={styles.timelineNote}>“{event.notes}”</Text>
         ) : null}
         <View style={styles.timelineAuthorRow}>
-          <AnimalAvatar accessibilityLabel={`Avatar de ${event.recordedByName || 'un familiar'}`} size={24} variant={resolveStableMemberAvatar(event.recordedById)} />
+          <AnimalAvatar
+            accessibilityLabel={`Avatar de ${event.recordedByName || 'un familiar'}`}
+            photoUrl={event.recordedByAvatarUrl}
+            size={24}
+            variant={event.recordedByAvatarKey ?? resolveStableMemberAvatar(event.recordedById)}
+          />
           <Text style={styles.timelineAuthor}>Registrado por {event.recordedByName || 'un familiar'}</Text>
         </View>
       </View>

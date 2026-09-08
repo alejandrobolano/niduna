@@ -10,9 +10,11 @@ import {
     mapCareEvent,
     mapCareTimelineRow,
     mapMeasurement,
+    type CareEventAvatar,
     type CareTimelineRow,
 } from '@/features/care/infrastructure/supabase-care-event-mapper';
 import type { CareEvent } from '@/features/care/domain/care-event';
+import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
 import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
@@ -93,13 +95,17 @@ async function dispatchActivityNotifications(
   ]);
 }
 
-async function loadDisplayNames(
+async function loadAuthorProfiles(
   userIds: string[],
-): Promise<ReadonlyMap<string, string>> {
+): Promise<{
+  avatars: ReadonlyMap<string, CareEventAvatar>;
+  displayNames: ReadonlyMap<string, string>;
+}> {
   const displayNames = new Map<string, string>();
+  const avatars = new Map<string, CareEventAvatar>();
 
   if (userIds.length === 0) {
-    return displayNames;
+    return { avatars, displayNames };
   }
 
   for (const userId of new Set(userIds)) {
@@ -108,18 +114,28 @@ async function loadDisplayNames(
 
   const { data: profiles, error } = await supabase
     .from('profiles')
-    .select('id, display_name')
+    .select('id, display_name, avatar_key, avatar_path')
     .in('id', [...new Set(userIds)]);
 
   if (error) {
     throwOperationError(error.code, error.message);
   }
 
+  const photoUrls = await createProfilePhotoUrls(
+    (profiles ?? []).map((profile) => profile.avatar_path),
+  );
+
   for (const profile of profiles ?? []) {
     displayNames.set(profile.id, profile.display_name || 'Un familiar');
+    avatars.set(profile.id, {
+      avatarKey: profile.avatar_key ?? undefined,
+      avatarUrl: profile.avatar_path
+        ? photoUrls.get(profile.avatar_path)
+        : undefined,
+    });
   }
 
-  return displayNames;
+  return { avatars, displayNames };
 }
 
 function getDateRange(date: string): { from: string; to: string } {
@@ -159,13 +175,13 @@ async function loadHistoryPage(
   }
 
   const rows = (data ?? []) as CareTimelineRow[];
-  const displayNames = await loadDisplayNames(
+  const { avatars, displayNames } = await loadAuthorProfiles(
     rows.map((row) => row.recorded_by),
   );
   const total = count ?? 0;
 
   return {
-    events: rows.map((row) => mapCareTimelineRow(row, displayNames)),
+    events: rows.map((row) => mapCareTimelineRow(row, displayNames, avatars)),
     page: query.page,
     pageSize: query.pageSize,
     total,
@@ -310,7 +326,7 @@ export const supabaseCareRepository: CareRepository = {
     const userIds = [
       ...new Set(selectedEvents.map((event) => event.recordedBy)),
     ];
-    const displayNames = await loadDisplayNames(userIds);
+    const { avatars, displayNames } = await loadAuthorProfiles(userIds);
     const weightMeasurements = new Map(
       [birthWeightResult.data, latestWeightResult.data].flatMap((row) =>
         row && row.weight_grams !== null
@@ -339,14 +355,14 @@ export const supabaseCareRepository: CareRepository = {
         membershipResult.data?.role === 'caregiver',
       events: selectedEvents.map((event) => {
         if (event.kind === 'care') {
-          return mapCareEvent(event.row, displayNames);
+          return mapCareEvent(event.row, displayNames, avatars);
         }
 
         if (event.kind === 'note') {
-          return mapBabyNote(event.row, displayNames);
+          return mapBabyNote(event.row, displayNames, avatars);
         }
 
-        return mapMeasurement(event.row, displayNames);
+        return mapMeasurement(event.row, displayNames, avatars);
       }),
       weightMeasurements: [...weightMeasurements.values()],
     };

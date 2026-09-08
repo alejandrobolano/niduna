@@ -4,6 +4,7 @@ import type {
   NoteEvent,
   SleepEvent,
 } from '@/features/care/domain/care-event';
+import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
 import { BabyIcon, Milk, Moon, NotebookPen, Scale } from 'lucide-react-native';
 
@@ -12,6 +13,11 @@ type BabyNoteRow = Database['public']['Tables']['baby_notes']['Row'];
 type MeasurementRow = Database['public']['Tables']['baby_measurements']['Row'];
 export type CareTimelineRow =
   Database['public']['Views']['care_timeline']['Row'];
+
+export interface CareEventAvatar {
+  avatarKey?: MemberAvatarVariant;
+  avatarUrl?: string;
+}
 
 export class InvalidCareEventError extends Error {
   constructor() {
@@ -23,7 +29,10 @@ export class InvalidCareEventError extends Error {
 export function mapBabyNote(
   row: BabyNoteRow,
   displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar> = new Map(),
 ): NoteEvent {
+  const avatar = avatars.get(row.recorded_by);
+
   return {
     babyId: row.baby_id,
     content: row.content,
@@ -32,6 +41,8 @@ export function mapBabyNote(
     id: row.id,
     occurredAt: row.occurred_at,
     recordedById: row.recorded_by,
+    recordedByAvatarKey: avatar?.avatarKey,
+    recordedByAvatarUrl: avatar?.avatarUrl,
     recordedByName: displayNames.get(row.recorded_by),
     sourceType: 'baby_note',
     type: 'note',
@@ -41,7 +52,10 @@ export function mapBabyNote(
 export function mapMeasurement(
   row: MeasurementRow,
   displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar> = new Map(),
 ): MeasurementEvent {
+  const avatar = avatars.get(row.recorded_by);
+
   return {
     babyId: row.baby_id,
     deletedAt: row.deleted_at ?? undefined,
@@ -53,6 +67,8 @@ export function mapMeasurement(
     notes: optionalText(row.notes),
     occurredAt: row.measured_at,
     recordedById: row.recorded_by,
+    recordedByAvatarKey: avatar?.avatarKey,
+    recordedByAvatarUrl: avatar?.avatarUrl,
     recordedByName: displayNames.get(row.recorded_by),
     source: row.source ?? 'other',
     sourceType: 'measurement',
@@ -68,7 +84,10 @@ function optionalText(value: string | null): string | undefined {
 function baseEvent(
   row: CareEventRow,
   displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar>,
 ) {
+  const avatar = avatars.get(row.recorded_by);
+
   return {
     babyId: row.baby_id,
     deletedAt: row.deleted_at ?? undefined,
@@ -76,6 +95,8 @@ function baseEvent(
     notes: optionalText(row.notes),
     occurredAt: row.occurred_at,
     recordedById: row.recorded_by,
+    recordedByAvatarKey: avatar?.avatarKey,
+    recordedByAvatarUrl: avatar?.avatarUrl,
     recordedByName: displayNames.get(row.recorded_by),
     sourceType: 'care_event' as const,
   };
@@ -84,8 +105,9 @@ function baseEvent(
 export function mapCareEvent(
   row: CareEventRow,
   displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar> = new Map(),
 ): CareEvent {
-  const base = baseEvent(row, displayNames);
+  const base = baseEvent(row, displayNames, avatars);
 
   if (row.event_type === 'feeding') {
     if (!row.feeding_method) {
@@ -126,6 +148,7 @@ export function mapCareEvent(
 export function mapCareTimelineRow(
   row: CareTimelineRow,
   displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar> = new Map(),
 ): CareEvent {
   if (row.source_type === 'care_event') {
     return mapCareEvent(
@@ -149,6 +172,7 @@ export function mapCareTimelineRow(
         updated_by: row.updated_by,
       },
       displayNames,
+      avatars,
     );
   }
 
@@ -171,6 +195,7 @@ export function mapCareTimelineRow(
         updated_by: row.updated_by,
       },
       displayNames,
+      avatars,
     );
   }
 
@@ -192,5 +217,6 @@ export function mapCareTimelineRow(
       weight_grams: row.weight_grams,
     },
     displayNames,
+    avatars,
   );
 }

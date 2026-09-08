@@ -54,10 +54,27 @@ describe('mapCareEvent', () => {
       method: 'breast',
       notes: 'Comió tranquila',
       occurredAt: '2026-07-29T10:00:00.000Z',
+      recordedByAvatarKey: undefined,
+      recordedByAvatarUrl: undefined,
       recordedById: 'user-1',
       recordedByName: 'Alejandro',
       sourceType: 'care_event',
       type: 'feeding',
+    });
+  });
+
+  it('maps the recorder current avatar selection', () => {
+    expect(
+      mapCareEvent(
+        baseRow,
+        new Map([['user-1', 'Alejandro']]),
+        new Map([
+          ['user-1', { avatarKey: 'fox', avatarUrl: 'https://example.com/avatar' }],
+        ]),
+      ),
+    ).toMatchObject({
+      recordedByAvatarKey: 'fox',
+      recordedByAvatarUrl: 'https://example.com/avatar',
     });
   });
 
