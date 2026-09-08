@@ -11,13 +11,19 @@ import {
   Star,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   useWindowDimensions,
   View,
+  type LayoutChangeEvent,
+  type LayoutRectangle,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -41,6 +47,7 @@ import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
+import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
@@ -339,9 +346,11 @@ function TimelineEvent({
 }
 
 function QuickActionsSection({
+  compact = false,
   isSleeping,
   onAction,
 }: {
+  compact?: boolean;
   isSleeping: boolean;
   onAction: (action: CareAction) => void;
 }) {
@@ -353,18 +362,24 @@ function QuickActionsSection({
           Dos toques y queda compartido con la familia.
         </Text>
       </View>
-      <View style={styles.actions}>
+      <View style={[styles.actions, compact && styles.actionsCompact]}>
         <Pressable
           accessibilityRole="button"
           onPress={() => onAction('feeding')}
           style={({ pressed }) => [
             styles.actionButton,
             styles.feedingAction,
+            compact && styles.primaryActionCompact,
             pressed && styles.actionPressed,
           ]}
         >
           <Milk color={colors.text} size={20} />
-          <Text style={styles.actionLabel}>Alimentación</Text>
+          <Text
+            numberOfLines={1}
+            style={[styles.actionLabel, compact && styles.actionLabelCompact]}
+          >
+            Alimentación
+          </Text>
           <View style={styles.actionArrow}>
             <Plus color={colors.text} size={18} />
           </View>
@@ -375,62 +390,186 @@ function QuickActionsSection({
           style={({ pressed }) => [
             styles.actionButton,
             styles.diaperAction,
+            compact && styles.primaryActionCompact,
             pressed && styles.actionPressed,
           ]}
         >
           <BabyIcon color={colors.text} size={20} />
-          <Text style={styles.actionLabel}>Pañal</Text>
+          <Text
+            numberOfLines={1}
+            style={[styles.actionLabel, compact && styles.actionLabelCompact]}
+          >
+            Pañal
+          </Text>
           <View style={styles.actionArrow}>
             <Plus color={colors.text} size={18} />
           </View>
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => onAction('sleep')}
-          style={({ pressed }) => [
-            styles.actionButton,
-            styles.sleepAction,
-            pressed && styles.actionPressed,
-          ]}
-        >
-          <Moon color={colors.text} size={20} />
-          <Text style={styles.actionLabel}>
-            {isSleeping ? 'Despertó' : 'Se durmió'}
-          </Text>
-          <View style={styles.actionArrow}>
-            {isSleeping ? (
-              <Check color={colors.text} size={18} />
-            ) : (
-              <Plus color={colors.text} size={18} />
-            )}
-          </View>
-        </Pressable>
+        {!compact ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => onAction('sleep')}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.sleepAction,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Moon color={colors.text} size={20} />
+            <Text style={styles.actionLabel}>
+              {isSleeping ? 'Despertó' : 'Se durmió'}
+            </Text>
+            <View style={styles.actionArrow}>
+              {isSleeping ? (
+                <Check color={colors.text} size={18} />
+              ) : (
+                <Plus color={colors.text} size={18} />
+              )}
+            </View>
+          </Pressable>
+        ) : null}
       </View>
-      <View style={styles.secondaryActions}>
+      <View
+        style={[
+          styles.secondaryActions,
+          compact && styles.secondaryActionsCompact,
+        ]}
+      >
+        {compact ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => onAction('sleep')}
+            style={({ pressed }) => [
+              styles.secondaryAction,
+              styles.secondaryActionCompact,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Moon color={colors.lavender} size={18} />
+            <Text style={styles.secondaryActionLabel}>
+              {isSleeping ? 'Despertó' : 'Dormir'}
+            </Text>
+          </Pressable>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           onPress={() => onAction('measurement')}
           style={({ pressed }) => [
             styles.secondaryAction,
+            compact && styles.secondaryActionCompact,
             pressed && styles.actionPressed,
           ]}
         >
           <Scale color={colors.primaryPressed} size={17} />
-          <Text style={styles.secondaryActionLabel}>Registrar medidas</Text>
+          <Text style={styles.secondaryActionLabel}>
+            {compact ? 'Medidas' : 'Registrar medidas'}
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           onPress={() => onAction('note')}
           style={({ pressed }) => [
             styles.secondaryAction,
+            compact && styles.secondaryActionCompact,
             pressed && styles.actionPressed,
           ]}
         >
           <NotebookPen color={colors.primaryPressed} size={17} />
-          <Text style={styles.secondaryActionLabel}>Añadir nota</Text>
+          <Text style={styles.secondaryActionLabel}>
+            {compact ? 'Nota' : 'Añadir nota'}
+          </Text>
         </Pressable>
       </View>
     </View>
+  );
+}
+
+function QuickActionPicker({
+  isSleeping,
+  onClose,
+  onSelect,
+  visible,
+}: {
+  isSleeping: boolean;
+  onClose: () => void;
+  onSelect: (action: CareAction) => void;
+  visible: boolean;
+}) {
+  const quickActionOptions: ReadonlyArray<{
+    action: CareAction;
+    accent: string;
+    icon: LucideIcon;
+    label: string;
+  }> = [
+    { action: 'feeding', accent: colors.coral, icon: Milk, label: 'Alimentación' },
+    { action: 'diaper', accent: colors.butter, icon: BabyIcon, label: 'Pañal' },
+    { action: 'sleep', accent: colors.lavender, icon: Moon, label: 'Sueño' },
+    { action: 'measurement', accent: colors.aqua, icon: Scale, label: 'Medidas' },
+    { action: 'note', accent: colors.primary, icon: NotebookPen, label: 'Nota' },
+  ];
+
+  return (
+    <Modal
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      transparent
+      visible={visible}
+    >
+      <View style={styles.pickerBackdrop}>
+        <Pressable
+          accessibilityLabel="Cerrar opciones de registro"
+          accessibilityRole="button"
+          onPress={onClose}
+          style={styles.pickerDismissArea}
+        />
+        <SafeAreaView edges={['bottom']} style={styles.pickerSheet}>
+          <View style={styles.pickerHandle} />
+          <View style={styles.pickerHeading}>
+            <View style={styles.pickerHeadingCopy}>
+              <Text style={styles.eyebrow}>Registro rápido</Text>
+              <Text style={styles.pickerTitle}>¿Qué quieres registrar?</Text>
+            </View>
+            <Pressable
+              accessibilityLabel="Cerrar"
+              accessibilityRole="button"
+              onPress={onClose}
+              style={({ pressed }) => [
+                styles.pickerCloseButton,
+                pressed && styles.actionPressed,
+              ]}
+            >
+              <Plus color={colors.text} size={22} style={styles.pickerCloseIcon} />
+            </Pressable>
+          </View>
+          <View style={styles.pickerOptions}>
+            {quickActionOptions.map(({ action, accent, icon: Icon, label }) => (
+              <Pressable
+                accessibilityRole="button"
+                key={action}
+                onPress={() => onSelect(action)}
+                style={({ pressed }) => [
+                  styles.pickerOption,
+                  pressed && styles.actionPressed,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.pickerOptionIcon,
+                    { backgroundColor: `${accent}22` },
+                  ]}
+                >
+                  <Icon color={accent} size={20} />
+                </View>
+                <Text style={styles.pickerOptionLabel}>
+                  {action === 'sleep' && isSleeping ? 'Despertó' : label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </SafeAreaView>
+      </View>
+    </Modal>
   );
 }
 
@@ -440,6 +579,7 @@ function DashboardContent({
   now,
   onAction,
   onOpenBabyProfile,
+  onQuickActionsLayout,
   onRefresh,
   storiesContent,
 }: {
@@ -448,6 +588,7 @@ function DashboardContent({
   now: Date;
   onAction: (action: CareAction) => void;
   onOpenBabyProfile: () => void;
+  onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
   storiesContent?: ReactNode;
 }) {
@@ -479,10 +620,12 @@ function DashboardContent({
               ? `Preparando el relevo de ${dashboard.baby.name}`
               : `Así está ${dashboard.baby.name}`}
           </Text>
-          <Text style={styles.heroText}>
+          <Text style={[styles.heroText, isCompact && styles.heroTextCompact]}>
             {isExpected
               ? 'Aquí tendréis lo esencial para coordinar los cuidados desde el primer día.'
-              : ageLabel
+              : isCompact && ageLabel
+                ? `${ageLabel} de vida.`
+                : ageLabel
                 ? `Qué alegría tener a ${dashboard.baby.name} ya con ${ageLabel} de vida.`
                 : 'Lo esencial para continuar los cuidados sin depender de la memoria.'}
           </Text>
@@ -503,17 +646,22 @@ function DashboardContent({
             </View>
           ) : null}
         </View>
-        <NuniMascot size={isCompact ? 92 : 138} />
+        <NuniMascot size={isCompact ? 78 : 138} />
       </View>
 
-      {storiesContent}
-
       {!isExpected && dashboard.canRecord && isCompact ? (
-        <QuickActionsSection
-          isSleeping={Boolean(openSleep)}
-          onAction={onAction}
-        />
+        <View
+          onLayout={(event) => onQuickActionsLayout?.(event.nativeEvent.layout)}
+        >
+          <QuickActionsSection
+            compact
+            isSleeping={Boolean(openSleep)}
+            onAction={onAction}
+          />
+        </View>
       ) : null}
+
+      {storiesContent}
 
       <View style={styles.summaryGrid}>
         <SummaryCard
@@ -678,13 +826,20 @@ export function CareHandoffScreen({
   topContent,
   userId,
 }: CareHandoffScreenProps) {
+  const { width } = useWindowDimensions();
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
   const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [action, setAction] = useState<CareAction>();
+  const [isQuickActionPickerOpen, setIsQuickActionPickerOpen] = useState(false);
+  const [showQuickActionAccess, setShowQuickActionAccess] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  const quickActionsLayout = useRef<LayoutRectangle>();
+  const scrollOffset = useRef(0);
+  const scrollViewportHeight = useRef(0);
+  const isCompact = width < 640;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -749,6 +904,43 @@ export function CareHandoffScreen({
   function handleRefresh() {
     setIsRefreshing(true);
     setLoadAttempt((current) => current + 1);
+  }
+
+  function updateQuickActionAccess(scrollOffset: number) {
+    const layout = quickActionsLayout.current;
+    const viewportHeight = scrollViewportHeight.current;
+
+    if (!isCompact || !layout || viewportHeight === 0) {
+      setShowQuickActionAccess(false);
+      return;
+    }
+
+    const nativeNavigationInset = Platform.OS === 'web' ? 0 : 72;
+    const shouldShow = shouldShowQuickActionAccess(layout, {
+      bottomInset: nativeNavigationInset + spacing.sm,
+      height: viewportHeight,
+      scrollOffset,
+      topInset: spacing.sm,
+    });
+
+    setShowQuickActionAccess((current) =>
+      current === shouldShow ? current : shouldShow,
+    );
+  }
+
+  function handleQuickActionsLayout(layout: LayoutRectangle) {
+    quickActionsLayout.current = layout;
+    updateQuickActionAccess(scrollOffset.current);
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    scrollOffset.current = event.nativeEvent.contentOffset.y;
+    updateQuickActionAccess(scrollOffset.current);
+  }
+
+  function handleSelectQuickAction(selectedAction: CareAction) {
+    setIsQuickActionPickerOpen(false);
+    setAction(selectedAction);
   }
 
   if (isLoading) {
@@ -828,7 +1020,15 @@ export function CareHandoffScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.page}>
+      <ScrollView
+        contentContainerStyle={styles.page}
+        onLayout={(event: LayoutChangeEvent) => {
+          scrollViewportHeight.current = event.nativeEvent.layout.height;
+          updateQuickActionAccess(scrollOffset.current);
+        }}
+        onScroll={handleScroll}
+        scrollEventThrottle={32}
+      >
         <View style={styles.content}>
           {topContent}
           <DashboardContent
@@ -837,11 +1037,34 @@ export function CareHandoffScreen({
             now={now}
             onAction={setAction}
             onOpenBabyProfile={onOpenBabyProfile}
+            onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
             storiesContent={storiesContent}
           />
         </View>
       </ScrollView>
+      {isCompact && showQuickActionAccess && !action && !isQuickActionPickerOpen ? (
+        <Pressable
+          accessibilityHint="Abre las opciones para registrar un cuidado"
+          accessibilityLabel="Registrar cuidado"
+          accessibilityRole="button"
+          onPress={() => setIsQuickActionPickerOpen(true)}
+          style={({ pressed }) => [
+            styles.floatingQuickAction,
+            Platform.OS !== 'web' && styles.floatingQuickActionNative,
+            pressed && styles.floatingQuickActionPressed,
+          ]}
+        >
+          <Plus color={colors.onAccent} size={20} />
+          <Text style={styles.floatingQuickActionText}>Registrar cuidado</Text>
+        </Pressable>
+      ) : null}
+      <QuickActionPicker
+        isSleeping={Boolean(snapshot?.openSleep)}
+        onClose={() => setIsQuickActionPickerOpen(false)}
+        onSelect={handleSelectQuickAction}
+        visible={isQuickActionPickerOpen}
+      />
       <CareActionSheet
         action={action}
         babyId={dashboard.baby.id}
@@ -877,8 +1100,9 @@ const styles = createThemedStyleSheet((colors) => ({
     paddingVertical: spacing.lg,
   },
   heroCompact: {
-    minHeight: 164,
+    minHeight: 148,
     paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   heroCopy: { flex: 1, gap: spacing.sm },
   eyebrow: {
@@ -903,6 +1127,10 @@ const styles = createThemedStyleSheet((colors) => ({
     fontSize: 15,
     lineHeight: 22,
     maxWidth: 470,
+  },
+  heroTextCompact: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   weightProgress: {
     alignItems: 'center',
@@ -1008,6 +1236,10 @@ const styles = createThemedStyleSheet((colors) => ({
     flexWrap: 'wrap',
     gap: spacing.md,
   },
+  actionsCompact: {
+    flexWrap: 'nowrap',
+    gap: spacing.sm,
+  },
   actionButton: {
     alignItems: 'center',
     borderRadius: radius.md,
@@ -1017,6 +1249,12 @@ const styles = createThemedStyleSheet((colors) => ({
     minHeight: 62,
     minWidth: 190,
     paddingHorizontal: spacing.lg,
+  },
+  primaryActionCompact: {
+    flexBasis: 0,
+    minHeight: 58,
+    minWidth: 0,
+    paddingHorizontal: spacing.md,
   },
   feedingAction: { backgroundColor: colors.peach },
   diaperAction: { backgroundColor: colors.butterSoft },
@@ -1028,10 +1266,16 @@ const styles = createThemedStyleSheet((colors) => ({
     fontSize: 15,
     fontWeight: '900',
   },
+  actionLabelCompact: {
+    fontSize: 13,
+  },
   secondaryActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+  },
+  secondaryActionsCompact: {
+    flexWrap: 'nowrap',
   },
   secondaryAction: {
     alignItems: 'center',
@@ -1045,6 +1289,15 @@ const styles = createThemedStyleSheet((colors) => ({
     minHeight: 48,
     paddingHorizontal: spacing.md,
   },
+  secondaryActionCompact: {
+    alignSelf: 'stretch',
+    borderRadius: radius.md,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+    minWidth: 0,
+    paddingHorizontal: spacing.sm,
+  },
   secondaryActionLabel: {
     color: colors.primaryPressed,
     fontSize: 12,
@@ -1053,6 +1306,122 @@ const styles = createThemedStyleSheet((colors) => ({
   actionArrow: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  floatingQuickAction: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: radius.pill,
+    bottom: spacing.lg,
+    elevation: 8,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'center',
+    minHeight: 50,
+    paddingHorizontal: spacing.xl,
+    position: 'absolute',
+    shadowColor: colors.text,
+    shadowOffset: { height: 6, width: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    zIndex: 3,
+  },
+  floatingQuickActionNative: {
+    bottom: 82,
+  },
+  floatingQuickActionPressed: {
+    backgroundColor: colors.primaryPressed,
+    transform: [{ scale: 0.98 }],
+  },
+  floatingQuickActionText: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  pickerBackdrop: {
+    backgroundColor: 'rgba(24, 35, 75, 0.58)',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  pickerDismissArea: {
+    flex: 1,
+  },
+  pickerSheet: {
+    alignSelf: 'center',
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    gap: spacing.lg,
+    maxWidth: 640,
+    padding: spacing.lg,
+    width: '100%',
+  },
+  pickerHandle: {
+    alignSelf: 'center',
+    backgroundColor: colors.border,
+    borderRadius: radius.pill,
+    height: 5,
+    width: 48,
+  },
+  pickerHeading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  pickerHeadingCopy: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  pickerTitle: {
+    color: colors.text,
+    fontSize: 23,
+    fontWeight: '900',
+    lineHeight: 29,
+  },
+  pickerCloseButton: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.pill,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  pickerCloseIcon: {
+    transform: [{ rotate: '45deg' }],
+  },
+  pickerOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingBottom: spacing.sm,
+  },
+  pickerOption: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexBasis: '47%',
+    flexDirection: 'row',
+    flexGrow: 1,
+    gap: spacing.sm,
+    minHeight: 64,
+    minWidth: 140,
+    paddingHorizontal: spacing.md,
+  },
+  pickerOptionIcon: {
+    alignItems: 'center',
+    borderRadius: radius.pill,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  pickerOptionLabel: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '900',
   },
   readOnlyNotice: {
     backgroundColor: colors.butterSoft,
