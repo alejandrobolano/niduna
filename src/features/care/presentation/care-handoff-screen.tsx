@@ -836,7 +836,7 @@ export function CareHandoffScreen({
   const [isQuickActionPickerOpen, setIsQuickActionPickerOpen] = useState(false);
   const [showQuickActionAccess, setShowQuickActionAccess] = useState(false);
   const [now, setNow] = useState(() => new Date());
-  const quickActionsLayout = useRef<LayoutRectangle>();
+  const quickActionsLayout = useRef<LayoutRectangle | null>(null);
   const scrollOffset = useRef(0);
   const scrollViewportHeight = useRef(0);
   const isCompact = width < 640;
