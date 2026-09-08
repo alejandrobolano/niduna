@@ -5,6 +5,26 @@ versionado semántico. Cada pull request de producto añade sus cambios a la
 sección `Unreleased`; la pull request de publicación los consolida bajo la
 versión correspondiente.
 
+## [1.2.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.1.0...niduna-v1.2.0) (2026-09-08)
+
+
+### Nuevas funciones
+
+* add quick action visibility logic and UI components for mobile … ([b7681e8](https://github.com/alejandrobolano/niduna/commit/b7681e85dc076733660a971570f61bf52fb88040))
+* add quick action visibility logic and UI components for mobile handoff ([d7ffc28](https://github.com/alejandrobolano/niduna/commit/d7ffc28c8891e189a28ca6ca748e719ace6029ac))
+
+
+### Correcciones
+
+* refresh care activity avatars ([d90e4bc](https://github.com/alejandrobolano/niduna/commit/d90e4bc55bbdaaee7b9c522151e23fede83bd3e5))
+* update quickActionsLayout reference type to allow null ([d528e1a](https://github.com/alejandrobolano/niduna/commit/d528e1a8ac55dfc7048b40ec561fcfaefd555c28))
+
+
+### Mantenimiento
+
+* prioritize care actions across layouts ([e5804d0](https://github.com/alejandrobolano/niduna/commit/e5804d08b549c151addf456aab5d23942b035a60))
+* share responsive screen heroes ([03ee4c1](https://github.com/alejandrobolano/niduna/commit/03ee4c1078e1cc277278cf79759e1b5c9c0094f9))
+
 ## [1.1.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.0.0...niduna-v1.1.0) (2026-09-04)
 
 
