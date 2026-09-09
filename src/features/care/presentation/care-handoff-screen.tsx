@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Scale,
   Star,
+  X,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -545,7 +546,7 @@ function QuickActionPicker({
                 pressed && styles.actionPressed,
               ]}
             >
-              <Plus color={colors.text} size={22} style={styles.pickerCloseIcon} />
+              <X color={colors.text} size={22} />
             </Pressable>
           </View>
           <View style={styles.pickerOptions}>
@@ -1380,9 +1381,6 @@ const styles = createThemedStyleSheet((colors) => ({
     height: 44,
     justifyContent: 'center',
     width: 44,
-  },
-  pickerCloseIcon: {
-    transform: [{ rotate: '45deg' }],
   },
   pickerOptions: {
     flexDirection: 'row',

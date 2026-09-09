@@ -174,8 +174,7 @@ versión correspondiente.
 
 ### Changed
 
-- La pantalla de Relevo prioriza el registro rápido en todos los tamaños y ofrece
-  un acceso flotante en móvil cuando el bloque principal queda fuera de la vista.
+- La pantalla de Relevo prioriza el registro rápido en todos los tamaños.
 - Los encabezados de Relevo, Registro, Bebé, Familia y sus apartados relacionados
   comparten ahora el mismo componente y comportamiento adaptable.
 - La actividad reciente muestra el animal o la foto de perfil vigente de quien
@@ -190,7 +189,7 @@ versión correspondiente.
 ### Fixed
 
 - El acceso flotante para registrar cuidados se muestra en cualquier tamaño
-  únicamente cuando el bloque de acciones queda fuera de la vista y mantiene
+  mientras el bloque de acciones no sea completamente visible y mantiene
   una separación cómoda respecto al borde inferior y la navegación nativa.
 - La navegación inferior web se mantiene ajustada al viewport visible y aplica
   una sola vez el área segura de Safari y las PWA instaladas en iPhone.

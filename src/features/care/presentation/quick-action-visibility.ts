@@ -18,5 +18,5 @@ export function shouldShowQuickActionAccess(
   const bottom = top + layout.height;
   const viewportBottom = viewport.height - viewport.bottomInset;
 
-  return bottom <= viewport.topInset || top >= viewportBottom;
+  return top < viewport.topInset || bottom > viewportBottom;
 }

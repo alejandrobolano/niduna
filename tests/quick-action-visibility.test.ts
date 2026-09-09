@@ -16,7 +16,7 @@ describe('quick action visibility', () => {
     ).toBe(false);
   });
 
-  it('keeps the shortcut hidden while part of the action block is visible', () => {
+  it('shows the shortcut while part of the action block is clipped', () => {
     expect(
       shouldShowQuickActionAccess(layout, {
         bottomInset: 16,
@@ -24,7 +24,7 @@ describe('quick action visibility', () => {
         scrollOffset: 0,
         topInset: 8,
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('shows the shortcut while the action block is below the viewport', () => {
