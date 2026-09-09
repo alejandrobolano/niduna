@@ -599,6 +599,8 @@ function DashboardContent({
   storiesContent?: ReactNode;
 }) {
   const { width } = useWindowDimensions();
+  const dashboardOffset = useRef(0);
+  const quickActionsLocalLayout = useRef<LayoutRectangle | null>(null);
   const isCompact = width < 640;
   const snapshot = useMemo(
     () => getCareSnapshot(dashboard.events),
@@ -616,8 +618,27 @@ function DashboardContent({
     now,
   );
 
+  function reportQuickActionsLayout() {
+    const layout = quickActionsLocalLayout.current;
+
+    if (!layout) {
+      return;
+    }
+
+    onQuickActionsLayout?.({
+      ...layout,
+      y: dashboardOffset.current + layout.y,
+    });
+  }
+
   return (
-    <>
+    <View
+      onLayout={(event) => {
+        dashboardOffset.current = event.nativeEvent.layout.y;
+        reportQuickActionsLayout();
+      }}
+      style={styles.dashboardContent}
+    >
       <ScreenHero
         eyebrow="Relevo familiar"
         subtitle={
@@ -653,7 +674,10 @@ function DashboardContent({
 
       {!isExpected && dashboard.canRecord ? (
         <View
-          onLayout={(event) => onQuickActionsLayout?.(event.nativeEvent.layout)}
+          onLayout={(event) => {
+            quickActionsLocalLayout.current = event.nativeEvent.layout;
+            reportQuickActionsLayout();
+          }}
         >
           <QuickActionsSection
             compact={isCompact}
@@ -808,7 +832,7 @@ function DashboardContent({
           )}
         </View>
       </View>
-    </>
+    </View>
   );
 }
 
@@ -821,7 +845,6 @@ export function CareHandoffScreen({
   topContent,
   userId,
 }: CareHandoffScreenProps) {
-  const { width } = useWindowDimensions();
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
   const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -834,7 +857,6 @@ export function CareHandoffScreen({
   const quickActionsLayout = useRef<LayoutRectangle | null>(null);
   const scrollOffset = useRef(0);
   const scrollViewportHeight = useRef(0);
-  const isCompact = width < 640;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -905,7 +927,13 @@ export function CareHandoffScreen({
     const layout = quickActionsLayout.current;
     const viewportHeight = scrollViewportHeight.current;
 
-    if (!isCompact || !layout || viewportHeight === 0) {
+    if (
+      !dashboard ||
+      !dashboard.canRecord ||
+      dashboard.baby.lifeStage === 'expected' ||
+      !layout ||
+      viewportHeight === 0
+    ) {
       setShowQuickActionAccess(false);
       return;
     }
@@ -1038,7 +1066,11 @@ export function CareHandoffScreen({
           />
         </View>
       </ScrollView>
-      {isCompact && showQuickActionAccess && !action && !isQuickActionPickerOpen ? (
+      {dashboard.canRecord &&
+      dashboard.baby.lifeStage !== 'expected' &&
+      showQuickActionAccess &&
+      !action &&
+      !isQuickActionPickerOpen ? (
         <Pressable
           accessibilityHint="Abre las opciones para registrar un cuidado"
           accessibilityLabel="Registrar cuidado"
@@ -1083,6 +1115,9 @@ const styles = createThemedStyleSheet((colors) => ({
     gap: spacing.xl,
     maxWidth: 920,
     width: '100%',
+  },
+  dashboardContent: {
+    gap: spacing.xl,
   },
   eyebrow: {
     color: colors.primaryPressed,
@@ -1271,7 +1306,7 @@ const styles = createThemedStyleSheet((colors) => ({
     alignSelf: 'center',
     backgroundColor: colors.primary,
     borderRadius: radius.pill,
-    bottom: spacing.lg,
+    bottom: spacing.xl,
     elevation: 8,
     flexDirection: 'row',
     gap: spacing.sm,
@@ -1286,7 +1321,7 @@ const styles = createThemedStyleSheet((colors) => ({
     zIndex: 3,
   },
   floatingQuickActionNative: {
-    bottom: 82,
+    bottom: 96,
   },
   floatingQuickActionPressed: {
     backgroundColor: colors.primaryPressed,

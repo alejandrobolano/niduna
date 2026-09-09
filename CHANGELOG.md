@@ -169,6 +169,9 @@ versión correspondiente.
 
 ### Fixed
 
+- El acceso flotante para registrar cuidados se muestra en cualquier tamaño
+  únicamente cuando el bloque de acciones queda fuera de la vista y mantiene
+  una separación cómoda respecto al borde inferior y la navegación nativa.
 - La navegación inferior web se mantiene ajustada al viewport visible y aplica
   una sola vez el área segura de Safari y las PWA instaladas en iPhone.
 
