@@ -16,7 +16,7 @@ describe('quick action visibility', () => {
     ).toBe(false);
   });
 
-  it('shows the shortcut when the action block extends below the viewport', () => {
+  it('shows the shortcut while part of the action block is clipped', () => {
     expect(
       shouldShowQuickActionAccess(layout, {
         bottomInset: 16,
@@ -24,6 +24,20 @@ describe('quick action visibility', () => {
         scrollOffset: 0,
         topInset: 8,
       }),
+    ).toBe(true);
+  });
+
+  it('shows the shortcut while the action block is below the viewport', () => {
+    expect(
+      shouldShowQuickActionAccess(
+        { height: 180, y: 500 },
+        {
+          bottomInset: 16,
+          height: 420,
+          scrollOffset: 0,
+          topInset: 8,
+        },
+      ),
     ).toBe(true);
   });
 
