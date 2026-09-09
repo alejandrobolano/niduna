@@ -4,6 +4,8 @@ import { Pressable, Text, View } from 'react-native';
 import type { AppSection } from '@/features/home/domain/app-section';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
+export const bottomNavigationContentHeight = 58 + spacing.xs * 2;
+
 interface AppSectionNavigationProps {
   careAvailable?: boolean;
   onChange: (section: AppSection) => void;

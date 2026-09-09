@@ -15,7 +15,6 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -85,6 +84,7 @@ const measurementSourceLabels: Record<string, string> = {
 
 interface CareHandoffScreenProps {
   babyId?: string;
+  bottomNavigationInset?: number;
   canCreateBaby: boolean;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
@@ -839,6 +839,7 @@ function DashboardContent({
 
 export function CareHandoffScreen({
   babyId: selectedBabyId,
+  bottomNavigationInset = 0,
   canCreateBaby,
   onOpenBabyProfile,
   repository,
@@ -939,9 +940,8 @@ export function CareHandoffScreen({
       return;
     }
 
-    const nativeNavigationInset = Platform.OS === 'web' ? 0 : 72;
     const shouldShow = shouldShowQuickActionAccess(layout, {
-      bottomInset: nativeNavigationInset + spacing.sm,
+      bottomInset: bottomNavigationInset + spacing.sm,
       height: viewportHeight,
       scrollOffset,
       topInset: spacing.sm,
@@ -1079,7 +1079,7 @@ export function CareHandoffScreen({
           onPress={() => setIsQuickActionPickerOpen(true)}
           style={({ pressed }) => [
             styles.floatingQuickAction,
-            Platform.OS !== 'web' && styles.floatingQuickActionNative,
+            { bottom: bottomNavigationInset + spacing.xl },
             pressed && styles.floatingQuickActionPressed,
           ]}
         >
@@ -1320,9 +1320,6 @@ const styles = createThemedStyleSheet((colors) => ({
     shadowOpacity: 0.2,
     shadowRadius: 14,
     zIndex: 3,
-  },
-  floatingQuickActionNative: {
-    bottom: 96,
   },
   floatingQuickActionPressed: {
     backgroundColor: colors.primaryPressed,

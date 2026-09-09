@@ -56,7 +56,10 @@ import {
   resolveAccessibleAppSection,
 } from '@/features/home/domain/app-section-access';
 import type { AppSection } from '@/features/home/domain/app-section';
-import { AppSectionNavigation } from '@/features/home/presentation/app-section-navigation';
+import {
+  AppSectionNavigation,
+  bottomNavigationContentHeight,
+} from '@/features/home/presentation/app-section-navigation';
 import { AppHeader } from '@/features/home/presentation/app-header';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
 import { supabaseNotificationRepository } from '@/features/notifications/infrastructure/supabase-notification-repository';
@@ -392,6 +395,9 @@ function AuthenticatedApp({
     return renderAppScreen(
       <CareHandoffScreen
         babyId={context.activeBaby?.id}
+        bottomNavigationInset={
+          compactNavigation ? bottomNavigationContentHeight + insets.bottom : 0
+        }
         canCreateBaby={canManageBabies}
         key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
         onOpenBabyProfile={() => changeSection('baby')}
