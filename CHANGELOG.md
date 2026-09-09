@@ -5,6 +5,15 @@ versionado semántico. Cada pull request de producto añade sus cambios a la
 sección `Unreleased`; la pull request de publicación los consolida bajo la
 versión correspondiente.
 
+## [1.2.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.0...niduna-v1.2.1) (2026-09-09)
+
+
+### Correcciones
+
+* keep care shortcut above navigation ([cca42a3](https://github.com/alejandrobolano/niduna/commit/cca42a3975ec6d7e17b63f58354adbb0afb72734))
+* keep quick actions accessible while clipped ([103eb1d](https://github.com/alejandrobolano/niduna/commit/103eb1dc9bd995e4ee3cc9ad613643f515eb539d))
+* show care shortcut outside action section ([ba3d0ae](https://github.com/alejandrobolano/niduna/commit/ba3d0aea8577ddd8a1d744f7477d9230a317a365))
+
 ## [1.2.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.1.0...niduna-v1.2.0) (2026-09-08)
 
 
