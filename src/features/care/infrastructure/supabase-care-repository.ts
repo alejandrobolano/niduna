@@ -14,6 +14,7 @@ import {
     type CareTimelineRow,
 } from '@/features/care/infrastructure/supabase-care-event-mapper';
 import type { CareEvent } from '@/features/care/domain/care-event';
+import { isCareEntryTimeAllowed } from '@/features/care/domain/care-entry-time';
 import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
@@ -55,6 +56,14 @@ function throwOperationError(
 
 function normalizeNotes(notes: string | undefined): string | null {
   return notes?.trim() || null;
+}
+
+function validateCareEntryTime(occurredAt: string): string {
+  if (!isCareEntryTimeAllowed(occurredAt)) {
+    throw new CareOperationError('invalid_occurrence');
+  }
+
+  return occurredAt;
 }
 
 async function insertEvent(
@@ -376,7 +385,7 @@ export const supabaseCareRepository: CareRepository = {
       event_type: 'feeding',
       feeding_method: input.method,
       notes: normalizeNotes(input.notes),
-      occurred_at: new Date().toISOString(),
+      occurred_at: validateCareEntryTime(input.occurredAt),
     });
   },
 
@@ -386,7 +395,7 @@ export const supabaseCareRepository: CareRepository = {
       diaper_condition: input.condition,
       event_type: 'diaper',
       notes: normalizeNotes(input.notes),
-      occurred_at: new Date().toISOString(),
+      occurred_at: validateCareEntryTime(input.occurredAt),
     });
   },
 
@@ -396,7 +405,7 @@ export const supabaseCareRepository: CareRepository = {
       .insert({
         baby_id: input.babyId,
         content: input.content.trim(),
-        occurred_at: new Date().toISOString(),
+        occurred_at: validateCareEntryTime(input.occurredAt),
       })
       .select('id')
       .single();
@@ -416,7 +425,7 @@ export const supabaseCareRepository: CareRepository = {
         head_circumference_millimeters:
           input.headCircumferenceMillimeters ?? null,
         length_millimeters: input.lengthMillimeters ?? null,
-        measured_at: new Date().toISOString(),
+        measured_at: validateCareEntryTime(input.occurredAt),
         notes: normalizeNotes(input.notes),
         source: input.source,
         weight_grams: input.weightGrams ?? null,
@@ -471,7 +480,7 @@ export const supabaseCareRepository: CareRepository = {
       baby_id: input.babyId,
       event_type: 'sleep',
       notes: normalizeNotes(input.notes),
-      occurred_at: new Date().toISOString(),
+      occurred_at: validateCareEntryTime(input.occurredAt),
     });
   },
 
