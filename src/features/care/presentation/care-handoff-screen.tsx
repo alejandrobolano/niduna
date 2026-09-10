@@ -921,7 +921,13 @@ export function CareHandoffScreen({
   const snapshot = dashboard ? getCareSnapshot(dashboard.events) : undefined;
 
   function handleRefresh() {
+    setNow(new Date());
     setIsRefreshing(true);
+    setLoadAttempt((current) => current + 1);
+  }
+
+  function handleCareSaved() {
+    setNow(new Date());
     setLoadAttempt((current) => current + 1);
   }
 
@@ -1097,7 +1103,7 @@ export function CareHandoffScreen({
         action={action}
         babyId={dashboard.baby.id}
         onClose={() => setAction(undefined)}
-        onSaved={() => setLoadAttempt((current) => current + 1)}
+        onSaved={handleCareSaved}
         openSleep={snapshot?.openSleep}
         repository={repository}
       />

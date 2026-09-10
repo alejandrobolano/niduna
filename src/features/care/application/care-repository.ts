@@ -14,6 +14,7 @@ import type {
 interface CareEventInput {
   babyId: string;
   notes?: string;
+  occurredAt: string;
 }
 
 export interface FeedingInput extends CareEventInput {
@@ -28,8 +29,7 @@ export interface DiaperInput extends CareEventInput {
 
 export type SleepInput = CareEventInput;
 
-export interface NoteInput {
-  babyId: string;
+export interface NoteInput extends Omit<CareEventInput, 'notes'> {
   content: string;
 }
 
@@ -77,6 +77,7 @@ export interface CareRepository {
 
 export type CareOperationErrorReason =
   | 'not_allowed'
+  | 'invalid_occurrence'
   | 'recovery_expired'
   | 'sleep_already_running'
   | 'unknown';

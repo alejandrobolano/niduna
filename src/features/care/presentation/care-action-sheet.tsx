@@ -30,6 +30,11 @@ import type {
   MeasurementSource,
   SleepEvent,
 } from '@/features/care/domain/care-event';
+import {
+  type CareEntryTimeSelection,
+  resolveCareEntryTime,
+} from '@/features/care/domain/care-entry-time';
+import { CareEntryTimeField } from '@/features/care/presentation/care-entry-time-field';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 
@@ -99,6 +104,10 @@ function getOperationMessage(error: unknown): string {
     return 'Ya hay un sueño en curso. Actualiza el relevo antes de continuar.';
   }
 
+  if (error.reason === 'invalid_occurrence') {
+    return 'El momento elegido debe estar dentro de las últimas 2 horas.';
+  }
+
   return 'No pudimos guardar el registro. Inténtalo de nuevo.';
 }
 
@@ -124,6 +133,9 @@ export function CareActionSheet({
     useState<MeasurementSource>('home');
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [timeSelection, setTimeSelection] = useState<CareEntryTimeSelection>({
+    kind: 'now',
+  });
   const amountIsInvalid = Boolean(amount.trim()) && !parseAmount(amount);
   const weightGrams = parseWeightGrams(weight);
   const lengthMillimeters = parseLengthMillimeters(length);
@@ -160,6 +172,7 @@ export function CareActionSheet({
     setLength('');
     setHeadCircumference('');
     setMeasurementSource('home');
+    setTimeSelection({ kind: 'now' });
     setErrorMessage(undefined);
   }
 
@@ -177,6 +190,8 @@ export function CareActionSheet({
     setErrorMessage(undefined);
 
     try {
+      const occurredAt = resolveCareEntryTime(timeSelection).toISOString();
+
       if (action === 'feeding') {
         await repository.recordFeeding({
           amountMilliliters: parseAmount(amount),
@@ -184,28 +199,31 @@ export function CareActionSheet({
           breastSide: showsBreastSide ? breastSide : undefined,
           method: feedingMethod,
           notes,
+          occurredAt,
         });
       } else if (action === 'diaper') {
         await repository.recordDiaper({
           babyId,
           condition: diaperCondition,
           notes,
+          occurredAt,
         });
       } else if (action === 'note') {
-        await repository.recordNote({ babyId, content: notes });
+        await repository.recordNote({ babyId, content: notes, occurredAt });
       } else if (action === 'measurement') {
         await repository.recordMeasurement({
           babyId,
           headCircumferenceMillimeters,
           lengthMillimeters,
           notes,
+          occurredAt,
           source: measurementSource,
           weightGrams,
         });
       } else if (openSleep) {
         await repository.finishSleep(openSleep.id);
       } else {
-        await repository.startSleep({ babyId, notes });
+        await repository.startSleep({ babyId, notes, occurredAt });
       }
 
       onSaved();
@@ -229,7 +247,7 @@ export function CareActionSheet({
         : openSleep
           ? 'Terminar sueño'
           : 'Iniciar sueño';
-  const buttonLabel = openSleep && action === 'sleep' ? 'Se despertó' : 'Guardar ahora';
+  const buttonLabel = openSleep && action === 'sleep' ? 'Se despertó' : 'Guardar registro';
 
   return (
     <Modal
@@ -258,7 +276,11 @@ export function CareActionSheet({
           <View style={styles.handle} />
           <View style={styles.heading}>
             <View>
-              <Text style={styles.eyebrow}>Se guardará con la hora actual</Text>
+              <Text style={styles.eyebrow}>
+                {openSleep && action === 'sleep'
+                  ? 'Se guardará con la hora actual'
+                  : 'Registra el momento real'}
+              </Text>
               <Text style={styles.title}>{title}</Text>
             </View>
             <Pressable
@@ -275,6 +297,13 @@ export function CareActionSheet({
             contentContainerStyle={styles.form}
             keyboardShouldPersistTaps="handled"
           >
+            {openSleep && action === 'sleep' ? null : (
+              <CareEntryTimeField
+                onChange={setTimeSelection}
+                selection={timeSelection}
+              />
+            )}
+
             {action === 'feeding' ? (
               <>
                 <SelectField

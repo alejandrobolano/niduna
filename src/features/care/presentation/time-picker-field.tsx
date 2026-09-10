@@ -1,87 +1,14 @@
 import { Check, ChevronDown, Clock, X } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Modal,
   Pressable,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
 
+import { TimeWheelPicker } from '@/features/care/presentation/time-wheel-picker';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
-
-const itemHeight = 48;
-const visibleItems = 5;
-const wheelHeight = itemHeight * visibleItems;
-const wheelPadding = (wheelHeight - itemHeight) / 2;
-
-const hours = Array.from({ length: 24 }, (_, value) => String(value).padStart(2, '0'));
-const minutes = Array.from({ length: 60 }, (_, value) => String(value).padStart(2, '0'));
-
-interface WheelColumnProps {
-  accessibilityLabel: string;
-  onChange: (value: string) => void;
-  options: string[];
-  value: string;
-}
-
-function WheelColumn({ accessibilityLabel, onChange, options, value }: WheelColumnProps) {
-  const listRef = useRef<ScrollView>(null);
-  const selectedIndex = Math.max(0, options.indexOf(value));
-
-  useEffect(() => {
-    listRef.current?.scrollTo({ animated: false, y: selectedIndex * itemHeight });
-  }, [selectedIndex]);
-
-  function selectFromOffset(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const index = Math.max(
-      0,
-      Math.min(options.length - 1, Math.round(event.nativeEvent.contentOffset.y / itemHeight)),
-    );
-    onChange(options[index]);
-  }
-
-  function select(valueToSelect: string, index: number) {
-    onChange(valueToSelect);
-    listRef.current?.scrollTo({ animated: true, y: index * itemHeight });
-  }
-
-  return (
-    <View accessibilityLabel={accessibilityLabel} style={styles.wheel}>
-      <View pointerEvents="none" style={styles.selection} />
-      <ScrollView
-        contentContainerStyle={styles.wheelContent}
-        decelerationRate="fast"
-        onMomentumScrollEnd={selectFromOffset}
-        onScrollEndDrag={selectFromOffset}
-        ref={listRef}
-        showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={itemHeight}
-        style={styles.wheelList}
-      >
-        {options.map((option, index) => {
-          const selected = option === value;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              key={option}
-              onPress={() => select(option, index)}
-              style={styles.wheelItem}
-            >
-              <Text style={[styles.wheelValue, selected && styles.wheelValueSelected]}>
-                {option}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
-  );
-}
 
 interface TimePickerFieldProps {
   hour: string;
@@ -162,23 +89,12 @@ export function TimePickerField({
               </Pressable>
             </View>
 
-            <View style={styles.columnLabels}>
-              <Text style={styles.columnLabel}>Hora</Text>
-              <Text style={styles.columnLabel}>Minutos</Text>
-            </View>
-            <View style={styles.wheels}>
-              <WheelColumn
-                accessibilityLabel="Seleccionar hora"
-                onChange={setDraftHour}
-                options={hours}
-                value={draftHour}
-              />
-              <Text pointerEvents="none" style={styles.separator}>:</Text>
-              <WheelColumn
-                accessibilityLabel="Seleccionar minutos"
-                onChange={setDraftMinute}
-                options={minutes}
-                value={draftMinute}
+            <View style={styles.picker}>
+              <TimeWheelPicker
+                hour={draftHour}
+                minute={draftMinute}
+                onHourChange={setDraftHour}
+                onMinuteChange={setDraftMinute}
               />
             </View>
 
@@ -266,61 +182,7 @@ const styles = createThemedStyleSheet((colors) => ({
     justifyContent: 'center',
     width: 40,
   },
-  columnLabels: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.xxl,
-  },
-  columnLabel: {
-    color: colors.textMuted,
-    flex: 1,
-    fontSize: 11,
-    fontWeight: '800',
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  wheels: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'center',
-  },
-  wheel: {
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    height: wheelHeight,
-    maxWidth: 132,
-    overflow: 'hidden',
-    position: 'relative',
-    width: '38%',
-  },
-  wheelList: {
-    backgroundColor: 'transparent',
-    flexGrow: 0,
-    height: wheelHeight,
-    zIndex: 1,
-  },
-  wheelContent: { paddingVertical: wheelPadding },
-  selection: {
-    backgroundColor: colors.peach,
-    borderColor: colors.coral,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    height: itemHeight,
-    left: spacing.xs,
-    position: 'absolute',
-    right: spacing.xs,
-    top: wheelPadding,
-    zIndex: 0,
-  },
-  wheelItem: { alignItems: 'center', height: itemHeight, justifyContent: 'center' },
-  wheelValue: { color: colors.textMuted, fontSize: 18, fontWeight: '700' },
-  wheelValueSelected: { color: colors.text, fontSize: 24, fontWeight: '900' },
-  separator: { color: colors.text, fontSize: 30, fontWeight: '900' },
+  picker: { marginTop: spacing.xl },
   confirmButton: {
     alignItems: 'center',
     backgroundColor: colors.primary,
