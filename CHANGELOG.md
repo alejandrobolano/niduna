@@ -167,7 +167,8 @@ versión correspondiente.
 ### Added
 
 - El registro de cuidados permite usar la hora actual, indicar que ocurrió hace
-  5, 10, 15 o 30 minutos, o elegir una hora concreta sin abandonar el formulario.
+  5, 10, 15 o 30 minutos, o elegir una hora concreta de las últimas 2 horas sin
+  abandonar el formulario; el historial conserva su edición completa.
 - Gestión privada de documentos PDF, JPG y PNG del bebé, organizados por
   categoría y fecha, con opciones para abrir, guardar, editar, retirar y
   restaurar según los permisos familiares.

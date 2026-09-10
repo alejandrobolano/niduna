@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getCareEntryClockTimes,
   isCareEntryTimeAllowed,
   resolveCareEntryTime,
 } from '../src/features/care/domain/care-entry-time';
@@ -33,7 +34,7 @@ describe('care entry time', () => {
     );
   });
 
-  it('uses yesterday when the selected clock time is later than now', () => {
+  it('uses yesterday only when crossing midnight within the quick-entry window', () => {
     const afterMidnight = new Date(2026, 8, 10, 0, 5);
 
     expect(
@@ -46,9 +47,30 @@ describe('care entry time', () => {
     ).toEqual(new Date(2026, 8, 9, 23, 55));
   });
 
-  it('accepts only valid times within the previous 24 hours', () => {
-    expect(isCareEntryTimeAllowed(new Date(now.getTime() - 24 * 60 * 60 * 1000), now)).toBe(true);
-    expect(isCareEntryTimeAllowed(new Date(now.getTime() - 24 * 60 * 60 * 1000 - 1), now)).toBe(false);
+  it('does not reinterpret an arbitrary future hour as yesterday', () => {
+    const occurrence = resolveCareEntryTime({
+      hour: 13,
+      kind: 'custom',
+      minute: 0,
+      referenceAt: new Date(2026, 8, 10, 9).toISOString(),
+    });
+
+    expect(occurrence).toEqual(new Date(2026, 8, 10, 13));
+    expect(isCareEntryTimeAllowed(occurrence, new Date(2026, 8, 10, 9))).toBe(false);
+  });
+
+  it('offers only clock times from now to two hours ago', () => {
+    const options = getCareEntryClockTimes(new Date(2026, 8, 10, 1, 15, 48));
+
+    expect(options).toHaveLength(121);
+    expect(options[0]).toEqual({ hour: 23, minute: 15 });
+    expect(options.at(-1)).toEqual({ hour: 1, minute: 15 });
+  });
+
+  it('accepts only valid times within the previous two hours', () => {
+    expect(isCareEntryTimeAllowed(new Date(now.getTime() - 2 * 60 * 60 * 1000), now)).toBe(true);
+    expect(isCareEntryTimeAllowed(new Date(now.getTime() - 2 * 60 * 60 * 1000 - 59_999), now)).toBe(true);
+    expect(isCareEntryTimeAllowed(new Date(now.getTime() - 2 * 60 * 60 * 1000 - 60_000), now)).toBe(false);
     expect(isCareEntryTimeAllowed(new Date(now.getTime() + 1), now)).toBe(false);
     expect(isCareEntryTimeAllowed('invalid', now)).toBe(false);
   });

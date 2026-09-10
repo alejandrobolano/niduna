@@ -1,8 +1,11 @@
 import { Clock3 } from 'lucide-react-native';
+import { useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import {
+  careEntryMaximumLookbackMinutes,
   careEntryMinuteOffsets,
+  getCareEntryClockTimes,
   type CareEntryTimeSelection,
   resolveCareEntryTime,
 } from '@/features/care/domain/care-entry-time';
@@ -25,8 +28,23 @@ function formatSelection(selection: CareEntryTimeSelection, now: Date): string {
   }
 
   const occurrence = resolveCareEntryTime(selection, now);
-  const dayLabel = occurrence.getDate() === now.getDate() ? 'Hoy' : 'Ayer';
+  const isToday = occurrence.getFullYear() === now.getFullYear()
+    && occurrence.getMonth() === now.getMonth()
+    && occurrence.getDate() === now.getDate();
+  const dayLabel = isToday ? 'Hoy' : 'Ayer';
   return `${dayLabel}, ${timeFormatter.format(occurrence)}`;
+}
+
+function formatClockValue(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+function findClosestMinute(minutes: number[], currentMinute: number): number {
+  return minutes.reduce((closest, minute) =>
+    Math.abs(minute - currentMinute) < Math.abs(closest - currentMinute)
+      ? minute
+      : closest,
+  );
 }
 
 export function CareEntryTimeField({
@@ -34,6 +52,26 @@ export function CareEntryTimeField({
   selection,
 }: CareEntryTimeFieldProps) {
   const now = new Date();
+  const customReferenceAt = selection.kind === 'custom'
+    ? selection.referenceAt
+    : undefined;
+  const allowedClockTimes = useMemo(
+    () => customReferenceAt ? getCareEntryClockTimes(customReferenceAt) : [],
+    [customReferenceAt],
+  );
+  const hourOptions = useMemo(
+    () => Array.from(new Set(allowedClockTimes.map(({ hour }) => formatClockValue(hour)))),
+    [allowedClockTimes],
+  );
+  const minuteOptions = useMemo(() => {
+    if (selection.kind !== 'custom') {
+      return [];
+    }
+
+    return allowedClockTimes
+      .filter(({ hour }) => hour === selection.hour)
+      .map(({ minute }) => formatClockValue(minute));
+  }, [allowedClockTimes, selection]);
 
   function chooseCustomTime() {
     onChange({
@@ -42,6 +80,22 @@ export function CareEntryTimeField({
       minute: now.getMinutes(),
       referenceAt: now.toISOString(),
     });
+  }
+
+  function changeCustomHour(hourValue: string) {
+    if (selection.kind !== 'custom') {
+      return;
+    }
+
+    const hour = Number(hourValue);
+    const allowedMinutes = allowedClockTimes
+      .filter((time) => time.hour === hour)
+      .map((time) => time.minute);
+    const minute = allowedMinutes.includes(selection.minute)
+      ? selection.minute
+      : findClosestMinute(allowedMinutes, selection.minute);
+
+    onChange({ ...selection, hour, minute });
   }
 
   return (
@@ -122,12 +176,15 @@ export function CareEntryTimeField({
           <TimeWheelPicker
             compact
             hour={String(selection.hour).padStart(2, '0')}
+            hourOptions={hourOptions}
             minute={String(selection.minute).padStart(2, '0')}
-            onHourChange={(hour) => onChange({ ...selection, hour: Number(hour) })}
+            minuteOptions={minuteOptions}
+            onHourChange={changeCustomHour}
             onMinuteChange={(minute) => onChange({ ...selection, minute: Number(minute) })}
           />
           <Text style={styles.hint}>
-            Si eliges una hora posterior a la actual, se entenderá que fue ayer.
+            Puedes retroceder hasta {careEntryMaximumLookbackMinutes / 60} horas. Para
+            una hora anterior, guarda el cuidado y corrígelo desde Registro.
           </Text>
         </View>
       ) : null}

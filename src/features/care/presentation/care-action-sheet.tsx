@@ -105,7 +105,7 @@ function getOperationMessage(error: unknown): string {
   }
 
   if (error.reason === 'invalid_occurrence') {
-    return 'El momento elegido debe estar dentro de las últimas 24 horas.';
+    return 'El momento elegido debe estar dentro de las últimas 2 horas.';
   }
 
   return 'No pudimos guardar el registro. Inténtalo de nuevo.';

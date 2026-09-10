@@ -96,7 +96,9 @@ function WheelColumn({
 interface TimeWheelPickerProps {
   compact?: boolean;
   hour: string;
+  hourOptions?: string[];
   minute: string;
+  minuteOptions?: string[];
   onHourChange: (value: string) => void;
   onMinuteChange: (value: string) => void;
 }
@@ -104,7 +106,9 @@ interface TimeWheelPickerProps {
 export function TimeWheelPicker({
   compact = false,
   hour,
+  hourOptions = hours,
   minute,
+  minuteOptions = minutes,
   onHourChange,
   onMinuteChange,
 }: TimeWheelPickerProps) {
@@ -120,7 +124,7 @@ export function TimeWheelPicker({
         <WheelColumn
           accessibilityLabel="Seleccionar hora"
           onChange={onHourChange}
-          options={hours}
+          options={hourOptions}
           value={hour}
           visibleItems={visibleItems}
         />
@@ -128,7 +132,7 @@ export function TimeWheelPicker({
         <WheelColumn
           accessibilityLabel="Seleccionar minutos"
           onChange={onMinuteChange}
-          options={minutes}
+          options={minuteOptions}
           value={minute}
           visibleItems={visibleItems}
         />
