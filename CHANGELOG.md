@@ -5,6 +5,20 @@ versionado semántico. Cada pull request de producto añade sus cambios a la
 sección `Unreleased`; la pull request de publicación los consolida bajo la
 versión correspondiente.
 
+## [1.3.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.1...niduna-v1.3.0) (2026-09-10)
+
+
+### Nuevas funciones
+
+* allow adjusting new care record time ([6dd1edc](https://github.com/alejandrobolano/niduna/commit/6dd1edc3548950d91f662d83a082de9654368807))
+* allow adjusting new care record time ([faff281](https://github.com/alejandrobolano/niduna/commit/faff281b0499e326ccbf376d0021eceaf77d4820))
+
+
+### Correcciones
+
+* limit quick care time selection ([a19b4db](https://github.com/alejandrobolano/niduna/commit/a19b4db31256104c688061b958be10f247b19213))
+* refresh relative time after saving care ([c13b5c9](https://github.com/alejandrobolano/niduna/commit/c13b5c9e6708a1666e8d61dfec29f340a6c06857))
+
 ## [1.2.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.0...niduna-v1.2.1) (2026-09-09)
 
 
