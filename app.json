@@ -68,7 +68,60 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      [
+        "expo-quick-actions",
+        {
+          "androidIcons": {
+            "care_feeding": {
+              "foregroundImage": "./assets/images/quick-actions/feeding.png",
+              "backgroundColor": "#FFDAD3"
+            },
+            "care_diaper": {
+              "foregroundImage": "./assets/images/quick-actions/diaper.png",
+              "backgroundColor": "#FFF0AD"
+            },
+            "care_sleep": {
+              "foregroundImage": "./assets/images/quick-actions/sleep.png",
+              "backgroundColor": "#E4D2FF"
+            }
+          }
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "NidunaCareWidget",
+              "displayName": "Relevo de Niduna",
+              "description": "Consulta los últimos cuidados del bebé de un vistazo.",
+              "ios": {
+                "supportedFamilies": ["systemMedium"]
+              }
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "NidunaCareWidget",
+              "label": "Relevo de Niduna",
+              "description": "Última alimentación, pañal y sueño del bebé.",
+              "minWidth": "320dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
+      "./plugins/with-android-work-manager-resolution"
     ],
     "experiments": {
       "typedRoutes": true,
