@@ -2,6 +2,7 @@ import * as Linking from 'expo-linking';
 import { useQuickActionCallback } from 'expo-quick-actions/hooks';
 import { setItems } from 'expo-quick-actions';
 import { useCallback, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 
 import {
   parseCareWidgetAction,
@@ -16,21 +17,21 @@ interface CareQuickActionsProps {
 
 const quickActions = [
   {
-    icon: 'compose',
+    icon: Platform.OS === 'android' ? 'care_feeding' : 'compose',
     id: 'feeding',
     params: { careAction: 'feeding' },
     subtitle: 'Abrir Relevo',
     title: 'Registrar alimentación',
   },
   {
-    icon: 'task',
+    icon: Platform.OS === 'android' ? 'care_diaper' : 'task',
     id: 'diaper',
     params: { careAction: 'diaper' },
     subtitle: 'Abrir Relevo',
     title: 'Registrar pañal',
   },
   {
-    icon: 'time',
+    icon: Platform.OS === 'android' ? 'care_sleep' : 'time',
     id: 'sleep',
     params: { careAction: 'sleep' },
     subtitle: 'Abrir Relevo',

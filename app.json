@@ -70,6 +70,25 @@
         }
       ],
       [
+        "expo-quick-actions",
+        {
+          "androidIcons": {
+            "care_feeding": {
+              "foregroundImage": "./assets/images/quick-actions/feeding.png",
+              "backgroundColor": "#FFDAD3"
+            },
+            "care_diaper": {
+              "foregroundImage": "./assets/images/quick-actions/diaper.png",
+              "backgroundColor": "#FFF0AD"
+            },
+            "care_sleep": {
+              "foregroundImage": "./assets/images/quick-actions/sleep.png",
+              "backgroundColor": "#E4D2FF"
+            }
+          }
+        }
+      ],
+      [
         "expo-widgets",
         {
           "widgets": [

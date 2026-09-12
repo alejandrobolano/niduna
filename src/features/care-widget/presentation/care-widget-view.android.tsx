@@ -31,10 +31,15 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
       clickAction="OPEN_URI"
       clickActionData={{ uri: careHandoffDeepLink }}
       style={{
-        backgroundColor: palette.background,
+        backgroundGradient: {
+          from: palette.background,
+          orientation: 'TOP_BOTTOM',
+          to: palette.background,
+        },
         borderRadius: 24,
         flexDirection: 'column',
         height: 'match_parent',
+        overflow: 'hidden',
         padding: 16,
         width: 'match_parent',
       }}

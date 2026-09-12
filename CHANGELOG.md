@@ -181,6 +181,7 @@ versión correspondiente.
 ### Fixed
 
 - Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
+- Corregido el fondo transparente del widget Android y añadidos iconos propios a sus accesos rápidos.
 
 ### Added
 
