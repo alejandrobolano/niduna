@@ -68,6 +68,39 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "NidunaCareWidget",
+              "displayName": "Relevo de Niduna",
+              "description": "Consulta los últimos cuidados del bebé de un vistazo.",
+              "ios": {
+                "supportedFamilies": ["systemMedium"]
+              }
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "NidunaCareWidget",
+              "label": "Relevo de Niduna",
+              "description": "Última alimentación, pañal y sueño del bebé.",
+              "minWidth": "320dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
       ]
     ],
     "experiments": {

@@ -180,6 +180,10 @@ versión correspondiente.
 
 ### Added
 
+- Widget nativo de Relevo para consultar la última alimentación, pañal y sueño
+  en Android e iOS, con apertura directa de la pantalla principal.
+- Accesos rápidos para registrar alimentación, pañal o sueño desde el icono de
+  la aplicación nativa y desde el menú contextual de la PWA.
 - El registro de cuidados permite usar la hora actual, indicar que ocurrió hace
   5, 10, 15 o 30 minutos, o elegir una hora concreta de las últimas 2 horas sin
   abandonar el formulario; el historial conserva su edición completa.

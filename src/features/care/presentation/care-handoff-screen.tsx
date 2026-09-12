@@ -86,6 +86,8 @@ interface CareHandoffScreenProps {
   babyId?: string;
   bottomNavigationInset?: number;
   canCreateBaby: boolean;
+  initialAction?: CareAction;
+  onExternalActionHandled?: () => void;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   storiesContent?: ReactNode;
@@ -841,6 +843,8 @@ export function CareHandoffScreen({
   babyId: selectedBabyId,
   bottomNavigationInset = 0,
   canCreateBaby,
+  initialAction,
+  onExternalActionHandled,
   onOpenBabyProfile,
   repository,
   storiesContent,
@@ -852,7 +856,7 @@ export function CareHandoffScreen({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [action, setAction] = useState<CareAction>();
+  const [action, setAction] = useState<CareAction | undefined>(initialAction);
   const [isQuickActionPickerOpen, setIsQuickActionPickerOpen] = useState(false);
   const [showQuickActionAccess, setShowQuickActionAccess] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -1102,7 +1106,10 @@ export function CareHandoffScreen({
       <CareActionSheet
         action={action}
         babyId={dashboard.baby.id}
-        onClose={() => setAction(undefined)}
+        onClose={() => {
+          setAction(undefined);
+          onExternalActionHandled?.();
+        }}
         onSaved={handleCareSaved}
         openSleep={snapshot?.openSleep}
         repository={repository}
