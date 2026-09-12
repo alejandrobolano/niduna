@@ -178,6 +178,10 @@ versión correspondiente.
 
 ## [Unreleased]
 
+### Fixed
+
+- Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
+
 ### Added
 
 - Widget nativo de Relevo para consultar la última alimentación, pañal y sueño
