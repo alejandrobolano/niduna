@@ -16,12 +16,48 @@ function createBackgroundDrawable(color) {
 }
 
 function createWidgetLayout({ dark }) {
+  const primaryText = dark ? '#FFF8E8' : '#16214A';
+  const secondaryText = dark ? '#BFC5D6' : '#5D6780';
+
   return `<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/niduna_widget_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Niduna"
+            android:textColor="${primaryText}"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Abre la app para sincronizar"
+            android:textColor="${secondaryText}"
+            android:textSize="13sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Alimentación · Pañal · Sueño"
+            android:textColor="${primaryText}"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/rn_widget_image_light"
