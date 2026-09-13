@@ -9,5 +9,4 @@ minimumReleaseAgeExclude:
   - expo-image-picker@57.0.9
   - '@expo/ui@57.0.18'
   - expo-widgets@57.0.19
-patchedDependencies:
-  react-native-android-widget@0.22.1: patches/react-native-android-widget@0.22.1.patch
+patchedDependencies: {}
