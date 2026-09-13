@@ -182,6 +182,8 @@ versión correspondiente.
 
 - Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
 - Corregido el fondo transparente del widget Android desde su contenedor nativo y añadidos iconos propios a sus accesos rápidos.
+- Corregido el arranque del widget Android para que pinte sus datos después de
+  iniciar la aplicación, incluso si no puede recuperar el último estado guardado.
 
 ### Added
 

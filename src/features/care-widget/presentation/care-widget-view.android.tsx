@@ -1,4 +1,10 @@
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
+'use no memo';
+
+import {
+  FlexWidget,
+  TextWidget,
+  type WidgetRepresentation,
+} from 'react-native-android-widget';
 
 import type { CareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
 import { careHandoffDeepLink } from '@/features/care-widget/infrastructure/care-widget-links';
@@ -78,6 +84,15 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
       </FlexWidget>
     </FlexWidget>
   );
+}
+
+export function createCareWidgetRepresentation(
+  snapshot: CareWidgetSnapshot,
+): WidgetRepresentation {
+  return {
+    dark: <CareWidgetView dark snapshot={snapshot} />,
+    light: <CareWidgetView dark={false} snapshot={snapshot} />,
+  };
 }
 
 function CareWidgetColumn({

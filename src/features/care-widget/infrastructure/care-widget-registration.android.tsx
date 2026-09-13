@@ -1,16 +1,19 @@
-import { registerWidgetTaskHandler } from 'react-native-android-widget';
+import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 
+import { createEmptyCareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
 import { loadCareWidgetSnapshot } from '@/features/care-widget/infrastructure/care-widget-storage';
-import { CareWidgetView } from '@/features/care-widget/presentation/care-widget-view.android';
+import { createCareWidgetRepresentation } from '@/features/care-widget/presentation/care-widget-view.android';
 
-registerWidgetTaskHandler(async ({ renderWidget, widgetAction }) => {
+export async function careWidgetTaskHandler({
+  renderWidget,
+  widgetAction,
+}: WidgetTaskHandlerProps): Promise<void> {
   if (widgetAction === 'WIDGET_DELETED') {
     return;
   }
 
-  const snapshot = await loadCareWidgetSnapshot();
-  renderWidget({
-    dark: <CareWidgetView dark snapshot={snapshot} />,
-    light: <CareWidgetView dark={false} snapshot={snapshot} />,
-  });
-});
+  const snapshot = await loadCareWidgetSnapshot().catch(() =>
+    createEmptyCareWidgetSnapshot(),
+  );
+  renderWidget(createCareWidgetRepresentation(snapshot));
+}
