@@ -121,6 +121,7 @@
           ]
         }
       ],
+      "./plugins/with-android-widget-container-background",
       "./plugins/with-android-work-manager-resolution"
     ],
     "experiments": {
