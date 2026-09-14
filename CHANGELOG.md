@@ -182,8 +182,8 @@ versión correspondiente.
 
 - Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
 - Corregido el fondo transparente del widget Android desde su contenedor nativo y añadidos iconos propios a sus accesos rápidos.
-- Corregido el renderizado del widget Android para mostrar sus datos también en
-  launchers que no cargan imágenes internas por URI, con un estado de respaldo visible.
+- Corregida la resolución de los módulos nativos del widget para que Android sincronice
+  realmente los últimos cuidados al abrir Niduna.
 
 ### Added
 
