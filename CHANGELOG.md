@@ -180,6 +180,8 @@ versión correspondiente.
 
 ### Fixed
 
+- Mejorado el widget Android con tiempos relativos, composición visual de Niduna
+  y accesos directos para registrar alimentación, pañal o sueño.
 - Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
 - Corregido el fondo transparente del widget Android desde su contenedor nativo y añadidos iconos propios a sus accesos rápidos.
 - Corregida la resolución de los módulos nativos del widget para que Android sincronice
