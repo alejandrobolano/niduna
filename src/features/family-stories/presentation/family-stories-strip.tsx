@@ -25,6 +25,7 @@ import {
   type FamilyStoryGroup,
 } from '@/features/family-stories/domain/family-story';
 import { pickAndPrepareStoryImage } from '@/features/family-stories/infrastructure/story-image-picker';
+import { StoryReactionBurst } from '@/features/family-stories/presentation/story-reaction-burst';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
@@ -196,6 +197,9 @@ function StoryViewer({
           <Pressable accessibilityLabel="Historia anterior" onPress={goBack} style={styles.viewerHalf} />
           <Pressable accessibilityLabel="Historia siguiente" onPress={goForward} style={styles.viewerHalf} />
         </View>
+        {isOwnStory ? (
+          <StoryReactionBurst reactions={story.reactions} storyId={story.id} />
+        ) : null}
         <View style={styles.reactionArea}>
           <View style={styles.reactionRow}>
             {familyStoryReactionOptions.map((option) => {

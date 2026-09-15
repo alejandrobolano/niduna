@@ -1,7 +1,6 @@
 import { Sparkles } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   Easing,
   Platform,
@@ -12,6 +11,7 @@ import {
   createThemedStyleSheet,
   illustrationColors,
 } from '@/shared/presentation/theme';
+import { useReducedMotion } from '@/shared/presentation/use-reduced-motion';
 
 interface NuniMascotProps {
   size?: number;
@@ -22,36 +22,34 @@ const ARTBOARD_HEIGHT = 154;
 
 export function NuniMascot({ size = ARTBOARD_WIDTH }: NuniMascotProps) {
   const [floating] = useState(() => new Animated.Value(0));
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    let animation: Animated.CompositeAnimation | undefined;
+    if (shouldReduceMotion) {
+      floating.setValue(0);
+      return () => floating.stopAnimation();
+    }
 
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduceMotionEnabled) => {
-      if (reduceMotionEnabled) {
-        return;
-      }
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floating, {
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          toValue: 1,
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+        Animated.timing(floating, {
+          duration: 1800,
+          easing: Easing.inOut(Easing.sin),
+          toValue: 0,
+          useNativeDriver: Platform.OS !== 'web',
+        }),
+      ]),
+    );
+    animation.start();
 
-      animation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(floating, {
-            duration: 1800,
-            easing: Easing.inOut(Easing.sin),
-            toValue: 1,
-            useNativeDriver: Platform.OS !== 'web',
-          }),
-          Animated.timing(floating, {
-            duration: 1800,
-            easing: Easing.inOut(Easing.sin),
-            toValue: 0,
-            useNativeDriver: Platform.OS !== 'web',
-          }),
-        ]),
-      );
-      animation.start();
-    });
-
-    return () => animation?.stop();
-  }, [floating]);
+    return () => animation.stop();
+  }, [floating, shouldReduceMotion]);
 
   const scale = size / ARTBOARD_WIDTH;
   const translateY = floating.interpolate({
