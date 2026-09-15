@@ -116,6 +116,7 @@ export default function IndexRoute() {
   const { session, status } = useAuth();
   const { scheme } = useThemePreference();
   const params = useLocalSearchParams<{
+    babyId?: string;
     careAction?: string;
     createBaby?: string;
     section?: string;
@@ -147,6 +148,7 @@ export default function IndexRoute() {
   return (
     <AuthenticatedApp
       colorScheme={scheme}
+      initialBabyId={params.babyId}
       initialCareAction={initialCareAction}
       initialCreateBaby={params.createBaby === '1'}
       initialSection={
@@ -160,12 +162,14 @@ export default function IndexRoute() {
 
 function AuthenticatedApp({
   colorScheme,
+  initialBabyId,
   initialCareAction,
   initialCreateBaby,
   initialSection,
   user,
 }: {
   colorScheme: AppColorScheme;
+  initialBabyId?: string;
   initialCareAction?: CareWidgetAction;
   initialCreateBaby: boolean;
   initialSection: AppSection;
@@ -199,6 +203,7 @@ function AuthenticatedApp({
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
+    initialBabyId,
   );
   const refreshFamilyBabyContext = context.refresh;
 
@@ -271,7 +276,7 @@ function AuthenticatedApp({
 
   const clearPendingCareAction = useCallback(() => {
     setPendingCareAction(undefined);
-    router.setParams({ careAction: undefined });
+    router.setParams({ babyId: undefined, careAction: undefined });
   }, [router]);
 
   if (context.status === 'loading') {

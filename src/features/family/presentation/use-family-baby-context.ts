@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FamilyBabyContextRepository } from '@/features/family/application/family-baby-context-repository';
 import {
   resolveFamilyBabySelection,
+  selectBaby,
   selectFamily,
 } from '@/features/family/application/family-baby-selection';
 import type {
@@ -19,6 +20,7 @@ type ContextStatus = 'error' | 'loading' | 'ready';
 export function useFamilyBabyContext(
   repository: FamilyBabyContextRepository,
   userId: string,
+  preferredBabyId?: string,
 ) {
   const [families, setFamilies] = useState<FamilyBabyGroup[]>([]);
   const [selection, setSelection] = useState<FamilyBabySelection>();
@@ -57,7 +59,7 @@ export function useFamilyBabyContext(
 
   useEffect(() => {
     let active = true;
-    const preferred = loadFamilyBabySelection(userId);
+    const storedSelection = loadFamilyBabySelection(userId);
 
     void repository
       .load(userId)
@@ -68,7 +70,9 @@ export function useFamilyBabyContext(
 
         const resolvedSelection = resolveFamilyBabySelection(
           loadedFamilies,
-          preferred,
+          (preferredBabyId
+            ? selectBaby(loadedFamilies, preferredBabyId)
+            : undefined) ?? storedSelection,
         );
         setFamilies(loadedFamilies);
         storeSelection(resolvedSelection);
@@ -83,7 +87,7 @@ export function useFamilyBabyContext(
     return () => {
       active = false;
     };
-  }, [repository, storeSelection, userId]);
+  }, [preferredBabyId, repository, storeSelection, userId]);
 
   const activeFamily = useMemo(
     () => families.find((family) => family.id === selection?.familyId),
@@ -101,15 +105,11 @@ export function useFamilyBabyContext(
   }
 
   function changeBaby(babyId: string) {
-    if (!activeFamily?.babies.some((baby) => baby.id === babyId)) {
-      return;
-    }
+    const nextSelection = selectBaby(families, babyId);
 
-    const nextSelection = {
-      babyId,
-      familyId: activeFamily.id,
-    };
-    storeSelection(nextSelection);
+    if (nextSelection) {
+      storeSelection(nextSelection);
+    }
   }
 
   async function archiveBaby(babyId: string) {

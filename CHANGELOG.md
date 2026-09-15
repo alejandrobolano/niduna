@@ -180,6 +180,9 @@ versión correspondiente.
 
 ### Fixed
 
+- Corregido el cierre de la aplicación Android al abrir una acción del widget.
+- El widget Android actualiza periódicamente los últimos cuidados desde Supabase
+  sin exigir que Niduna esté abierta.
 - Mejorado el widget Android con tiempos relativos, composición visual de Niduna
   y accesos directos para registrar alimentación, pañal o sueño.
 - Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
@@ -189,6 +192,8 @@ versión correspondiente.
 
 ### Added
 
+- Cada instancia del widget Android puede configurarse para mostrar un bebé
+  diferente y abre sus registros rápidos en el contexto correcto.
 - Widget nativo de Relevo para consultar la última alimentación, pañal y sueño
   en Android e iOS, con apertura directa de la pantalla principal.
 - Accesos rápidos para registrar alimentación, pañal o sueño desde el icono de

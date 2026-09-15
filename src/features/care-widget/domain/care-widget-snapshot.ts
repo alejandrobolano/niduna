@@ -17,6 +17,7 @@ export interface CareWidgetItem {
 }
 
 export interface CareWidgetSnapshot {
+  babyId?: string;
   babyName: string;
   diaper: CareWidgetItem;
   feeding: CareWidgetItem;
@@ -88,6 +89,7 @@ export function createCareWidgetSnapshot(
   const finishedSleep = snapshot.latestFinishedSleep;
 
   return {
+    babyId: dashboard.baby.id,
     babyName: dashboard.baby.name,
     feeding: feeding
       ? {
@@ -170,6 +172,9 @@ export function parseCareWidgetSnapshot(
     }
 
     return {
+      ...('babyId' in parsed && typeof parsed.babyId === 'string'
+        ? { babyId: parsed.babyId }
+        : {}),
       babyName: parsed.babyName,
       diaper: parseCareWidgetItem(diaper),
       feeding: parseCareWidgetItem(feeding),

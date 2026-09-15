@@ -11,8 +11,8 @@ import { formatCareEventRecency } from '@/features/care/domain/care-time';
 import type { CareWidgetAction } from '@/features/care-widget/domain/care-widget-action';
 import type { CareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
 import {
-  careHandoffDeepLink,
   getCareActionDeepLink,
+  getCareHandoffDeepLink,
 } from '@/features/care-widget/infrastructure/care-widget-links';
 
 const nuniMascot = require('../../../../assets/images/nuni-transparent.svg');
@@ -50,7 +50,7 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
     <FlexWidget
       accessibilityLabel={`Relevo de ${snapshot.babyName}. Toca para abrir Niduna.`}
       clickAction="OPEN_URI"
-      clickActionData={{ uri: careHandoffDeepLink }}
+      clickActionData={{ uri: getCareHandoffDeepLink(snapshot.babyId) }}
       style={{
         backgroundGradient: {
           from: palette.background,
@@ -93,6 +93,7 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
         <CareWidgetCard
           accent={palette.feeding}
           action="feeding"
+          babyId={snapshot.babyId}
           item={snapshot.feeding}
           now={now}
           palette={palette}
@@ -100,6 +101,7 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
         <CareWidgetCard
           accent={palette.diaper}
           action="diaper"
+          babyId={snapshot.babyId}
           item={snapshot.diaper}
           now={now}
           palette={palette}
@@ -107,6 +109,7 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
         <CareWidgetCard
           accent={palette.sleep}
           action="sleep"
+          babyId={snapshot.babyId}
           item={snapshot.sleep}
           now={now}
           palette={palette}
@@ -128,12 +131,14 @@ export function createCareWidgetRepresentation(
 function CareWidgetCard({
   accent,
   action,
+  babyId,
   item,
   now,
   palette,
 }: {
   accent: `#${string}`;
   action: CareWidgetAction;
+  babyId?: string;
   item: CareWidgetSnapshot['feeding'];
   now: Date;
   palette: {
@@ -153,7 +158,7 @@ function CareWidgetCard({
     <FlexWidget
       accessibilityLabel={`${item.title}: ${value}. Toca para registrar.`}
       clickAction="OPEN_URI"
-      clickActionData={{ uri: getCareActionDeepLink(action) }}
+      clickActionData={{ uri: getCareActionDeepLink(action, babyId) }}
       style={{
         alignItems: 'center',
         backgroundColor: palette.card,

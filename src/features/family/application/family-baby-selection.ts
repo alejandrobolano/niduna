@@ -40,3 +40,14 @@ export function selectFamily(
     familyId: family.id,
   };
 }
+
+export function selectBaby(
+  families: FamilyBabyGroup[],
+  babyId: string,
+): FamilyBabySelection | undefined {
+  const family = families.find((candidate) =>
+    candidate.babies.some((baby) => baby.id === babyId),
+  );
+
+  return family ? { babyId, familyId: family.id } : undefined;
+}

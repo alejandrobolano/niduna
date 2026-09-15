@@ -116,6 +116,7 @@
               "targetCellWidth": 4,
               "targetCellHeight": 2,
               "resizeMode": "horizontal",
+              "widgetFeatures": "reconfigurable",
               "updatePeriodMillis": 1800000
             }
           ]
