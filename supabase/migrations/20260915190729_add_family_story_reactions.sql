@@ -1,0 +1,83 @@
+create table public.family_story_reactions (
+  story_id uuid not null references public.family_stories (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  reaction text not null check (reaction in ('heart', 'tender', 'celebrate', 'laugh')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (story_id, user_id)
+);
+
+create index family_story_reactions_user_id_idx
+  on public.family_story_reactions (user_id, story_id);
+
+create function public.set_family_story_reaction(
+  target_story_id uuid,
+  target_reaction text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_id uuid := (select auth.uid());
+  selected_author_id uuid;
+begin
+  if actor_id is null or not private.can_view_family_story(target_story_id) then
+    raise exception 'family_story_reaction_not_allowed' using errcode = '42501';
+  end if;
+
+  select story.author_user_id
+  into selected_author_id
+  from public.family_stories story
+  where story.id = target_story_id;
+
+  if selected_author_id is null or selected_author_id = actor_id then
+    raise exception 'family_story_reaction_not_allowed' using errcode = '42501';
+  end if;
+
+  if target_reaction is null then
+    delete from public.family_story_reactions
+    where story_id = target_story_id and user_id = actor_id;
+    return;
+  end if;
+
+  if target_reaction not in ('heart', 'tender', 'celebrate', 'laugh') then
+    raise exception 'family_story_reaction_invalid' using errcode = '22023';
+  end if;
+
+  insert into public.family_story_reactions (
+    story_id,
+    user_id,
+    reaction,
+    created_at,
+    updated_at
+  ) values (
+    target_story_id,
+    actor_id,
+    target_reaction,
+    now(),
+    now()
+  )
+  on conflict (story_id, user_id)
+  do update set
+    reaction = excluded.reaction,
+    updated_at = now();
+end;
+$$;
+
+alter table public.family_story_reactions enable row level security;
+
+create policy family_story_reactions_select_followers
+on public.family_story_reactions for select
+to authenticated
+using (private.can_view_family_story(story_id));
+
+alter publication supabase_realtime add table public.family_story_reactions;
+
+revoke all on table public.family_story_reactions from public, anon, authenticated;
+revoke all on function public.set_family_story_reaction(uuid, text) from public, anon;
+
+grant select on table public.family_story_reactions to authenticated;
+grant select, insert, update, delete on table public.family_story_reactions to service_role;
+grant execute on function public.set_family_story_reaction(uuid, text) to authenticated;
