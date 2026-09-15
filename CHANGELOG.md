@@ -5,6 +5,18 @@ versionado semántico. Cada pull request de producto añade sus cambios a la
 sección `Unreleased`; la pull request de publicación los consolida bajo la
 versión correspondiente.
 
+## Unreleased
+
+### Nuevas funciones
+
+* añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
+
+### Correcciones
+
+* protege los datos del widget al cerrar sesión o perder acceso a un bebé
+* abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
+* distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
+
 ## [1.3.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.1...niduna-v1.3.0) (2026-09-10)
 
 

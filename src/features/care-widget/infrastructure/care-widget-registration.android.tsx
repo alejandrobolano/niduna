@@ -9,6 +9,8 @@ import {
 } from '@/features/care-widget/domain/care-widget-snapshot';
 import {
   bindCareWidgetToBaby,
+  clearCareWidgetBabyData,
+  clearCareWidgetData,
   loadCareWidgetBabyId,
   loadCareWidgetSnapshot,
   removeCareWidgetBinding,
@@ -49,12 +51,14 @@ async function loadFreshWidgetSnapshot(
   try {
     const session = await supabaseAuthService.getSession();
     if (!session) {
-      return cachedSnapshot;
+      await clearCareWidgetData();
+      return createEmptyCareWidgetSnapshot();
     }
 
     const dashboard = await supabaseCareRepository.load(session.user.id, babyId);
     if (!dashboard) {
-      return cachedSnapshot;
+      await clearCareWidgetBabyData(babyId);
+      return createEmptyCareWidgetSnapshot();
     }
 
     const freshSnapshot = createCareWidgetSnapshot(dashboard);

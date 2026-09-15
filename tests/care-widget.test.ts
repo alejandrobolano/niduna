@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { parseCareWidgetAction } from '../src/features/care-widget/domain/care-widget-action';
 import {
+  parseCareWidgetIntent,
+  resolveCareWidgetTarget,
+} from '../src/features/care-widget/domain/care-widget-intent';
+import {
   createCareWidgetSnapshot,
   parseCareWidgetSnapshot,
 } from '../src/features/care-widget/domain/care-widget-snapshot';
@@ -98,6 +102,62 @@ describe('care widget actions', () => {
     expect(parseCareWidgetAction(undefined)).toBeUndefined();
   });
 
+  it('parses the baby and action from a widget deep link', () => {
+    expect(
+      parseCareWidgetIntent(
+        'niduna:///?section=handoff&careAction=diaper&babyId=baby-2',
+      ),
+    ).toEqual({
+      action: 'diaper',
+      babyId: 'baby-2',
+      openHandoff: true,
+    });
+  });
+
+  it('allows only accessible born babies for widget actions', () => {
+    const families = [
+      {
+        archivedBabies: [],
+        babies: [
+          { id: 'baby-born', lifeStage: 'born' as const, name: 'Luna' },
+          { id: 'baby-expected', lifeStage: 'expected' as const, name: 'Sol' },
+        ],
+        id: 'family-1',
+        name: 'Familia',
+        role: 'caregiver' as const,
+        unfollowedBabies: [],
+      },
+    ];
+
+    expect(
+      resolveCareWidgetTarget({
+        activeBabyId: 'baby-expected',
+        activeFamilyId: 'family-1',
+        babyId: 'baby-born',
+        families,
+        requireRecordingPermission: true,
+      }),
+    ).toBe('baby-born');
+    expect(
+      resolveCareWidgetTarget({
+        activeBabyId: 'baby-born',
+        activeFamilyId: 'family-1',
+        babyId: 'baby-expected',
+        families,
+        requireRecordingPermission: true,
+      }),
+    ).toBeUndefined();
+    expect(
+      resolveCareWidgetTarget({
+        activeBabyId: 'baby-born',
+        activeFamilyId: 'family-1',
+        babyId: 'unknown',
+        families,
+        requireRecordingPermission: false,
+      }),
+    ).toBeUndefined();
+  });
+
   it('builds a direct link for every quick care action', () => {
     expect(getCareActionDeepLink('feeding')).toBe(
       'niduna:///?section=handoff&careAction=feeding',
@@ -112,7 +172,7 @@ describe('care widget actions', () => {
 });
 
 describe('care event recency', () => {
-  it('uses the same relative time language in the app and widget', () => {
+  it('formats relative care time for the main app', () => {
     const now = new Date(2026, 8, 12, 14, 40);
 
     expect(formatCareEventRecency(localIso(14, 30), now)).toBe('Hace 10 min');

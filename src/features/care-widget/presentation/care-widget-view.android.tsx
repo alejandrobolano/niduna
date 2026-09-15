@@ -64,7 +64,12 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
       }}
     >
       <FlexWidget
-        style={{ alignItems: 'center', flexDirection: 'row', flexGap: 9 }}
+        style={{
+          alignItems: 'center',
+          flexDirection: 'row',
+          flexGap: 9,
+          width: 'match_parent',
+        }}
       >
         <SvgWidget style={{ height: 34, width: 34 }} svg={nuniMascot} />
         <FlexWidget style={{ flex: 1, flexDirection: 'column' }}>
@@ -85,6 +90,7 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
           flexDirection: 'row',
           flexGap: 8,
           marginTop: 10,
+          width: 'match_parent',
         }}
       >
         <CareWidgetCard

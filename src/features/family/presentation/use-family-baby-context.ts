@@ -99,18 +99,18 @@ export function useFamilyBabyContext(
     [activeFamily, selection?.babyId],
   );
 
-  function changeFamily(familyId: string) {
+  const changeFamily = useCallback((familyId: string) => {
     const nextSelection = selectFamily(families, familyId);
     storeSelection(nextSelection);
-  }
+  }, [families, storeSelection]);
 
-  function changeBaby(babyId: string) {
+  const changeBaby = useCallback((babyId: string) => {
     const nextSelection = selectBaby(families, babyId);
 
     if (nextSelection) {
       storeSelection(nextSelection);
     }
-  }
+  }, [families, storeSelection]);
 
   async function archiveBaby(babyId: string) {
     await repository.archiveBaby(babyId);

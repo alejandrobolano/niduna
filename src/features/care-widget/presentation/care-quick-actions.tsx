@@ -8,11 +8,12 @@ import {
   parseCareWidgetAction,
   type CareWidgetAction,
 } from '@/features/care-widget/domain/care-widget-action';
+import { parseCareWidgetIntent } from '@/features/care-widget/domain/care-widget-intent';
 
 interface CareQuickActionsProps {
   enabled: boolean;
-  onAction: (action: CareWidgetAction) => void;
-  onOpenHandoff: () => void;
+  onAction: (action: CareWidgetAction, babyId?: string) => void;
+  onOpenHandoff: (babyId?: string) => void;
 }
 
 const quickActions = [
@@ -81,13 +82,12 @@ export function CareQuickActions({
 
   useEffect(() => {
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      const parsed = Linking.parse(url);
-      const action = parseCareWidgetAction(parsed.queryParams?.careAction);
+      const intent = parseCareWidgetIntent(url);
 
-      if (action) {
-        onAction(action);
-      } else if (parsed.queryParams?.section === 'handoff') {
-        onOpenHandoff();
+      if (intent?.action) {
+        onAction(intent.action, intent.babyId);
+      } else if (intent?.openHandoff) {
+        onOpenHandoff(intent.babyId);
       }
     });
 

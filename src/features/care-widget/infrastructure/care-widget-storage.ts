@@ -65,3 +65,56 @@ export async function saveCareWidgetSnapshot(
 export async function removeCareWidgetBinding(widgetId: number): Promise<void> {
   await careWidgetStorage.removeItem(getWidgetBabyKey(widgetId));
 }
+
+export async function clearCareWidgetData(): Promise<void> {
+  await careWidgetStorage.clearAsync();
+}
+
+export async function clearCareWidgetBabyData(babyId: string): Promise<void> {
+  const keys = await careWidgetStorage.getAllKeysAsync();
+  const bindingKeys = keys.filter((key) =>
+    key.startsWith(`${widgetBabyKeyPrefix}.`),
+  );
+  const bindings = await careWidgetStorage.multiGet(bindingKeys);
+  const activeSnapshot = parseCareWidgetSnapshot(
+    await careWidgetStorage.getItemAsync(careWidgetStorageKey),
+  );
+  const keysToRemove = [
+    getBabySnapshotKey(babyId),
+    ...(activeSnapshot?.babyId === babyId ? [careWidgetStorageKey] : []),
+    ...bindings.flatMap(([key, value]) => (value === babyId ? [key] : [])),
+  ];
+
+  await careWidgetStorage.multiRemove(keysToRemove);
+}
+
+export async function retainCareWidgetDataForBabies(
+  babyIds: string[],
+): Promise<void> {
+  const allowedBabyIds = new Set(babyIds);
+  const keys = await careWidgetStorage.getAllKeysAsync();
+  const bindingKeys = keys.filter((key) =>
+    key.startsWith(`${widgetBabyKeyPrefix}.`),
+  );
+  const bindings = await careWidgetStorage.multiGet(bindingKeys);
+  const activeSnapshot = parseCareWidgetSnapshot(
+    await careWidgetStorage.getItemAsync(careWidgetStorageKey),
+  );
+  const keysToRemove = [
+    ...keys.filter(
+      (key) =>
+        key.startsWith(`${babySnapshotKeyPrefix}.`) &&
+        !allowedBabyIds.has(key.slice(babySnapshotKeyPrefix.length + 1)),
+    ),
+    ...bindings.flatMap(([key, value]) =>
+      value && !allowedBabyIds.has(value) ? [key] : [],
+    ),
+    ...(activeSnapshot?.babyId && !allowedBabyIds.has(activeSnapshot.babyId)
+      ? [careWidgetStorageKey]
+      : []),
+  ];
+
+  if (keysToRemove.length > 0) {
+    await careWidgetStorage.multiRemove([...new Set(keysToRemove)]);
+  }
+}

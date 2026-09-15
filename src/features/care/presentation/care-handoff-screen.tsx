@@ -89,6 +89,7 @@ interface CareHandoffScreenProps {
   canCreateBaby: boolean;
   initialAction?: CareAction;
   onExternalActionHandled?: () => void;
+  onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   storiesContent?: ReactNode;
@@ -829,6 +830,7 @@ export function CareHandoffScreen({
   canCreateBaby,
   initialAction,
   onExternalActionHandled,
+  onDashboardLoaded,
   onOpenBabyProfile,
   repository,
   storiesContent,
@@ -868,6 +870,7 @@ export function CareHandoffScreen({
         if (active) {
           setLoadError(false);
           setDashboard(loadedDashboard);
+          onDashboardLoaded?.(loadedDashboard);
         }
       })
       .catch(() => {
@@ -885,7 +888,7 @@ export function CareHandoffScreen({
     return () => {
       active = false;
     };
-  }, [loadAttempt, repository, selectedBabyId, userId]);
+  }, [loadAttempt, onDashboardLoaded, repository, selectedBabyId, userId]);
 
   const babyId = dashboard?.baby.id;
 

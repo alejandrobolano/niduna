@@ -10,6 +10,7 @@ import {
 import { createWidget } from 'expo-widgets';
 
 import type { CareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
+import { getCareHandoffDeepLink } from '@/features/care-widget/infrastructure/care-widget-links';
 
 export const NidunaCareWidget = createWidget<CareWidgetSnapshot>(
   'NidunaCareWidget',
@@ -28,7 +29,7 @@ export const NidunaCareWidget = createWidget<CareWidgetSnapshot>(
         modifiers={[
           containerBackground(backgroundColor, 'widget'),
           padding({ all: 14 }),
-          widgetURL('niduna:///?section=handoff'),
+          widgetURL(getCareHandoffDeepLink(snapshot.babyId)),
         ]}
         spacing={10}
       >
