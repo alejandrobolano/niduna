@@ -17,6 +17,28 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.4.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.3.0...niduna-v1.4.0) (2026-09-15)
+
+
+### Nuevas funciones
+
+* add care widgets and quick actions ([549d67b](https://github.com/alejandrobolano/niduna/commit/549d67b8e82014a9cfd55e74304da576865c6693))
+* add care widgets and quick actions ([ebb734e](https://github.com/alejandrobolano/niduna/commit/ebb734e1a1210ab5bd0d4364698d1b82c64d0982))
+* configure care widgets per baby ([66b1422](https://github.com/alejandrobolano/niduna/commit/66b1422ef947fffe00c75229edbd5034ce30950e))
+
+
+### Correcciones
+
+* align Android WorkManager dependencies ([26285e3](https://github.com/alejandrobolano/niduna/commit/26285e3db8df387a18359d2a7d0e24007eaaba6b))
+* enforce opaque Android widget background ([2f6f61c](https://github.com/alejandrobolano/niduna/commit/2f6f61cea38238a94dc08fe580421746d8ca98ae))
+* harden and align care widgets ([b16434a](https://github.com/alejandrobolano/niduna/commit/b16434a83a84bc382c3ecc5346794da105864760))
+* load Android widget implementations ([7e3e0ce](https://github.com/alejandrobolano/niduna/commit/7e3e0cee814806b3a9110d9efc9fc40e06f8725a))
+* polish Android care widget actions ([768d454](https://github.com/alejandrobolano/niduna/commit/768d4549ef94128e13fa2318f97c7430e021d9e4))
+* polish Android widget and shortcut icons ([3a79c92](https://github.com/alejandrobolano/niduna/commit/3a79c92e82201c8996bbbd6cda76ef9996c16a80))
+* render Android widget content ([fd5449a](https://github.com/alejandrobolano/niduna/commit/fd5449ab3d46a29d7c8d3223fd690c03579009c4))
+* render widget content on Android launchers ([31fb788](https://github.com/alejandrobolano/niduna/commit/31fb788d220950bdc20d6522d670b8f1ffaeee9b))
+* show exact care times in widget ([c5041dd](https://github.com/alejandrobolano/niduna/commit/c5041ddcd183821bc4e7b3e9c589b4ff2e3c02c9))
+
 ## [1.3.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.1...niduna-v1.3.0) (2026-09-10)
 
 
