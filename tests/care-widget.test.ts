@@ -70,17 +70,14 @@ describe('care widget snapshot', () => {
       babyName: 'Stephanie',
       diaper: {
         detail: 'Pipí',
-        relativeTo: localIso(13, 52),
         value: '13:52',
       },
       feeding: {
         detail: 'Fórmula · 90 ml',
-        relativeTo: localIso(14, 30),
         value: '14:30',
       },
       sleep: {
         detail: 'Desde 14:10',
-        detailRelativeTo: localIso(14, 10),
         value: 'Durmiendo',
       },
     });

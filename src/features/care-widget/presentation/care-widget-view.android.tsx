@@ -7,7 +7,6 @@ import {
   type WidgetRepresentation,
 } from 'react-native-android-widget';
 
-import { formatCareEventRecency } from '@/features/care/domain/care-time';
 import type { CareWidgetAction } from '@/features/care-widget/domain/care-widget-action';
 import type { CareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
 import {
@@ -44,8 +43,6 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
         sleep: '#7653A4' as const,
         text: '#16214A' as const,
       };
-  const now = new Date();
-
   return (
     <FlexWidget
       accessibilityLabel={`Relevo de ${snapshot.babyName}. Toca para abrir Niduna.`}
@@ -95,7 +92,6 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
           action="feeding"
           babyId={snapshot.babyId}
           item={snapshot.feeding}
-          now={now}
           palette={palette}
         />
         <CareWidgetCard
@@ -103,7 +99,6 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
           action="diaper"
           babyId={snapshot.babyId}
           item={snapshot.diaper}
-          now={now}
           palette={palette}
         />
         <CareWidgetCard
@@ -111,7 +106,6 @@ export function CareWidgetView({ dark, snapshot }: CareWidgetViewProps) {
           action="sleep"
           babyId={snapshot.babyId}
           item={snapshot.sleep}
-          now={now}
           palette={palette}
         />
       </FlexWidget>
@@ -133,30 +127,21 @@ function CareWidgetCard({
   action,
   babyId,
   item,
-  now,
   palette,
 }: {
   accent: `#${string}`;
   action: CareWidgetAction;
   babyId?: string;
   item: CareWidgetSnapshot['feeding'];
-  now: Date;
   palette: {
     card: `#${string}`;
     detail: `#${string}`;
     text: `#${string}`;
   };
 }) {
-  const value = item.relativeTo
-    ? formatCareEventRecency(item.relativeTo, now)
-    : item.value;
-  const detail = item.detailRelativeTo
-    ? `Desde ${formatCareEventRecency(item.detailRelativeTo, now).toLowerCase()}`
-    : item.detail;
-
   return (
     <FlexWidget
-      accessibilityLabel={`${item.title}: ${value}. Toca para registrar.`}
+      accessibilityLabel={`${item.title}: ${item.value}. Toca para registrar.`}
       clickAction="OPEN_URI"
       clickActionData={{ uri: getCareActionDeepLink(action, babyId) }}
       style={{
@@ -186,7 +171,7 @@ function CareWidgetCard({
           marginTop: 3,
           textAlign: 'center',
         }}
-        text={value}
+        text={item.value}
         truncate="END"
       />
       <TextWidget
@@ -197,7 +182,7 @@ function CareWidgetCard({
           marginTop: 3,
           textAlign: 'center',
         }}
-        text={detail}
+        text={item.detail}
         truncate="END"
       />
     </FlexWidget>

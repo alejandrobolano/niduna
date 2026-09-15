@@ -180,6 +180,8 @@ versión correspondiente.
 
 ### Fixed
 
+- El widget Android vuelve a mostrar la hora exacta de cada cuidado para evitar
+  tiempos relativos obsoletos cuando el sistema retrasa su actualización.
 - Corregido el cierre de la aplicación Android al abrir una acción del widget.
 - El widget Android actualiza periódicamente los últimos cuidados desde Supabase
   sin exigir que Niduna esté abierta.

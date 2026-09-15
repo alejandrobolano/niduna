@@ -10,8 +10,6 @@ import type {
 
 export interface CareWidgetItem {
   detail: string;
-  detailRelativeTo?: string;
-  relativeTo?: string;
   title: string;
   value: string;
 }
@@ -102,14 +100,12 @@ export function createCareWidgetSnapshot(
             .filter(Boolean)
             .join(' · '),
           title: 'Alimentación',
-          relativeTo: feeding.occurredAt,
           value: formatClock(feeding.occurredAt),
         }
       : emptyItem('Alimentación'),
     diaper: diaper
       ? {
           detail: diaperLabels[diaper.condition],
-          relativeTo: diaper.occurredAt,
           title: 'Pañal',
           value: formatClock(diaper.occurredAt),
         }
@@ -117,7 +113,6 @@ export function createCareWidgetSnapshot(
     sleep: openSleep
       ? {
           detail: `Desde ${formatClock(openSleep.occurredAt)}`,
-          detailRelativeTo: openSleep.occurredAt,
           title: 'Sueño',
           value: 'Durmiendo',
         }
@@ -129,7 +124,6 @@ export function createCareWidgetSnapshot(
                 finishedSleep.endedAt,
               ),
             )}`,
-            relativeTo: finishedSleep.endedAt,
             title: 'Sueño',
             value: formatClock(finishedSleep.endedAt),
           }
@@ -189,10 +183,6 @@ export function parseCareWidgetSnapshot(
 function parseCareWidgetItem(value: CareWidgetItem): CareWidgetItem {
   return {
     detail: value.detail,
-    ...(value.detailRelativeTo
-      ? { detailRelativeTo: value.detailRelativeTo }
-      : {}),
-    ...(value.relativeTo ? { relativeTo: value.relativeTo } : {}),
     title: value.title,
     value: value.value,
   };
@@ -204,9 +194,6 @@ function isCareWidgetItem(value: unknown): value is CareWidgetItem {
     value !== null &&
     'detail' in value &&
     typeof value.detail === 'string' &&
-    (!('detailRelativeTo' in value) ||
-      typeof value.detailRelativeTo === 'string') &&
-    (!('relativeTo' in value) || typeof value.relativeTo === 'string') &&
     'title' in value &&
     typeof value.title === 'string' &&
     'value' in value &&
