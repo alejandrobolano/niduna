@@ -2,7 +2,7 @@
   "expo": {
     "name": "Niduna",
     "slug": "niduna",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "niduna",
@@ -97,7 +97,9 @@
               "displayName": "Relevo de Niduna",
               "description": "Consulta los últimos cuidados del bebé de un vistazo.",
               "ios": {
-                "supportedFamilies": ["systemMedium"]
+                "supportedFamilies": [
+                  "systemMedium"
+                ]
               }
             }
           ]
