@@ -5,6 +5,18 @@ versionado semántico. Cada pull request de producto añade sus cambios a la
 sección `Unreleased`; la pull request de publicación los consolida bajo la
 versión correspondiente.
 
+## Unreleased
+
+### Nuevas funciones
+
+* añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
+
+### Correcciones
+
+* protege los datos del widget al cerrar sesión o perder acceso a un bebé
+* abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
+* distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
+
 ## [1.3.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.2.1...niduna-v1.3.0) (2026-09-10)
 
 
@@ -178,8 +190,28 @@ versión correspondiente.
 
 ## [Unreleased]
 
+### Fixed
+
+- El widget Android vuelve a mostrar la hora exacta de cada cuidado para evitar
+  tiempos relativos obsoletos cuando el sistema retrasa su actualización.
+- Corregido el cierre de la aplicación Android al abrir una acción del widget.
+- El widget Android actualiza periódicamente los últimos cuidados desde Supabase
+  sin exigir que Niduna esté abierta.
+- Mejorado el widget Android con tiempos relativos, composición visual de Niduna
+  y accesos directos para registrar alimentación, pañal o sueño.
+- Alineada la versión de Android WorkManager usada por el widget para evitar clases duplicadas durante la compilación release.
+- Corregido el fondo transparente del widget Android desde su contenedor nativo y añadidos iconos propios a sus accesos rápidos.
+- Corregida la resolución de los módulos nativos del widget para que Android sincronice
+  realmente los últimos cuidados al abrir Niduna.
+
 ### Added
 
+- Cada instancia del widget Android puede configurarse para mostrar un bebé
+  diferente y abre sus registros rápidos en el contexto correcto.
+- Widget nativo de Relevo para consultar la última alimentación, pañal y sueño
+  en Android e iOS, con apertura directa de la pantalla principal.
+- Accesos rápidos para registrar alimentación, pañal o sueño desde el icono de
+  la aplicación nativa y desde el menú contextual de la PWA.
 - El registro de cuidados permite usar la hora actual, indicar que ocurrió hace
   5, 10, 15 o 30 minutos, o elegir una hora concreta de las últimas 2 horas sin
   abandonar el formulario; el historial conserva su edición completa.

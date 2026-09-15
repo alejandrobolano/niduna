@@ -7,3 +7,5 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - expo-image-manipulator@57.0.9
   - expo-image-picker@57.0.9
+  - '@expo/ui@57.0.18'
+  - expo-widgets@57.0.19

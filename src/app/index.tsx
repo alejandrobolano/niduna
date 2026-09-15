@@ -33,11 +33,24 @@ import {
   createCareReportHtml,
   type CareReportInput,
 } from '@/features/care/application/care-report';
-import type { CareEvent } from '@/features/care/domain/care-event';
+import type { CareDashboard, CareEvent } from '@/features/care/domain/care-event';
 import { exportCareHistoryFile } from '@/features/care/infrastructure/care-history-file';
 import { exportCareReportFile } from '@/features/care/infrastructure/care-report-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import {
+  createCareWidgetActionRequest,
+  parseCareWidgetAction,
+  type CareWidgetAction,
+} from '@/features/care-widget/domain/care-widget-action';
+import { resolveCareWidgetTarget } from '@/features/care-widget/domain/care-widget-intent';
+import { CareQuickActions } from '@/features/care-widget/presentation/care-quick-actions';
+import { CareWidgetSynchronizer } from '@/features/care-widget/presentation/care-widget-synchronizer';
+import { createCareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
+import {
+  clearCareWidgetsForBaby,
+  updateCareWidget,
+} from '@/features/care-widget/infrastructure/care-widget-service';
 import { supabaseFamilyStoryRepository } from '@/features/family-stories/infrastructure/supabase-family-story-repository';
 import { FamilyStoriesStrip } from '@/features/family-stories/presentation/family-stories-strip';
 import { CareHistoryScreen } from '@/features/care/presentation/care-history-screen';
@@ -102,27 +115,52 @@ async function exportCareReport(input: CareReportInput): Promise<void> {
   });
 }
 
+function ignoreCareQuickAction(_: CareWidgetAction): void {}
+function ignoreOpenHandoff(): void {}
+
 export default function IndexRoute() {
   const { session, status } = useAuth();
   const { scheme } = useThemePreference();
   const params = useLocalSearchParams<{
+    babyId?: string;
+    careAction?: string;
     createBaby?: string;
     section?: string;
   }>();
+  const initialCareAction = parseCareWidgetAction(params.careAction);
 
   if (status === 'loading') {
     return <AuthLoadingScreen />;
   }
 
   if (!session) {
-    return <AuthScreen />;
+    return (
+      <>
+        <CareQuickActions
+          enabled={false}
+          onAction={ignoreCareQuickAction}
+          onOpenHandoff={ignoreOpenHandoff}
+        />
+        <CareWidgetSynchronizer
+          accessibleBabyIds={[]}
+          enabled={false}
+          repository={supabaseCareRepository}
+          userId=""
+        />
+        <AuthScreen />
+      </>
+    );
   }
 
   return (
     <AuthenticatedApp
       colorScheme={scheme}
+      initialBabyId={params.babyId}
+      initialCareAction={initialCareAction}
       initialCreateBaby={params.createBaby === '1'}
-      initialSection={resolveInitialSection(params.section)}
+      initialSection={
+        initialCareAction ? 'handoff' : resolveInitialSection(params.section)
+      }
       key={session.user.id}
       user={session.user}
     />
@@ -131,11 +169,15 @@ export default function IndexRoute() {
 
 function AuthenticatedApp({
   colorScheme,
+  initialBabyId,
+  initialCareAction,
   initialCreateBaby,
   initialSection,
   user,
 }: {
   colorScheme: AppColorScheme;
+  initialBabyId?: string;
+  initialCareAction?: CareWidgetAction;
   initialCreateBaby: boolean;
   initialSection: AppSection;
   user: AuthenticatedUser;
@@ -144,6 +186,11 @@ function AuthenticatedApp({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [section, setSection] = useState<AppSection>(initialSection);
+  const [pendingCareAction, setPendingCareAction] = useState(() =>
+    initialCareAction
+      ? createCareWidgetActionRequest(initialCareAction)
+      : undefined,
+  );
   const [isCreatingBaby, setIsCreatingBaby] = useState(initialCreateBaby);
   const [newBabyFormVersion, setNewBabyFormVersion] = useState(0);
   const [onboardingState, setOnboardingState] = useState<
@@ -163,8 +210,13 @@ function AuthenticatedApp({
   const context = useFamilyBabyContext(
     supabaseFamilyBabyContextRepository,
     user.id,
+    initialBabyId,
   );
   const refreshFamilyBabyContext = context.refresh;
+  const contextActiveBaby = context.activeBaby;
+  const contextActiveFamily = context.activeFamily;
+  const contextChangeBaby = context.changeBaby;
+  const contextFamilies = context.families;
 
   useFocusEffect(
     useCallback(() => {
@@ -219,6 +271,84 @@ function AuthenticatedApp({
       }
     },
     [navigateToSection],
+  );
+
+  const navigateToCareHandoff = useCallback(() => {
+    setSection('handoff');
+    setIsCreatingBaby(false);
+    router.setParams({ createBaby: undefined, section: 'handoff' });
+  }, [router]);
+
+  const selectCareTarget = useCallback(
+    (babyId: string | undefined, requireRecordingPermission: boolean) => {
+      const targetBabyId = resolveCareWidgetTarget({
+        activeBabyId: contextActiveBaby?.id,
+        activeFamilyId: contextActiveFamily?.id,
+        babyId,
+        families: contextFamilies,
+        requireRecordingPermission,
+      });
+
+      if (!targetBabyId) {
+        return false;
+      }
+
+      if (targetBabyId !== contextActiveBaby?.id) {
+        contextChangeBaby(targetBabyId);
+      }
+
+      return true;
+    },
+    [contextActiveBaby, contextActiveFamily, contextChangeBaby, contextFamilies],
+  );
+
+  const handleCareQuickAction = useCallback(
+    (action: CareWidgetAction, babyId?: string) => {
+      if (!selectCareTarget(babyId, true)) {
+        return;
+      }
+
+      setPendingCareAction(createCareWidgetActionRequest(action));
+      navigateToCareHandoff();
+    },
+    [navigateToCareHandoff, selectCareTarget],
+  );
+
+  const openCareHandoff = useCallback(
+    (babyId?: string) => {
+      if (!selectCareTarget(babyId, false)) {
+        return;
+      }
+
+      navigateToCareHandoff();
+    },
+    [navigateToCareHandoff, selectCareTarget],
+  );
+
+  const clearPendingCareAction = useCallback(() => {
+    setPendingCareAction(undefined);
+    router.setParams({ babyId: undefined, careAction: undefined });
+  }, [router]);
+
+  const activeBabyId = contextActiveBaby?.id;
+  const accessibleWidgetBabyIds = useMemo(
+    () =>
+      contextFamilies.flatMap((family) =>
+        family.babies.map((baby) => baby.id),
+      ),
+    [contextFamilies],
+  );
+  const handleWidgetDashboardLoaded = useCallback(
+    (dashboard: CareDashboard | null) => {
+      const operation = dashboard
+        ? updateCareWidget(createCareWidgetSnapshot(dashboard))
+        : activeBabyId
+          ? clearCareWidgetsForBaby(activeBabyId)
+          : Promise.resolve();
+
+      void operation.catch(() => undefined);
+    },
+    [activeBabyId],
   );
 
   if (context.status === 'loading') {
@@ -317,6 +447,17 @@ function AuthenticatedApp({
   if (!activeFamily) {
     return (
       <View style={[styles.appShell, { backgroundColor: appBackground }]}>
+        <CareQuickActions
+          enabled={false}
+          onAction={handleCareQuickAction}
+          onOpenHandoff={openCareHandoff}
+        />
+        <CareWidgetSynchronizer
+          accessibleBabyIds={accessibleWidgetBabyIds}
+          enabled={false}
+          repository={supabaseCareRepository}
+          userId={user.id}
+        />
         <FamilyScreen
           dataExportRepository={supabaseDataExportRepository}
           onContextChanged={(familyId) =>
@@ -348,9 +489,21 @@ function AuthenticatedApp({
       section={activeSection}
     />
   );
-  const activeBabyId = context.activeBaby?.id;
   const renderAppScreen = (screen: ReactNode) => (
     <View style={[styles.appShell, { backgroundColor: appBackground }]}>
+      <CareQuickActions
+        enabled={careAvailable && Boolean(canRecordCare)}
+        onAction={handleCareQuickAction}
+        onOpenHandoff={openCareHandoff}
+      />
+      <CareWidgetSynchronizer
+        accessibleBabyIds={accessibleWidgetBabyIds}
+        babyId={activeBabyId}
+        enabled={careAvailable}
+        repository={supabaseCareRepository}
+        synchronizeDashboard={activeSection !== 'handoff'}
+        userId={user.id}
+      />
       <View style={styles.appScreen}>{screen}</View>
       <NotificationOptInModal
         familyId={activeFamily.id}
@@ -399,7 +552,10 @@ function AuthenticatedApp({
           compactNavigation ? bottomNavigationContentHeight + insets.bottom : 0
         }
         canCreateBaby={canManageBabies}
-        key={context.activeBaby?.id ?? `${activeFamily.id}:empty`}
+        initialAction={canRecordCare ? pendingCareAction?.action : undefined}
+        key={`${context.activeBaby?.id ?? `${activeFamily.id}:empty`}:${pendingCareAction?.id ?? 'default'}`}
+        onExternalActionHandled={clearPendingCareAction}
+        onDashboardLoaded={handleWidgetDashboardLoaded}
         onOpenBabyProfile={() => changeSection('baby')}
         repository={supabaseCareRepository}
         storiesContent={

@@ -30,5 +30,25 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar alimentación",
+      "short_name": "Alimentación",
+      "description": "Añadir una alimentación al relevo",
+      "url": "/?section=handoff&careAction=feeding"
+    },
+    {
+      "name": "Registrar pañal",
+      "short_name": "Pañal",
+      "description": "Añadir un cambio de pañal al relevo",
+      "url": "/?section=handoff&careAction=diaper"
+    },
+    {
+      "name": "Registrar sueño",
+      "short_name": "Sueño",
+      "description": "Iniciar o finalizar el sueño desde el relevo",
+      "url": "/?section=handoff&careAction=sleep"
+    }
   ]
 }

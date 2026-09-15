@@ -43,6 +43,7 @@ import type {
   FeedingEvent,
   MeasurementEvent,
 } from '@/features/care/domain/care-event';
+import { formatCareEventRecency } from '@/features/care/domain/care-time';
 import {
   CareActionSheet,
   type CareAction,
@@ -86,6 +87,9 @@ interface CareHandoffScreenProps {
   babyId?: string;
   bottomNavigationInset?: number;
   canCreateBaby: boolean;
+  initialAction?: CareAction;
+  onExternalActionHandled?: () => void;
+  onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
   storiesContent?: ReactNode;
@@ -122,34 +126,6 @@ function SummaryCard({
       <Text style={styles.summaryDetail}>{detail}</Text>
     </View>
   );
-}
-
-function formatWhen(value: string, now: Date): string {
-  const differenceMinutes = Math.max(
-    0,
-    Math.floor((now.getTime() - Date.parse(value)) / 60_000),
-  );
-
-  if (differenceMinutes < 1) {
-    return 'Ahora';
-  }
-
-  if (differenceMinutes < 60) {
-    return `Hace ${differenceMinutes} min`;
-  }
-
-  if (differenceMinutes < 24 * 60) {
-    const hours = Math.floor(differenceMinutes / 60);
-    const minutes = differenceMinutes % 60;
-    return minutes > 0 ? `Hace ${hours} h ${minutes} min` : `Hace ${hours} h`;
-  }
-
-  return new Intl.DateTimeFormat('es-ES', {
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-  }).format(new Date(value));
 }
 
 function formatDuration(minutes: number): string {
@@ -329,7 +305,7 @@ function TimelineEvent({
         <View style={styles.timelineTitleRow}>
           <Text style={styles.timelineTitle}>{presentation.title}</Text>
           <Text style={styles.timelineTime}>
-            {formatWhen(event.occurredAt, now)}
+            {formatCareEventRecency(event.occurredAt, now)}
           </Text>
         </View>
         <Text style={styles.timelineDescription}>
@@ -696,20 +672,31 @@ function DashboardContent({
           detail={feeding ? getFeedingDetail(feeding) : 'Todavía sin registros'}
           icon={Milk}
           title="Última alimentación"
-          value={feeding ? formatWhen(feeding.occurredAt, now) : 'Sin datos'}
+          value={
+            feeding
+              ? formatCareEventRecency(feeding.occurredAt, now)
+              : 'Sin datos'
+          }
         />
         <SummaryCard
           accent={colors.butter}
           detail={diaper ? diaperLabels[diaper.condition] : 'Todavía sin registros'}
           icon={BabyIcon}
           title="Último pañal"
-          value={diaper ? formatWhen(diaper.occurredAt, now) : 'Sin datos'}
+          value={
+            diaper
+              ? formatCareEventRecency(diaper.occurredAt, now)
+              : 'Sin datos'
+          }
         />
         <SummaryCard
           accent={colors.lavender}
           detail={
             openSleep
-              ? `Desde ${formatWhen(openSleep.occurredAt, now).toLowerCase()}`
+              ? `Desde ${formatCareEventRecency(
+                  openSleep.occurredAt,
+                  now,
+                ).toLowerCase()}`
               : finishedSleep?.endedAt
                 ? `Duró ${formatDuration(
                     getDurationMinutes(
@@ -725,7 +712,7 @@ function DashboardContent({
             openSleep
               ? 'Durmiendo ahora'
               : finishedSleep?.endedAt
-                ? formatWhen(finishedSleep.endedAt, now)
+                ? formatCareEventRecency(finishedSleep.endedAt, now)
                 : 'Sin datos'
           }
         />
@@ -742,7 +729,7 @@ function DashboardContent({
             measurement?.weightGrams !== undefined
               ? formatWeight(measurement.weightGrams)
               : measurement
-                ? formatWhen(measurement.occurredAt, now)
+                ? formatCareEventRecency(measurement.occurredAt, now)
                 : 'Sin datos'
           }
         />
@@ -841,6 +828,9 @@ export function CareHandoffScreen({
   babyId: selectedBabyId,
   bottomNavigationInset = 0,
   canCreateBaby,
+  initialAction,
+  onExternalActionHandled,
+  onDashboardLoaded,
   onOpenBabyProfile,
   repository,
   storiesContent,
@@ -852,7 +842,7 @@ export function CareHandoffScreen({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [action, setAction] = useState<CareAction>();
+  const [action, setAction] = useState<CareAction | undefined>(initialAction);
   const [isQuickActionPickerOpen, setIsQuickActionPickerOpen] = useState(false);
   const [showQuickActionAccess, setShowQuickActionAccess] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -880,6 +870,7 @@ export function CareHandoffScreen({
         if (active) {
           setLoadError(false);
           setDashboard(loadedDashboard);
+          onDashboardLoaded?.(loadedDashboard);
         }
       })
       .catch(() => {
@@ -897,7 +888,7 @@ export function CareHandoffScreen({
     return () => {
       active = false;
     };
-  }, [loadAttempt, repository, selectedBabyId, userId]);
+  }, [loadAttempt, onDashboardLoaded, repository, selectedBabyId, userId]);
 
   const babyId = dashboard?.baby.id;
 
@@ -1102,7 +1093,10 @@ export function CareHandoffScreen({
       <CareActionSheet
         action={action}
         babyId={dashboard.baby.id}
-        onClose={() => setAction(undefined)}
+        onClose={() => {
+          setAction(undefined);
+          onExternalActionHandled?.();
+        }}
         onSaved={handleCareSaved}
         openSleep={snapshot?.openSleep}
         repository={repository}
