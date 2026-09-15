@@ -17,8 +17,11 @@ import {
   type PreparedStoryImage,
 } from '@/features/family-stories/application/family-story-repository';
 import {
+  applyFamilyStoryReaction,
+  familyStoryReactionOptions,
   formatStoryElapsedTime,
   groupFamilyStories,
+  type FamilyStoryReaction,
   type FamilyStoryGroup,
 } from '@/features/family-stories/domain/family-story';
 import { pickAndPrepareStoryImage } from '@/features/family-stories/infrastructure/story-image-picker';
@@ -52,12 +55,14 @@ function getErrorMessage(error: unknown): string {
 function StoryViewer({
   group,
   onClose,
+  onReact,
   onRetire,
   onViewed,
   userId,
 }: {
   group: FamilyStoryGroup;
   onClose: () => void;
+  onReact: (storyId: string, reaction?: FamilyStoryReaction) => Promise<void>;
   onRetire: (storyId: string) => Promise<void>;
   onViewed: (storyId: string) => Promise<void>;
   userId: string;
@@ -65,8 +70,11 @@ function StoryViewer({
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isConfirmingRetire, setIsConfirmingRetire] = useState(false);
+  const [isReacting, setIsReacting] = useState(false);
   const [isRetiring, setIsRetiring] = useState(false);
+  const [reactionError, setReactionError] = useState<string>();
   const story = group.stories[storyIndex];
+  const isOwnStory = story.author.id === userId;
 
   useEffect(() => {
     if (!story.isViewed) {
@@ -75,7 +83,7 @@ function StoryViewer({
   }, [onViewed, story.id, story.isViewed]);
 
   useEffect(() => {
-    if (isConfirmingRetire) {
+    if (isConfirmingRetire || isReacting) {
       return;
     }
 
@@ -99,7 +107,7 @@ function StoryViewer({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [group.stories.length, isConfirmingRetire, onClose, storyIndex]);
+  }, [group.stories.length, isConfirmingRetire, isReacting, onClose, storyIndex]);
 
   function goBack() {
     if (storyIndex > 0) {
@@ -130,6 +138,21 @@ function StoryViewer({
     }
   }
 
+  async function react(reaction: FamilyStoryReaction) {
+    const nextReaction = story.viewerReaction === reaction ? undefined : reaction;
+    setIsReacting(true);
+    setReactionError(undefined);
+
+    try {
+      await onReact(story.id, nextReaction);
+      setProgress(0);
+    } catch {
+      setReactionError('No pudimos guardar tu reacción.');
+    } finally {
+      setIsReacting(false);
+    }
+  }
+
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible>
       <SafeAreaView style={styles.viewer}>
@@ -156,7 +179,7 @@ function StoryViewer({
             <Text style={styles.viewerAuthorName}>{group.author.displayName}</Text>
             <Text style={styles.viewerTime}>{formatStoryElapsedTime(story.createdAt)}</Text>
           </View>
-          {group.author.id === userId ? (
+          {isOwnStory ? (
             <Pressable
               accessibilityLabel="Retirar historia"
               onPress={() => setIsConfirmingRetire(true)}
@@ -172,6 +195,51 @@ function StoryViewer({
         <View pointerEvents="box-none" style={styles.viewerNavigation}>
           <Pressable accessibilityLabel="Historia anterior" onPress={goBack} style={styles.viewerHalf} />
           <Pressable accessibilityLabel="Historia siguiente" onPress={goForward} style={styles.viewerHalf} />
+        </View>
+        <View style={styles.reactionArea}>
+          <View style={styles.reactionRow}>
+            {familyStoryReactionOptions.map((option) => {
+              const count = story.reactions.find(
+                ({ reaction }) => reaction === option.value,
+              )?.count ?? 0;
+
+              if (isOwnStory && count === 0) {
+                return null;
+              }
+
+              return (
+                <Pressable
+                  accessibilityLabel={isOwnStory
+                    ? `${option.label}: ${count}`
+                    : `${option.label}${count > 0 ? `: ${count}` : ''}`}
+                  accessibilityRole="button"
+                  disabled={isOwnStory || isReacting}
+                  key={option.value}
+                  onPress={() => void react(option.value)}
+                  style={[
+                    styles.reactionButton,
+                    story.viewerReaction === option.value && styles.selectedReactionButton,
+                  ]}
+                >
+                  <Text style={styles.reactionEmoji}>{option.emoji}</Text>
+                  {count > 0 ? (
+                    <Text
+                      style={[
+                        styles.reactionCount,
+                        story.viewerReaction === option.value && styles.selectedReactionCount,
+                      ]}
+                    >
+                      {count}
+                    </Text>
+                  ) : null}
+                </Pressable>
+              );
+            })}
+          </View>
+          {isOwnStory && story.reactions.length === 0 ? (
+            <Text style={styles.reactionHint}>Tu familia aún no ha reaccionado</Text>
+          ) : null}
+          {reactionError ? <Text style={styles.reactionError}>{reactionError}</Text> : null}
         </View>
         <View style={styles.screenshotNotice}>
           <ShieldCheck color={colors.white} size={15} />
@@ -222,7 +290,7 @@ export function FamilyStoriesStrip({
   userId,
 }: FamilyStoriesStripProps) {
   const [stories, setStories] = useState<Awaited<ReturnType<FamilyStoryRepository['load']>>>([]);
-  const [selectedGroup, setSelectedGroup] = useState<FamilyStoryGroup>();
+  const [selectedAuthorId, setSelectedAuthorId] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [pendingImage, setPendingImage] = useState<PreparedStoryImage>();
@@ -230,6 +298,7 @@ export function FamilyStoriesStrip({
   const loadPromiseRef = useRef<Promise<void> | undefined>(undefined);
   const viewedStoryIdsRef = useRef(new Set<string>());
   const groups = useMemo(() => groupFamilyStories(stories), [stories]);
+  const selectedGroup = groups.find((group) => group.author.id === selectedAuthorId);
 
   const loadStories = useCallback(() => {
     if (loadPromiseRef.current) {
@@ -290,7 +359,7 @@ export function FamilyStoriesStrip({
       setStories((current) =>
         current.filter((story) => Date.parse(story.expiresAt) > now),
       );
-      setSelectedGroup(undefined);
+      setSelectedAuthorId(undefined);
     }, Math.max(0, nextExpiry - Date.now()) + 25);
 
     return () => clearTimeout(timer);
@@ -344,12 +413,19 @@ export function FamilyStoriesStrip({
     }
   }, [repository]);
 
-  const closeViewer = useCallback(() => setSelectedGroup(undefined), []);
+  const closeViewer = useCallback(() => setSelectedAuthorId(undefined), []);
+
+  async function setReaction(storyId: string, reaction?: FamilyStoryReaction) {
+    await repository.setReaction(storyId, reaction);
+    setStories((current) => current.map((story) =>
+      story.id === storyId ? applyFamilyStoryReaction(story, reaction) : story,
+    ));
+  }
 
   async function retire(storyId: string) {
     try {
       await repository.retire(storyId);
-      setSelectedGroup(undefined);
+      setSelectedAuthorId(undefined);
       await loadStories();
     } catch (caughtError) {
       setError('No pudimos retirar la historia.');
@@ -377,7 +453,7 @@ export function FamilyStoriesStrip({
           </Pressable>
         ) : null}
         {groups.map((group) => (
-          <Pressable key={group.author.id} onPress={() => setSelectedGroup(group)} style={styles.bubbleAction}>
+          <Pressable key={group.author.id} onPress={() => setSelectedAuthorId(group.author.id)} style={styles.bubbleAction}>
             <View style={[styles.storyRing, group.hasUnseenStories ? styles.unseenRing : styles.seenRing]}>
               <View style={styles.avatar}>
                 <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} photoUrl={group.author.avatarUrl} size={50} variant={resolveMemberAvatar(group.author.avatarKey, group.author.relationship)} />
@@ -403,6 +479,7 @@ export function FamilyStoriesStrip({
         <StoryViewer
           group={selectedGroup}
           onClose={closeViewer}
+          onReact={setReaction}
           onRetire={retire}
           onViewed={markViewed}
           userId={userId}
@@ -440,8 +517,17 @@ const styles = createThemedStyleSheet((colors) => ({
   viewerAuthorName: { color: colors.white, fontSize: 14, fontWeight: '900' },
   viewerTime: { color: '#FFFFFFBB', fontSize: 11, fontWeight: '700' },
   viewerIconButton: { alignItems: 'center', backgroundColor: '#00000055', borderRadius: radius.pill, height: 40, justifyContent: 'center', width: 40 },
-  viewerNavigation: { bottom: 70, flexDirection: 'row', left: 0, position: 'absolute', right: 0, top: 84 },
+  viewerNavigation: { bottom: 132, flexDirection: 'row', left: 0, position: 'absolute', right: 0, top: 84 },
   viewerHalf: { flex: 1 },
+  reactionArea: { alignItems: 'center', bottom: 62, gap: spacing.xs, left: spacing.lg, position: 'absolute', right: spacing.lg },
+  reactionRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, justifyContent: 'center' },
+  reactionButton: { alignItems: 'center', backgroundColor: '#00000099', borderColor: '#FFFFFF44', borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: 3, justifyContent: 'center', minHeight: 42, minWidth: 48, paddingHorizontal: spacing.sm },
+  selectedReactionButton: { backgroundColor: '#FFFFFFEE', borderColor: colors.coral },
+  reactionEmoji: { fontSize: 20 },
+  reactionCount: { color: colors.white, fontSize: 12, fontWeight: '900' },
+  selectedReactionCount: { color: colors.text },
+  reactionHint: { color: '#FFFFFFBB', fontSize: 10, fontWeight: '700' },
+  reactionError: { color: '#FFD5D2', fontSize: 10, fontWeight: '800' },
   screenshotNotice: { alignItems: 'center', backgroundColor: '#00000088', borderRadius: radius.pill, bottom: spacing.lg, flexDirection: 'row', gap: spacing.sm, left: spacing.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, position: 'absolute', right: spacing.lg },
   screenshotNoticeText: { color: colors.white, flex: 1, fontSize: 10, lineHeight: 14 },
   confirmationOverlay: { alignItems: 'center', backgroundColor: '#070A12CC', bottom: 0, justifyContent: 'center', left: 0, padding: spacing.xl, position: 'absolute', right: 0, top: 0 },

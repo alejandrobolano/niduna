@@ -41,6 +41,7 @@ type RhesusFactor = 'positive' | 'negative';
 type SexAtBirth = 'female' | 'male' | 'intersex' | 'unknown';
 type MemberAvatarKey = 'rabbit' | 'bear' | 'fox' | 'koala' | 'otter' | 'owl';
 type BabyAvatarKey = MemberAvatarKey | 'chick' | 'lamb' | 'seal';
+type FamilyStoryReaction = 'heart' | 'tender' | 'celebrate' | 'laugh';
 
 export type Database = {
   public: {
@@ -135,6 +136,17 @@ export type Database = {
           story_id: string;
           user_id: string;
           viewed_at: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
+      family_story_reactions: Table<
+        {
+          created_at: string;
+          reaction: FamilyStoryReaction;
+          story_id: string;
+          updated_at: string;
+          user_id: string;
         },
         Record<string, never>,
         Record<string, never>
@@ -796,6 +808,13 @@ export type Database = {
       };
       mark_family_story_viewed: {
         Args: { target_story_id: string };
+        Returns: undefined;
+      };
+      set_family_story_reaction: {
+        Args: {
+          target_reaction: FamilyStoryReaction | null;
+          target_story_id: string;
+        };
         Returns: undefined;
       };
       retire_family_story: {
