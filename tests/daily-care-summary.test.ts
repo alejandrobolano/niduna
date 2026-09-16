@@ -103,14 +103,31 @@ describe('daily care summary', () => {
     });
 
     expect(comparison.feedingCount.delta).toBe(2);
-    expect(comparison.diaperCount.delta).toBe(2);
+    expect(comparison.diaper.total.delta).toBe(2);
+    expect(comparison.diaper.wet.delta).toBe(1);
+    expect(comparison.diaper.dirty.delta).toBe(0);
+    expect(comparison.diaper.both.delta).toBe(1);
     expect(comparison.sleepMinutes.delta).toBe(60);
     expect(comparison.feedingIntervalMinutes?.delta).toBe(-30);
     expect(createCareSummaryObservations(comparison)).toEqual([
       'Se registraron 2 tomas más que en el periodo anterior.',
-      'Se registraron 2 cambios de pañal más que en el periodo anterior.',
+      'Se registraron 2 cambios de pañal más que en el periodo anterior: 1 de pipí más y 1 mixto más.',
       'Se registraron 1 h de sueño más que en el periodo anterior.',
       'En las tomas con cantidad indicada se registraron 120 ml más.',
+    ]);
+  });
+
+  it('describes diaper type changes when the total remains equal', () => {
+    const comparison = compareCareSummaries({
+      ...emptySummary,
+      diaper: { both: 1, dirty: 0, total: 3, wet: 2 },
+    }, {
+      ...emptySummary,
+      diaper: { both: 0, dirty: 2, total: 3, wet: 1 },
+    });
+
+    expect(createCareSummaryObservations(comparison)).toEqual([
+      'El total de cambios de pañal se mantiene, pero cambió el tipo registrado: 1 de pipí más, 2 de caca menos y 1 mixto más.',
     ]);
   });
 

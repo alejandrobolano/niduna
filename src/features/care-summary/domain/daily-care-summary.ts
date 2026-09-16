@@ -60,7 +60,12 @@ export interface CareSummaryMetricComparison {
 }
 
 export interface CareSummaryComparison {
-  diaperCount: CareSummaryMetricComparison;
+  diaper: {
+    both: CareSummaryMetricComparison;
+    dirty: CareSummaryMetricComparison;
+    total: CareSummaryMetricComparison;
+    wet: CareSummaryMetricComparison;
+  };
   feedingAmountMilliliters: CareSummaryMetricComparison & {
     currentKnownCount: number;
     previousKnownCount: number;
@@ -132,7 +137,12 @@ export function compareCareSummaries(
   const previousInterval = previous.feeding.averageIntervalMinutes;
 
   return {
-    diaperCount: compareMetric(current.diaper.total, previous.diaper.total),
+    diaper: {
+      both: compareMetric(current.diaper.both, previous.diaper.both),
+      dirty: compareMetric(current.diaper.dirty, previous.diaper.dirty),
+      total: compareMetric(current.diaper.total, previous.diaper.total),
+      wet: compareMetric(current.diaper.wet, previous.diaper.wet),
+    },
     feedingAmountMilliliters: {
       ...compareMetric(
         current.feeding.totalAmountMilliliters,

@@ -9,7 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
-* compara los cuidados registrados con el periodo anterior y resume los cambios con lenguaje neutral
+* compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales por pipí, caca y mixtos
 * permite reaccionar a los Momentos con seis emociones y muestra al autor una ráfaga de las reacciones recibidas elevándose desde la parte inferior de la foto
 * añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
 
