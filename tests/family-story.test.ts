@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  applyFamilyStoryReaction,
   formatStoryElapsedTime,
   groupFamilyStories,
   type FamilyStory,
@@ -19,6 +20,7 @@ function story(
     id,
     imageUrl: `https://example.test/${id}`,
     isViewed,
+    reactions: [],
   };
 }
 
@@ -42,6 +44,32 @@ describe('groupFamilyStories', () => {
     ]);
 
     expect(group.hasUnseenStories).toBe(false);
+  });
+});
+
+describe('applyFamilyStoryReaction', () => {
+  it('adds, replaces and removes the viewer reaction without changing other totals', () => {
+    const initial = story('one', 'a', '2026-08-11T08:00:00.000Z');
+    const liked = applyFamilyStoryReaction(initial, 'heart');
+    const changed = applyFamilyStoryReaction(liked, 'tender');
+    const removed = applyFamilyStoryReaction(changed);
+
+    expect(liked.reactions).toEqual([{ count: 1, reaction: 'heart' }]);
+    expect(changed.reactions).toEqual([{ count: 1, reaction: 'tender' }]);
+    expect(removed.reactions).toEqual([]);
+    expect(removed.viewerReaction).toBeUndefined();
+  });
+
+  it('preserves reactions made by other family members', () => {
+    const current = {
+      ...story('one', 'a', '2026-08-11T08:00:00.000Z'),
+      reactions: [{ count: 3, reaction: 'heart' as const }],
+      viewerReaction: 'heart' as const,
+    };
+
+    expect(applyFamilyStoryReaction(current).reactions).toEqual([
+      { count: 2, reaction: 'heart' },
+    ]);
   });
 });
 

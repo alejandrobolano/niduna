@@ -1,6 +1,22 @@
 import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 import type { FamilyRelationship } from '@/features/family/domain/family';
 
+export const familyStoryReactionOptions = [
+  { emoji: '❤️', label: 'Me encanta', value: 'heart' },
+  { emoji: '🥰', label: 'Qué ternura', value: 'tender' },
+  { emoji: '🥳', label: 'Celebrar', value: 'celebrate' },
+  { emoji: '😂', label: 'Me divierte', value: 'laugh' },
+  { emoji: '😮', label: 'Me sorprende', value: 'surprise' },
+  { emoji: '🤪', label: 'Qué locura', value: 'silly' },
+] as const;
+
+export type FamilyStoryReaction = typeof familyStoryReactionOptions[number]['value'];
+
+export interface FamilyStoryReactionSummary {
+  count: number;
+  reaction: FamilyStoryReaction;
+}
+
 export interface FamilyStory {
   author: {
     avatarKey?: MemberAvatarVariant;
@@ -14,6 +30,34 @@ export interface FamilyStory {
   id: string;
   imageUrl: string;
   isViewed: boolean;
+  reactions: FamilyStoryReactionSummary[];
+  viewerReaction?: FamilyStoryReaction;
+}
+
+export function applyFamilyStoryReaction(
+  story: FamilyStory,
+  nextReaction?: FamilyStoryReaction,
+): FamilyStory {
+  const counts = new Map(
+    story.reactions.map(({ count, reaction }) => [reaction, count]),
+  );
+
+  if (story.viewerReaction) {
+    counts.set(story.viewerReaction, Math.max(0, (counts.get(story.viewerReaction) ?? 0) - 1));
+  }
+
+  if (nextReaction) {
+    counts.set(nextReaction, (counts.get(nextReaction) ?? 0) + 1);
+  }
+
+  return {
+    ...story,
+    reactions: familyStoryReactionOptions.flatMap(({ value }) => {
+      const count = counts.get(value) ?? 0;
+      return count > 0 ? [{ count, reaction: value }] : [];
+    }),
+    viewerReaction: nextReaction,
+  };
 }
 
 export interface FamilyStoryGroup {

@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite reaccionar a los Momentos con seis emociones y muestra al autor una ráfaga de las reacciones recibidas elevándose desde la parte inferior de la foto
 * añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
 
 ### Correcciones

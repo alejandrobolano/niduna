@@ -2,7 +2,11 @@ import {
   FamilyStoryError,
   type FamilyStoryRepository,
 } from '@/features/family-stories/application/family-story-repository';
-import type { FamilyStory } from '@/features/family-stories/domain/family-story';
+import {
+  familyStoryReactionOptions,
+  type FamilyStory,
+  type FamilyStoryReaction,
+} from '@/features/family-stories/domain/family-story';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
 import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
@@ -84,7 +88,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
 
     const authorIds = [...new Set(rows.map((row) => row.author_user_id))];
     const storyIds = rows.map((row) => row.id);
-    const [profilesResult, membershipsResult, viewsResult, urlsResult] = await Promise.all([
+    const [profilesResult, membershipsResult, viewsResult, reactionsResult, urlsResult] = await Promise.all([
       supabase
         .from('profiles')
         .select('id, display_name, avatar_key, avatar_path')
@@ -99,6 +103,10 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         .select('story_id')
         .eq('user_id', userId)
         .in('story_id', storyIds),
+      supabase
+        .from('family_story_reactions')
+        .select('story_id, user_id, reaction')
+        .in('story_id', storyIds),
       supabase.storage
         .from('family-stories')
         .createSignedUrls(
@@ -107,7 +115,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         ),
     ]);
     const relatedError =
-      profilesResult.error ?? membershipsResult.error ?? viewsResult.error ?? urlsResult.error;
+      profilesResult.error ?? membershipsResult.error ?? viewsResult.error ?? reactionsResult.error ?? urlsResult.error;
 
     if (relatedError) {
       throw mapError('code' in relatedError ? relatedError.code : undefined);
@@ -125,6 +133,18 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
     const viewedIds = new Set(
       (viewsResult.data ?? []).map((view) => view.story_id),
     );
+    const reactionsByStory = new Map<string, Map<FamilyStoryReaction, number>>();
+    const viewerReactionByStory = new Map<string, FamilyStoryReaction>();
+
+    for (const reaction of reactionsResult.data ?? []) {
+      const storyReactions = reactionsByStory.get(reaction.story_id) ?? new Map();
+      storyReactions.set(reaction.reaction, (storyReactions.get(reaction.reaction) ?? 0) + 1);
+      reactionsByStory.set(reaction.story_id, storyReactions);
+
+      if (reaction.user_id === userId) {
+        viewerReactionByStory.set(reaction.story_id, reaction.reaction);
+      }
+    }
 
     return rows.flatMap((row, index): FamilyStory[] => {
       const signedUrl = urlsResult.data?.[index];
@@ -148,12 +168,28 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         id: row.id,
         imageUrl: signedUrl.signedUrl,
         isViewed: viewedIds.has(row.id),
+        reactions: familyStoryReactionOptions.flatMap(({ value }) => {
+          const count = reactionsByStory.get(row.id)?.get(value) ?? 0;
+          return count > 0 ? [{ count, reaction: value }] : [];
+        }),
+        viewerReaction: viewerReactionByStory.get(row.id),
       }];
     });
   },
 
   async markViewed(storyId) {
     const { error } = await supabase.rpc('mark_family_story_viewed', {
+      target_story_id: storyId,
+    });
+
+    if (error) {
+      throw mapError(error.code);
+    }
+  },
+
+  async setReaction(storyId, reaction) {
+    const { error } = await supabase.rpc('set_family_story_reaction', {
+      target_reaction: reaction ?? null,
       target_story_id: storyId,
     });
 
@@ -182,6 +218,15 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
           filter: `baby_id=eq.${babyId}`,
           schema: 'public',
           table: 'family_stories',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'family_story_reactions',
         },
         onChange,
       )

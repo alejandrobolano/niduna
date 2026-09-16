@@ -1,4 +1,7 @@
-import type { FamilyStory } from '@/features/family-stories/domain/family-story';
+import type {
+  FamilyStory,
+  FamilyStoryReaction,
+} from '@/features/family-stories/domain/family-story';
 
 export interface PreparedStoryImage {
   bytes: ArrayBuffer;
@@ -11,6 +14,7 @@ export interface FamilyStoryRepository {
   create(babyId: string, image: PreparedStoryImage): Promise<void>;
   load(babyId: string, userId: string): Promise<FamilyStory[]>;
   markViewed(storyId: string): Promise<void>;
+  setReaction(storyId: string, reaction?: FamilyStoryReaction): Promise<void>;
   retire(storyId: string): Promise<void>;
   subscribe(babyId: string, onChange: () => void): () => void;
 }
