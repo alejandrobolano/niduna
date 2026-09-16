@@ -121,6 +121,20 @@ export const supabaseCareSummaryRepository: CareSummaryRepository = {
     };
   },
 
+  async loadSummary(query) {
+    const { data, error } = await supabase.rpc('get_care_range_summary', {
+      target_baby_id: query.babyId,
+      target_range_end: query.endAt,
+      target_range_start: query.startAt,
+    });
+
+    if (error || !data?.[0]) {
+      throw new Error(error?.message ?? 'care_summary_not_found');
+    }
+
+    return mapSummary(data[0]);
+  },
+
   subscribe(babyId, onChange) {
     const channel = supabase
       .channel(createRealtimeChannelTopic('care-summary', babyId))

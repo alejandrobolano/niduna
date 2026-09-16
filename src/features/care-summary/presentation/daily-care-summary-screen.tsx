@@ -1,5 +1,6 @@
 import {
   BabyIcon,
+  GitCompareArrows,
   Milk,
   Moon,
   NotebookPen,
@@ -13,12 +14,16 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
+import { createCareSummaryObservations } from '@/features/care-summary/application/care-summary-observations';
 import {
+  compareCareSummaries,
   createCareSummaryRange,
+  createPreviousCareSummaryRange,
   formatWeightGrams,
   formatSummaryDuration,
   getCareSummaryPeriodLabel,
   type CareSummaryPeriod,
+  type CareSummaryComparison,
   type CareSummaryReport,
   type DailyCareSummary,
 } from '@/features/care-summary/domain/daily-care-summary';
@@ -99,6 +104,7 @@ export function DailyCareSummaryScreen({
 }: DailyCareSummaryScreenProps) {
   const [period, setPeriod] = useState<CareSummaryPeriod>('24h');
   const [report, setReport] = useState<CareSummaryReport>();
+  const [comparison, setComparison] = useState<CareSummaryComparison>();
   const [isLoading, setIsLoading] = useState(Boolean(babyId));
   const [error, setError] = useState<string>();
   const [loadVersion, setLoadVersion] = useState(0);
@@ -108,11 +114,17 @@ export function DailyCareSummaryScreen({
 
     if (!babyId) return () => { active = false; };
 
-    void repository
-      .loadReport({ babyId, ...createCareSummaryRange(period) })
-      .then((result) => {
+    const currentRange = createCareSummaryRange(period);
+    const previousRange = createPreviousCareSummaryRange(currentRange);
+
+    void Promise.all([
+      repository.loadReport({ babyId, ...currentRange }),
+      repository.loadSummary({ babyId, ...previousRange }),
+    ])
+      .then(([result, previousSummary]) => {
         if (!active) return;
         setReport(result);
+        setComparison(compareCareSummaries(result.summary, previousSummary));
         setError(undefined);
       })
       .catch(() => {
@@ -131,6 +143,9 @@ export function DailyCareSummaryScreen({
   }, [babyId, repository]);
 
   const summary = report?.summary;
+  const observations = comparison
+    ? createCareSummaryObservations(comparison)
+    : [];
   const periodLabel = getCareSummaryPeriodLabel(period);
   const feedingDetail = summary?.feeding.count
     ? summary.feeding.knownAmountCount > 0
@@ -184,6 +199,7 @@ export function DailyCareSummaryScreen({
                       onPress={() => {
                         setIsLoading(true);
                         setReport(undefined);
+                        setComparison(undefined);
                         setPeriod(option.value);
                       }}
                       style={({ pressed }) => [
@@ -256,6 +272,34 @@ export function DailyCareSummaryScreen({
                       value={`${summary.noteCount} ${summary.noteCount === 1 ? 'nota' : 'notas'}`}
                     />
                   </View>
+
+                  {comparison ? (
+                    <View
+                      accessibilityLabel={`Qué ha cambiado. ${observations.join(' ')}`}
+                      accessible
+                      style={styles.comparisonCard}
+                    >
+                      <View style={styles.comparisonHeading}>
+                        <View style={styles.comparisonIcon}>
+                          <GitCompareArrows color={colors.primaryPressed} size={21} />
+                        </View>
+                        <View style={styles.comparisonCopy}>
+                          <Text style={styles.comparisonTitle}>¿Qué ha cambiado?</Text>
+                          <Text style={styles.comparisonSubtitle}>
+                            Frente al periodo inmediatamente anterior de la misma duración.
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.observations}>
+                        {observations.map((observation) => (
+                          <View key={observation} style={styles.observationRow}>
+                            <View style={styles.observationDot} />
+                            <Text style={styles.observationText}>{observation}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </View>
+                  ) : null}
 
                   {isLoading ? (
                     <Text accessibilityLiveRegion="polite" style={styles.loadingInline}>
@@ -344,6 +388,26 @@ const styles = createThemedStyleSheet((colors) => ({
   chartHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   chartSubtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
   chartTitle: { color: colors.text, fontSize: 18, fontWeight: '900' },
+  comparisonCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.md,
+    padding: spacing.lg,
+  },
+  comparisonCopy: { flex: 1, gap: 2 },
+  comparisonHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
+  comparisonIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: radius.md,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  comparisonSubtitle: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
+  comparisonTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   disclaimer: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
   empty: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.xxl },
@@ -356,6 +420,16 @@ const styles = createThemedStyleSheet((colors) => ({
   measurementCopy: { flex: 1, gap: spacing.xs },
   measurementIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 52, justifyContent: 'center', width: 52 },
   measurementValue: { color: colors.text, fontSize: 21, fontWeight: '900' },
+  observationDot: {
+    backgroundColor: colors.aqua,
+    borderRadius: radius.pill,
+    height: 7,
+    marginTop: 6,
+    width: 7,
+  },
+  observationRow: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
+  observationText: { color: colors.text, flex: 1, fontSize: 13, lineHeight: 19 },
+  observations: { gap: spacing.sm },
   page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 96 },
   periodButton: { alignItems: 'center', borderRadius: radius.pill, flex: 1, justifyContent: 'center', minHeight: 42, paddingHorizontal: spacing.sm },
   periodButtonSelected: { backgroundColor: colors.primary },
