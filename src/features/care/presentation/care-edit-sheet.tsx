@@ -39,7 +39,7 @@ const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
   { label: 'Leche extraída', value: 'expressed_milk' },
   { label: 'Fórmula', value: 'formula' },
-  { label: 'Mixta', value: 'mixed' },
+  { label: 'Pecho + fórmula', value: 'mixed' },
 ] satisfies SelectOption<FeedingMethod>[];
 
 const breastSideOptions = [

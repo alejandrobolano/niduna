@@ -722,7 +722,11 @@ export type Database = {
           diaper_wet_count: number;
           feeding_amount_count: number;
           feeding_amount_milliliters: number;
+          feeding_breast_count: number;
           feeding_count: number;
+          feeding_expressed_milk_count: number;
+          feeding_formula_count: number;
+          feeding_mixed_count: number;
           latest_head_circumference_millimeters: number | null;
           latest_length_millimeters: number | null;
           latest_measurement_at: string | null;

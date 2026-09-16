@@ -12,21 +12,55 @@ export function getSelectableCareRecordKeys(events: CareEvent[]): Set<string> {
   );
 }
 
-export function reconcileCareRecordSelection(
-  selectedKeys: ReadonlySet<string>,
+export function refreshCareRecordSelection(
+  selection: ReadonlyMap<string, CareEvent>,
   visibleEvents: CareEvent[],
-): Set<string> {
-  const visibleKeys = new Set(visibleEvents.map(getCareRecordKey));
-  return new Set([...selectedKeys].filter((key) => visibleKeys.has(key)));
+  babyId: string,
+): Map<string, CareEvent> {
+  const next = new Map(
+    [...selection].filter(([, event]) => event.babyId === babyId),
+  );
+
+  visibleEvents.forEach((event) => {
+    const key = getCareRecordKey(event);
+    if (next.has(key)) next.set(key, event);
+  });
+
+  return next;
 }
 
-export function getCareEventsForExport(
-  events: CareEvent[],
-  selectedKeys: ReadonlySet<string>,
-): CareEvent[] {
-  if (selectedKeys.size === 0) return events;
+export function toggleCareRecordSelection(
+  selection: ReadonlyMap<string, CareEvent>,
+  event: CareEvent,
+): Map<string, CareEvent> {
+  const next = new Map(selection);
+  const key = getCareRecordKey(event);
 
-  return events.filter((event) => selectedKeys.has(getCareRecordKey(event)));
+  if (next.has(key)) next.delete(key);
+  else next.set(key, event);
+
+  return next;
+}
+
+export function toggleVisibleCareRecordSelection(
+  selection: ReadonlyMap<string, CareEvent>,
+  visibleEvents: CareEvent[],
+): Map<string, CareEvent> {
+  const selectableEvents = visibleEvents.filter(
+    (event) => !(event.type === 'measurement' && event.source === 'birth'),
+  );
+  const allVisibleSelected = selectableEvents.length > 0 && selectableEvents.every(
+    (event) => selection.has(getCareRecordKey(event)),
+  );
+  const next = new Map(selection);
+
+  selectableEvents.forEach((event) => {
+    const key = getCareRecordKey(event);
+    if (allVisibleSelected) next.delete(key);
+    else next.set(key, event);
+  });
+
+  return next;
 }
 
 export function canEditCareRecord(

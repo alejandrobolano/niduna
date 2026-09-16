@@ -28,10 +28,10 @@ import type { CareEventFilter, CareHistoryPageSize } from '@/features/care/appli
 import { getCareRecordRetention } from '@/features/care/application/care-record-retention';
 import {
   canEditCareRecord,
-  getCareEventsForExport,
   getCareRecordKey,
-  getSelectableCareRecordKeys,
-  reconcileCareRecordSelection,
+  refreshCareRecordSelection,
+  toggleCareRecordSelection,
+  toggleVisibleCareRecordSelection,
 } from '@/features/care/application/care-record-management';
 import { CareOperationError, type CareHistoryPage, type CareRepository } from '@/features/care/application/care-repository';
 import type { CareReportInput } from '@/features/care/application/care-report';
@@ -99,7 +99,7 @@ export function CareHistoryScreen({
   const [error, setError] = useState<string>();
   const [editingEvent, setEditingEvent] = useState<CareEvent>();
   const [pendingRetireId, setPendingRetireId] = useState<string>();
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [recordSelection, setRecordSelection] = useState<Map<string, CareEvent>>(new Map());
   const [showBulkConfirmation, setShowBulkConfirmation] = useState(false);
   const [isRetiring, setIsRetiring] = useState(false);
   const [showRetired, setShowRetired] = useState(false);
@@ -119,7 +119,9 @@ export function CareHistoryScreen({
         if (page > result.totalPages) setPage(result.totalPages);
         else {
           setHistory(result);
-          setSelectedKeys((current) => reconcileCareRecordSelection(current, result.events));
+          setRecordSelection((current) =>
+            refreshCareRecordSelection(current, result.events, babyId),
+          );
           setShowBulkConfirmation(false);
         }
       })
@@ -142,7 +144,7 @@ export function CareHistoryScreen({
     action();
     setPage(1);
     setPendingRetireId(undefined);
-    setSelectedKeys(new Set());
+    setRecordSelection(new Map());
     setShowBulkConfirmation(false);
   }
 
@@ -152,7 +154,7 @@ export function CareHistoryScreen({
     try {
       await repository.retireEvents(events);
       setPendingRetireId(undefined);
-      setSelectedKeys(new Set());
+      setRecordSelection(new Map());
       setShowBulkConfirmation(false);
       setLoadVersion((value) => value + 1);
     } catch {
@@ -179,23 +181,15 @@ export function CareHistoryScreen({
   }
 
   function toggleSelection(event: CareEvent) {
-    const key = getCareRecordKey(event);
-    setSelectedKeys((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setRecordSelection((current) => toggleCareRecordSelection(current, event));
     setShowBulkConfirmation(false);
   }
 
   const visibleEvents = history?.events ?? [];
-  const selectedEvents = visibleEvents.filter((event) =>
-    selectedKeys.has(getCareRecordKey(event)),
-  );
-  const exportEvents = getCareEventsForExport(visibleEvents, selectedKeys);
-  const isSelectionExport = selectedKeys.size > 0;
-  const exportCount = isSelectionExport ? exportEvents.length : history?.total ?? 0;
+  const selectedKeys = new Set(recordSelection.keys());
+  const selectedEvents = [...recordSelection.values()];
+  const isSelectionExport = recordSelection.size > 0;
+  const exportCount = isSelectionExport ? recordSelection.size : history?.total ?? 0;
 
   async function handleExport() {
     if (!babyId || !babyName) return;
@@ -203,7 +197,7 @@ export function CareHistoryScreen({
     setError(undefined);
     try {
       const events = isSelectionExport
-        ? exportEvents
+        ? selectedEvents
         : await repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       await exportHistory(events, babyName);
     } catch {
@@ -220,7 +214,7 @@ export function CareHistoryScreen({
 
     try {
       const eventsPromise = isSelectionExport
-        ? Promise.resolve(exportEvents)
+        ? Promise.resolve(selectedEvents)
         : repository.loadHistoryForExport({ babyId, date: selectedDate, filter });
       const [events, contacts] = await Promise.all([
         eventsPromise,
@@ -464,9 +458,9 @@ export function CareHistoryScreen({
                   <View style={styles.selectionBar}>
                     <Pressable
                       onPress={() => {
-                        const selectable = getSelectableCareRecordKeys(visibleEvents);
-                        const allSelected = selectable.size > 0 && [...selectable].every((key) => selectedKeys.has(key));
-                        setSelectedKeys(allSelected ? new Set() : selectable);
+                        setRecordSelection((current) =>
+                          toggleVisibleCareRecordSelection(current, visibleEvents),
+                        );
                         setShowBulkConfirmation(false);
                       }}
                       style={styles.selectionLink}
@@ -474,8 +468,8 @@ export function CareHistoryScreen({
                       <CheckSquare2 color={colors.primaryPressed} size={16} />
                       <Text style={styles.selectionLinkText}>Seleccionar todos los visibles</Text>
                     </Pressable>
-                    <Text style={styles.selectionCount}>{selectedKeys.size} seleccionados</Text>
-                    {selectedKeys.size > 0 ? (
+                    <Text style={styles.selectionCount}>{recordSelection.size} seleccionados</Text>
+                    {recordSelection.size > 0 ? (
                       <Pressable onPress={() => setShowBulkConfirmation(true)} style={styles.bulkButton}>
                         <Archive color={colors.onAccent} size={15} />
                         <Text style={styles.bulkButtonText}>Quitar del relevo</Text>
@@ -513,8 +507,8 @@ export function CareHistoryScreen({
                   </Text>
                 ) : null}
                 <DataPagination
-                  onChangePage={(value) => { setIsLoading(true); setError(undefined); setSelectedKeys(new Set()); setShowBulkConfirmation(false); setPage(value); }}
-                  onChangePageSize={(value) => resetPage(() => setPageSize(value))}
+                  onChangePage={(value) => { setIsLoading(true); setError(undefined); setShowBulkConfirmation(false); setPage(value); }}
+                  onChangePageSize={(value) => { setIsLoading(true); setError(undefined); setPage(1); setPageSize(value); setShowBulkConfirmation(false); }}
                   page={history?.page ?? page}
                   pageSize={pageSize}
                   total={history?.total ?? 0}

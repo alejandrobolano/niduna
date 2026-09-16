@@ -37,8 +37,12 @@ function mapSummary(row: CareRangeSummaryRow): DailyCareSummary {
       averageIntervalMinutes: optionalNumber(
         row.average_feeding_interval_minutes,
       ),
+      breast: row.feeding_breast_count,
       count: row.feeding_count,
+      expressedMilk: row.feeding_expressed_milk_count,
+      formula: row.feeding_formula_count,
       knownAmountCount: row.feeding_amount_count,
+      mixed: row.feeding_mixed_count,
       totalAmountMilliliters: row.feeding_amount_milliliters,
     },
     latestMeasurement: hasMeasurement
@@ -119,6 +123,20 @@ export const supabaseCareSummaryRepository: CareSummaryRepository = {
       summary: mapSummary(summaryResult.data[0]),
       trend: (trendResult.data ?? []).map(mapTrend),
     };
+  },
+
+  async loadSummary(query) {
+    const { data, error } = await supabase.rpc('get_care_range_summary', {
+      target_baby_id: query.babyId,
+      target_range_end: query.endAt,
+      target_range_start: query.startAt,
+    });
+
+    if (error || !data?.[0]) {
+      throw new Error(error?.message ?? 'care_summary_not_found');
+    }
+
+    return mapSummary(data[0]);
   },
 
   subscribe(babyId, onChange) {

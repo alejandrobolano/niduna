@@ -9,5 +9,6 @@ export interface DailyCareSummaryQuery extends DailyCareSummaryRange {
 
 export interface CareSummaryRepository {
   loadReport(query: DailyCareSummaryQuery): Promise<CareSummaryReport>;
+  loadSummary(query: DailyCareSummaryQuery): Promise<CareSummaryReport['summary']>;
   subscribe(babyId: string, onChange: () => void): () => void;
 }

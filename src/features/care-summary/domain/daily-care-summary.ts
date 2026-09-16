@@ -7,8 +7,12 @@ export interface DailyCareSummary {
   };
   feeding: {
     averageIntervalMinutes?: number;
+    breast: number;
     count: number;
+    expressedMilk: number;
+    formula: number;
     knownAmountCount: number;
+    mixed: number;
     totalAmountMilliliters: number;
   };
   latestMeasurement?: {
@@ -53,6 +57,35 @@ export interface CareSummaryReport {
   trend: CareTrendPoint[];
 }
 
+export interface CareSummaryMetricComparison {
+  current: number;
+  delta: number;
+  previous: number;
+}
+
+export interface CareSummaryComparison {
+  diaper: {
+    both: CareSummaryMetricComparison;
+    dirty: CareSummaryMetricComparison;
+    total: CareSummaryMetricComparison;
+    wet: CareSummaryMetricComparison;
+  };
+  feeding: {
+    breast: CareSummaryMetricComparison;
+    expressedMilk: CareSummaryMetricComparison;
+    formula: CareSummaryMetricComparison;
+    mixed: CareSummaryMetricComparison;
+    total: CareSummaryMetricComparison;
+  };
+  feedingAmountMilliliters: CareSummaryMetricComparison & {
+    currentKnownCount: number;
+    previousKnownCount: number;
+  };
+  feedingIntervalMinutes?: CareSummaryMetricComparison;
+  noteCount: CareSummaryMetricComparison;
+  sleepMinutes: CareSummaryMetricComparison;
+}
+
 export function createCareSummaryRange(
   period: CareSummaryPeriod,
   now = new Date(),
@@ -78,6 +111,72 @@ export function createCareSummaryRange(
     bucketMinutes: 1440,
     endAt: end.toISOString(),
     startAt: start.toISOString(),
+  };
+}
+
+export function createPreviousCareSummaryRange(
+  range: DailyCareSummaryRange,
+): DailyCareSummaryRange {
+  const start = Date.parse(range.startAt);
+  const end = Date.parse(range.endAt);
+
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+    throw new Error('invalid_care_summary_range');
+  }
+
+  return {
+    bucketMinutes: range.bucketMinutes,
+    endAt: new Date(start).toISOString(),
+    startAt: new Date(start - (end - start)).toISOString(),
+  };
+}
+
+function compareMetric(current: number, previous: number): CareSummaryMetricComparison {
+  return {
+    current,
+    delta: current - previous,
+    previous,
+  };
+}
+
+export function compareCareSummaries(
+  current: DailyCareSummary,
+  previous: DailyCareSummary,
+): CareSummaryComparison {
+  const currentInterval = current.feeding.averageIntervalMinutes;
+  const previousInterval = previous.feeding.averageIntervalMinutes;
+
+  return {
+    diaper: {
+      both: compareMetric(current.diaper.both, previous.diaper.both),
+      dirty: compareMetric(current.diaper.dirty, previous.diaper.dirty),
+      total: compareMetric(current.diaper.total, previous.diaper.total),
+      wet: compareMetric(current.diaper.wet, previous.diaper.wet),
+    },
+    feeding: {
+      breast: compareMetric(current.feeding.breast, previous.feeding.breast),
+      expressedMilk: compareMetric(
+        current.feeding.expressedMilk,
+        previous.feeding.expressedMilk,
+      ),
+      formula: compareMetric(current.feeding.formula, previous.feeding.formula),
+      mixed: compareMetric(current.feeding.mixed, previous.feeding.mixed),
+      total: compareMetric(current.feeding.count, previous.feeding.count),
+    },
+    feedingAmountMilliliters: {
+      ...compareMetric(
+        current.feeding.totalAmountMilliliters,
+        previous.feeding.totalAmountMilliliters,
+      ),
+      currentKnownCount: current.feeding.knownAmountCount,
+      previousKnownCount: previous.feeding.knownAmountCount,
+    },
+    feedingIntervalMinutes:
+      currentInterval !== undefined && previousInterval !== undefined
+        ? compareMetric(currentInterval, previousInterval)
+        : undefined,
+    noteCount: compareMetric(current.noteCount, previous.noteCount),
+    sleepMinutes: compareMetric(current.sleepMinutes, previous.sleepMinutes),
   };
 }
 

@@ -6,7 +6,7 @@ const feedingLabels = {
   breast: 'Pecho',
   expressed_milk: 'Leche extraída',
   formula: 'Fórmula',
-  mixed: 'Mixta',
+  mixed: 'Pecho + fórmula',
 } as const;
 
 const breastSideLabels = {

@@ -27,7 +27,7 @@ const feedingLabels: Record<FeedingEvent['method'], string> = {
   breast: 'Pecho',
   expressed_milk: 'Leche extraída',
   formula: 'Fórmula',
-  mixed: 'Mixta',
+  mixed: 'Pecho + fórmula',
 };
 
 const diaperLabels: Record<DiaperEvent['condition'], string> = {

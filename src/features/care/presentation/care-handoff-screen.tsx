@@ -57,7 +57,7 @@ const feedingLabels: Record<FeedingEvent['method'], string> = {
   breast: 'Pecho',
   expressed_milk: 'Leche extraída',
   formula: 'Fórmula',
-  mixed: 'Mixta',
+  mixed: 'Pecho + fórmula',
 };
 
 const breastSideLabels: Record<
@@ -1093,6 +1093,7 @@ export function CareHandoffScreen({
       <CareActionSheet
         action={action}
         babyId={dashboard.baby.id}
+        key={`${dashboard.baby.id}:${action ?? 'closed'}`}
         onClose={() => {
           setAction(undefined);
           onExternalActionHandled?.();
