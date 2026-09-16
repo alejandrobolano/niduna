@@ -18,6 +18,21 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.5.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.4.0...niduna-v1.5.0) (2026-09-16)
+
+
+### Nuevas funciones
+
+* add family story reactions ([2a40a39](https://github.com/alejandrobolano/niduna/commit/2a40a3931ac9b942a1e08bca6259515ca2bb1238))
+* añadir reacciones familiares a los Momentos ([c16d5e4](https://github.com/alejandrobolano/niduna/commit/c16d5e449e1c4ee6a9e4b9a3f00d4abe0cd99a96))
+* animate received story reactions ([7c3c1dd](https://github.com/alejandrobolano/niduna/commit/7c3c1dde4b66234d7174e6d694bffe9d0d35e2cd))
+* expand family story reactions ([35567e6](https://github.com/alejandrobolano/niduna/commit/35567e62bfcef244dff388e5cb80761166cf8d19))
+
+
+### Correcciones
+
+* refine story reaction animation ([fa6bafa](https://github.com/alejandrobolano/niduna/commit/fa6bafa25c707bc521036e69da81c2066c17e862))
+
 ## [1.4.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.3.0...niduna-v1.4.0) (2026-09-15)
 
 
