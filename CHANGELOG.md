@@ -15,6 +15,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial
 * protege los datos del widget al cerrar sesión o perder acceso a un bebé
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
