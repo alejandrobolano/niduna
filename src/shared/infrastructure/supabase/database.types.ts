@@ -41,7 +41,13 @@ type RhesusFactor = 'positive' | 'negative';
 type SexAtBirth = 'female' | 'male' | 'intersex' | 'unknown';
 type MemberAvatarKey = 'rabbit' | 'bear' | 'fox' | 'koala' | 'otter' | 'owl';
 type BabyAvatarKey = MemberAvatarKey | 'chick' | 'lamb' | 'seal';
-type FamilyStoryReaction = 'heart' | 'tender' | 'celebrate' | 'laugh';
+type FamilyStoryReaction =
+  | 'heart'
+  | 'tender'
+  | 'celebrate'
+  | 'laugh'
+  | 'surprise'
+  | 'silly';
 
 export type Database = {
   public: {

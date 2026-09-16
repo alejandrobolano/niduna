@@ -4,8 +4,10 @@ import type { FamilyRelationship } from '@/features/family/domain/family';
 export const familyStoryReactionOptions = [
   { emoji: '❤️', label: 'Me encanta', value: 'heart' },
   { emoji: '🥰', label: 'Qué ternura', value: 'tender' },
-  { emoji: '👏', label: 'Celebrar', value: 'celebrate' },
+  { emoji: '🥳', label: 'Celebrar', value: 'celebrate' },
   { emoji: '😂', label: 'Me divierte', value: 'laugh' },
+  { emoji: '😮', label: 'Me sorprende', value: 'surprise' },
+  { emoji: '🤪', label: 'Qué locura', value: 'silly' },
 ] as const;
 
 export type FamilyStoryReaction = typeof familyStoryReactionOptions[number]['value'];

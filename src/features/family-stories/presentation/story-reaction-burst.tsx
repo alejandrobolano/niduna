@@ -17,9 +17,9 @@ import {
 } from '@/features/family-stories/domain/family-story';
 import { useReducedMotion } from '@/shared/presentation/use-reduced-motion';
 
-const duplicatesPerReaction = 3;
-const maximumParticles = 24;
-const particlesPerWave = 12;
+const duplicatesPerReaction = 5;
+const maximumParticles = 30;
+const particlesPerWave = 15;
 const horizontalPositions = [8, 72, 34, 86, 20, 57, 13, 65, 42, 91, 27, 51] as const;
 const horizontalDrifts = [-18, 14, -10, 16, 9, -15, 12, -8, 17, -13, 8, -11] as const;
 const verticalVariations = [0, 42, 18, 58, 30, 8, 50, 22, 46, 12, 54, 26] as const;
