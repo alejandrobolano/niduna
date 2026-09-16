@@ -31,7 +31,7 @@ function joinNaturalLanguage(parts: string[]): string {
   return `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}`;
 }
 
-function describeDiaperTypeChange(
+function describeCategoryChange(
   comparison: CareSummaryMetricComparison,
   singular: string,
   plural: string,
@@ -43,28 +43,79 @@ function describeDiaperTypeChange(
   return `${difference} ${label} ${comparison.delta > 0 ? 'más' : 'menos'}`;
 }
 
-function describeDiaperChange(
-  comparison: CareSummaryComparison['diaper'],
+function describeCategorizedCountChange(
+  total: CareSummaryMetricComparison,
+  breakdown: string[],
+  singular: string,
+  plural: string,
+  stableLabel: string,
 ): string | undefined {
-  const breakdown = [
-    describeDiaperTypeChange(comparison.wet, 'de pipí', 'de pipí'),
-    describeDiaperTypeChange(comparison.dirty, 'de caca', 'de caca'),
-    describeDiaperTypeChange(comparison.both, 'mixto', 'mixtos'),
-  ].filter((part): part is string => Boolean(part));
-
-  if (comparison.total.delta === 0) {
+  if (total.delta === 0) {
     return breakdown.length > 0
-      ? `El total de cambios de pañal se mantiene, pero cambió el tipo registrado: ${joinNaturalLanguage(breakdown)}.`
+      ? `El total de ${stableLabel} se mantiene, pero cambió el tipo registrado: ${joinNaturalLanguage(breakdown)}.`
       : undefined;
   }
 
-  const totalDifference = Math.abs(comparison.total.delta);
-  const totalLabel = totalDifference === 1 ? 'cambio de pañal' : 'cambios de pañal';
-  const totalDescription = `Se registraron ${totalDifference} ${totalLabel} ${comparison.total.delta > 0 ? 'más' : 'menos'} que en el periodo anterior`;
+  const totalDifference = Math.abs(total.delta);
+  const totalLabel = totalDifference === 1 ? singular : plural;
+  const totalDescription = `Se registraron ${totalDifference} ${totalLabel} ${total.delta > 0 ? 'más' : 'menos'} que en el periodo anterior`;
 
   return breakdown.length > 0
     ? `${totalDescription}: ${joinNaturalLanguage(breakdown)}.`
     : `${totalDescription}.`;
+}
+
+function describeDiaperChange(
+  comparison: CareSummaryComparison['diaper'],
+): string | undefined {
+  const breakdown = [
+    describeCategoryChange(comparison.wet, 'de pipí', 'de pipí'),
+    describeCategoryChange(comparison.dirty, 'de caca', 'de caca'),
+    describeCategoryChange(comparison.both, 'mixto', 'mixtos'),
+  ].filter((part): part is string => Boolean(part));
+
+  return describeCategorizedCountChange(
+    comparison.total,
+    breakdown,
+    'cambio de pañal',
+    'cambios de pañal',
+    'cambios de pañal',
+  );
+}
+
+function describeFeedingChange(
+  comparison: CareSummaryComparison['feeding'],
+): string | undefined {
+  const breakdown = [
+    describeCategoryChange(
+      comparison.breast,
+      'toma de pecho',
+      'tomas de pecho',
+    ),
+    describeCategoryChange(
+      comparison.expressedMilk,
+      'toma de leche extraída',
+      'tomas de leche extraída',
+    ),
+    describeCategoryChange(
+      comparison.formula,
+      'toma de fórmula',
+      'tomas de fórmula',
+    ),
+    describeCategoryChange(
+      comparison.mixed,
+      'toma de pecho + fórmula',
+      'tomas de pecho + fórmula',
+    ),
+  ].filter((part): part is string => Boolean(part));
+
+  return describeCategorizedCountChange(
+    comparison.total,
+    breakdown,
+    'toma',
+    'tomas',
+    'tomas',
+  );
 }
 
 function describeFeedingAmountChange(
@@ -91,7 +142,7 @@ function describeFeedingIntervalChange(
 
 function hasRecordedData(comparison: CareSummaryComparison): boolean {
   return [
-    comparison.feedingCount,
+    comparison.feeding.total,
     comparison.diaper.total,
     comparison.sleepMinutes,
     comparison.noteCount,
@@ -106,7 +157,7 @@ export function createCareSummaryObservations(
   }
 
   const observations = [
-    describeCountChange(comparison.feedingCount, 'toma', 'tomas'),
+    describeFeedingChange(comparison.feeding),
     describeDiaperChange(comparison.diaper),
     describeSleepChange(comparison.sleepMinutes),
     describeFeedingAmountChange(comparison.feedingAmountMilliliters),

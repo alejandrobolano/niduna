@@ -12,7 +12,15 @@ import { createCareSummaryObservations } from '../src/features/care-summary/appl
 
 const emptySummary = {
   diaper: { both: 0, dirty: 0, total: 0, wet: 0 },
-  feeding: { count: 0, knownAmountCount: 0, totalAmountMilliliters: 0 },
+  feeding: {
+    breast: 0,
+    count: 0,
+    expressedMilk: 0,
+    formula: 0,
+    knownAmountCount: 0,
+    mixed: 0,
+    totalAmountMilliliters: 0,
+  },
   noteCount: 0,
   sleepMinutes: 0,
 };
@@ -64,7 +72,15 @@ describe('daily care summary', () => {
   it('describes care trends without relying on the chart', () => {
     expect(summarizeCareTrend({
       diaper: { both: 0, dirty: 1, total: 3, wet: 2 },
-      feeding: { count: 4, knownAmountCount: 2, totalAmountMilliliters: 180 },
+      feeding: {
+        breast: 2,
+        count: 4,
+        expressedMilk: 1,
+        formula: 1,
+        knownAmountCount: 2,
+        mixed: 0,
+        totalAmountMilliliters: 180,
+      },
       noteCount: 1,
       sleepMinutes: 135,
     }, '24h')).toBe(
@@ -84,8 +100,12 @@ describe('daily care summary', () => {
       diaper: { both: 1, dirty: 1, total: 5, wet: 3 },
       feeding: {
         averageIntervalMinutes: 180,
+        breast: 2,
         count: 6,
+        expressedMilk: 1,
+        formula: 2,
         knownAmountCount: 4,
+        mixed: 1,
         totalAmountMilliliters: 360,
       },
       noteCount: 1,
@@ -94,15 +114,21 @@ describe('daily care summary', () => {
       diaper: { both: 0, dirty: 1, total: 3, wet: 2 },
       feeding: {
         averageIntervalMinutes: 210,
+        breast: 1,
         count: 4,
+        expressedMilk: 1,
+        formula: 2,
         knownAmountCount: 3,
+        mixed: 0,
         totalAmountMilliliters: 240,
       },
       noteCount: 2,
       sleepMinutes: 180,
     });
 
-    expect(comparison.feedingCount.delta).toBe(2);
+    expect(comparison.feeding.total.delta).toBe(2);
+    expect(comparison.feeding.breast.delta).toBe(1);
+    expect(comparison.feeding.mixed.delta).toBe(1);
     expect(comparison.diaper.total.delta).toBe(2);
     expect(comparison.diaper.wet.delta).toBe(1);
     expect(comparison.diaper.dirty.delta).toBe(0);
@@ -110,7 +136,7 @@ describe('daily care summary', () => {
     expect(comparison.sleepMinutes.delta).toBe(60);
     expect(comparison.feedingIntervalMinutes?.delta).toBe(-30);
     expect(createCareSummaryObservations(comparison)).toEqual([
-      'Se registraron 2 tomas más que en el periodo anterior.',
+      'Se registraron 2 tomas más que en el periodo anterior: 1 toma de pecho más y 1 toma de pecho + fórmula más.',
       'Se registraron 2 cambios de pañal más que en el periodo anterior: 1 de pipí más y 1 mixto más.',
       'Se registraron 1 h de sueño más que en el periodo anterior.',
       'En las tomas con cantidad indicada se registraron 120 ml más.',
@@ -131,6 +157,30 @@ describe('daily care summary', () => {
     ]);
   });
 
+  it('describes feeding method changes when the total remains equal', () => {
+    const comparison = compareCareSummaries({
+      ...emptySummary,
+      feeding: {
+        ...emptySummary.feeding,
+        breast: 2,
+        count: 3,
+        formula: 1,
+      },
+    }, {
+      ...emptySummary,
+      feeding: {
+        ...emptySummary.feeding,
+        count: 3,
+        expressedMilk: 1,
+        formula: 2,
+      },
+    });
+
+    expect(createCareSummaryObservations(comparison)).toEqual([
+      'El total de tomas se mantiene, pero cambió el tipo registrado: 2 tomas de pecho más, 1 toma de leche extraída menos y 1 toma de fórmula menos.',
+    ]);
+  });
+
   it('does not infer care activity when both periods are empty', () => {
     const comparison = compareCareSummaries(emptySummary, emptySummary);
 
@@ -142,10 +192,20 @@ describe('daily care summary', () => {
   it('does not compare feeding amounts when either period has no known quantities', () => {
     const comparison = compareCareSummaries({
       ...emptySummary,
-      feeding: { count: 2, knownAmountCount: 0, totalAmountMilliliters: 0 },
+      feeding: {
+        ...emptySummary.feeding,
+        breast: 2,
+        count: 2,
+      },
     }, {
       ...emptySummary,
-      feeding: { count: 2, knownAmountCount: 2, totalAmountMilliliters: 120 },
+      feeding: {
+        ...emptySummary.feeding,
+        breast: 2,
+        count: 2,
+        knownAmountCount: 2,
+        totalAmountMilliliters: 120,
+      },
     });
 
     expect(createCareSummaryObservations(comparison)).toEqual([

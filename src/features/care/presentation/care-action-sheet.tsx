@@ -34,6 +34,10 @@ import {
   type CareEntryTimeSelection,
   resolveCareEntryTime,
 } from '@/features/care/domain/care-entry-time';
+import {
+  loadFeedingMethodPreference,
+  saveFeedingMethodPreference,
+} from '@/features/care/infrastructure/feeding-method-preference-storage';
 import { CareEntryTimeField } from '@/features/care/presentation/care-entry-time-field';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
@@ -49,7 +53,7 @@ const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
   { label: 'Leche extraída', value: 'expressed_milk' },
   { label: 'Fórmula', value: 'formula' },
-  { label: 'Mixta', value: 'mixed' },
+  { label: 'Pecho + fórmula', value: 'mixed' },
 ] satisfies SelectOption<FeedingMethod>[];
 
 const breastSideOptions = [
@@ -120,7 +124,7 @@ export function CareActionSheet({
   repository,
 }: CareActionSheetProps) {
   const [feedingMethod, setFeedingMethod] =
-    useState<FeedingMethod>('breast');
+    useState<FeedingMethod>(() => loadFeedingMethodPreference(babyId));
   const [breastSide, setBreastSide] = useState<BreastSide>();
   const [diaperCondition, setDiaperCondition] =
     useState<DiaperCondition>('wet');
@@ -163,7 +167,7 @@ export function CareActionSheet({
     feedingMethod === 'breast' || feedingMethod === 'mixed';
 
   function resetForm() {
-    setFeedingMethod('breast');
+    setFeedingMethod(loadFeedingMethodPreference(babyId));
     setBreastSide(undefined);
     setDiaperCondition('wet');
     setAmount('');
@@ -201,6 +205,7 @@ export function CareActionSheet({
           notes,
           occurredAt,
         });
+        saveFeedingMethodPreference(babyId, feedingMethod);
       } else if (action === 'diaper') {
         await repository.recordDiaper({
           babyId,

@@ -37,8 +37,12 @@ function mapSummary(row: CareRangeSummaryRow): DailyCareSummary {
       averageIntervalMinutes: optionalNumber(
         row.average_feeding_interval_minutes,
       ),
+      breast: row.feeding_breast_count,
       count: row.feeding_count,
+      expressedMilk: row.feeding_expressed_milk_count,
+      formula: row.feeding_formula_count,
       knownAmountCount: row.feeding_amount_count,
+      mixed: row.feeding_mixed_count,
       totalAmountMilliliters: row.feeding_amount_milliliters,
     },
     latestMeasurement: hasMeasurement

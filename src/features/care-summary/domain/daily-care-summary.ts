@@ -7,8 +7,12 @@ export interface DailyCareSummary {
   };
   feeding: {
     averageIntervalMinutes?: number;
+    breast: number;
     count: number;
+    expressedMilk: number;
+    formula: number;
     knownAmountCount: number;
+    mixed: number;
     totalAmountMilliliters: number;
   };
   latestMeasurement?: {
@@ -66,11 +70,17 @@ export interface CareSummaryComparison {
     total: CareSummaryMetricComparison;
     wet: CareSummaryMetricComparison;
   };
+  feeding: {
+    breast: CareSummaryMetricComparison;
+    expressedMilk: CareSummaryMetricComparison;
+    formula: CareSummaryMetricComparison;
+    mixed: CareSummaryMetricComparison;
+    total: CareSummaryMetricComparison;
+  };
   feedingAmountMilliliters: CareSummaryMetricComparison & {
     currentKnownCount: number;
     previousKnownCount: number;
   };
-  feedingCount: CareSummaryMetricComparison;
   feedingIntervalMinutes?: CareSummaryMetricComparison;
   noteCount: CareSummaryMetricComparison;
   sleepMinutes: CareSummaryMetricComparison;
@@ -143,6 +153,16 @@ export function compareCareSummaries(
       total: compareMetric(current.diaper.total, previous.diaper.total),
       wet: compareMetric(current.diaper.wet, previous.diaper.wet),
     },
+    feeding: {
+      breast: compareMetric(current.feeding.breast, previous.feeding.breast),
+      expressedMilk: compareMetric(
+        current.feeding.expressedMilk,
+        previous.feeding.expressedMilk,
+      ),
+      formula: compareMetric(current.feeding.formula, previous.feeding.formula),
+      mixed: compareMetric(current.feeding.mixed, previous.feeding.mixed),
+      total: compareMetric(current.feeding.count, previous.feeding.count),
+    },
     feedingAmountMilliliters: {
       ...compareMetric(
         current.feeding.totalAmountMilliliters,
@@ -151,7 +171,6 @@ export function compareCareSummaries(
       currentKnownCount: current.feeding.knownAmountCount,
       previousKnownCount: previous.feeding.knownAmountCount,
     },
-    feedingCount: compareMetric(current.feeding.count, previous.feeding.count),
     feedingIntervalMinutes:
       currentInterval !== undefined && previousInterval !== undefined
         ? compareMetric(currentInterval, previousInterval)

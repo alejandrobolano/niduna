@@ -16,7 +16,7 @@ export function describeCareEvent(event: CareEvent): string {
       : event.method === 'formula'
         ? 'Fórmula'
         : event.method === 'mixed'
-          ? 'Mixta'
+          ? 'Pecho + fórmula'
           : 'Leche extraída';
 
     return [

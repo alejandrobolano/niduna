@@ -9,7 +9,8 @@ versión correspondiente.
 
 ### Nuevas funciones
 
-* compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales por pipí, caca y mixtos
+* compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales y los tipos de alimentación
+* recuerda en cada dispositivo el último tipo de alimentación utilizado para cada bebé y aclara las tomas combinadas como “Pecho + fórmula”
 * permite reaccionar a los Momentos con seis emociones y muestra al autor una ráfaga de las reacciones recibidas elevándose desde la parte inferior de la foto
 * añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
 
