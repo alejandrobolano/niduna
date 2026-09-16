@@ -21,6 +21,21 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.6.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.5.0...niduna-v1.6.0) (2026-09-16)
+
+
+### Nuevas funciones
+
+* comparar periodos en el resumen de cuidados ([7d6f5e3](https://github.com/alejandrobolano/niduna/commit/7d6f5e333b26f0cfc780bba47cde85bad8343111))
+* compare care summary periods ([dfe439d](https://github.com/alejandrobolano/niduna/commit/dfe439d88977e46ad8676cd5e81242d7d53c1cd2))
+* detail diaper period changes ([a029896](https://github.com/alejandrobolano/niduna/commit/a02989652fe4202afcc7c8b84aee68fe9152d55c))
+* detail feeding period changes ([94f30a1](https://github.com/alejandrobolano/niduna/commit/94f30a19d848b5e35c939230b3d54ce5667c5eb4))
+
+
+### Correcciones
+
+* preserve paginated record selections ([0a10e26](https://github.com/alejandrobolano/niduna/commit/0a10e265ebce43788e16f2f4e3f0c08c82fb92d8))
+
 ## [1.5.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.4.0...niduna-v1.5.0) (2026-09-16)
 
 
