@@ -9,7 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
-* permite reaccionar a los Momentos de otros familiares y muestra al autor una celebración sutil con las reacciones recibidas
+* permite reaccionar a los Momentos de otros familiares y muestra al autor las reacciones recibidas elevándose desde la parte inferior de la foto
 * añade widgets de relevo configurables por bebé y accesos rápidos a alimentación, pañal y sueño
 
 ### Correcciones

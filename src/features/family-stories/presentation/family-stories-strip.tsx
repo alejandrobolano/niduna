@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   FamilyStoryError,
@@ -74,6 +74,7 @@ function StoryViewer({
   const [isReacting, setIsReacting] = useState(false);
   const [isRetiring, setIsRetiring] = useState(false);
   const [reactionError, setReactionError] = useState<string>();
+  const insets = useSafeAreaInsets();
   const story = group.stories[storyIndex];
   const isOwnStory = story.author.id === userId;
 
@@ -156,9 +157,9 @@ function StoryViewer({
 
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible>
-      <SafeAreaView style={styles.viewer}>
+      <View style={styles.viewer}>
         <Image cachePolicy="memory" contentFit="contain" source={story.imageUrl} style={styles.viewerImage} />
-        <View style={styles.progressRow}>
+        <View style={[styles.progressRow, { top: insets.top + spacing.sm }]}>
           {group.stories.map((candidate, index) => (
             <View key={candidate.id} style={styles.progressTrack}>
               <View
@@ -172,7 +173,7 @@ function StoryViewer({
             </View>
           ))}
         </View>
-        <View style={styles.viewerHeader}>
+        <View style={[styles.viewerHeader, { top: insets.top + spacing.xl }]}>
           <View style={styles.viewerAuthorBadge}>
             <AnimalAvatar accessibilityLabel={`Avatar de ${group.author.displayName}`} photoUrl={group.author.avatarUrl} size={38} variant={resolveMemberAvatar(group.author.avatarKey, group.author.relationship)} />
           </View>
@@ -193,14 +194,20 @@ function StoryViewer({
             <X color={colors.white} size={24} />
           </Pressable>
         </View>
-        <View pointerEvents="box-none" style={styles.viewerNavigation}>
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.viewerNavigation,
+            { bottom: insets.bottom + 132, top: insets.top + 84 },
+          ]}
+        >
           <Pressable accessibilityLabel="Historia anterior" onPress={goBack} style={styles.viewerHalf} />
           <Pressable accessibilityLabel="Historia siguiente" onPress={goForward} style={styles.viewerHalf} />
         </View>
         {isOwnStory ? (
           <StoryReactionBurst reactions={story.reactions} storyId={story.id} />
         ) : null}
-        <View style={styles.reactionArea}>
+        <View style={[styles.reactionArea, { bottom: insets.bottom + 62 }]}>
           <View style={styles.reactionRow}>
             {familyStoryReactionOptions.map((option) => {
               const count = story.reactions.find(
@@ -245,7 +252,7 @@ function StoryViewer({
           ) : null}
           {reactionError ? <Text style={styles.reactionError}>{reactionError}</Text> : null}
         </View>
-        <View style={styles.screenshotNotice}>
+        <View style={[styles.screenshotNotice, { bottom: insets.bottom + spacing.lg }]}>
           <ShieldCheck color={colors.white} size={15} />
           <Text style={styles.screenshotNoticeText}>Solo tu familia puede verla, pero no podemos impedir capturas de pantalla.</Text>
         </View>
@@ -282,7 +289,7 @@ function StoryViewer({
             </View>
           </View>
         ) : null}
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

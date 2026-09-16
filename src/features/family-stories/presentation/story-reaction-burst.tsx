@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   familyStoryReactionOptions,
@@ -8,10 +17,12 @@ import {
 } from '@/features/family-stories/domain/family-story';
 import { useReducedMotion } from '@/shared/presentation/use-reduced-motion';
 
-const maximumParticles = 12;
-const horizontalPositions = [12, 72, 38, 84, 24, 58, 6, 66, 44, 90, 18, 52] as const;
-const horizontalDrifts = [-14, 10, -8, 12, 7, -12, 9, -6, 13, -10, 6, -9] as const;
-const verticalDistances = [230, 290, 255, 320, 275, 240, 305, 265, 295, 245, 315, 280] as const;
+const duplicatesPerReaction = 3;
+const maximumParticles = 24;
+const particlesPerWave = 12;
+const horizontalPositions = [8, 72, 34, 86, 20, 57, 13, 65, 42, 91, 27, 51] as const;
+const horizontalDrifts = [-18, 14, -10, 16, 9, -15, 12, -8, 17, -13, 8, -11] as const;
+const verticalVariations = [0, 42, 18, 58, 30, 8, 50, 22, 46, 12, 54, 26] as const;
 
 interface ReactionParticle {
   emoji: string;
@@ -27,7 +38,7 @@ function createReactionParticles(
   reactions: FamilyStoryReactionSummary[],
 ): ReactionParticle[] {
   const remaining = new Map(
-    reactions.map(({ count, reaction }) => [reaction, count]),
+    reactions.map(({ count, reaction }) => [reaction, count * duplicatesPerReaction]),
   );
   const particles: ReactionParticle[] = [];
 
@@ -53,10 +64,12 @@ function createReactionParticles(
 }
 
 function FloatingReaction({
+  distance,
   delay,
   emoji,
   index,
 }: {
+  distance: number;
   delay: number;
   emoji: string;
   index: number;
@@ -67,7 +80,7 @@ function FloatingReaction({
     progress.setValue(0);
     const animation = Animated.timing(progress, {
       delay,
-      duration: 1_850 + (index % 3) * 140,
+      duration: 3_600 + (index % 3) * 120,
       easing: Easing.out(Easing.cubic),
       toValue: 1,
       useNativeDriver: Platform.OS !== 'web',
@@ -78,8 +91,8 @@ function FloatingReaction({
   }, [delay, index, progress]);
 
   const opacity = progress.interpolate({
-    inputRange: [0, 0.12, 0.72, 1],
-    outputRange: [0, 0.92, 0.82, 0],
+    inputRange: [0, 0.08, 0.78, 1],
+    outputRange: [0, 1, 0.9, 0],
   });
   const scale = progress.interpolate({
     inputRange: [0, 0.18, 1],
@@ -87,17 +100,18 @@ function FloatingReaction({
   });
   const translateX = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, horizontalDrifts[index]],
+    outputRange: [0, horizontalDrifts[index % horizontalDrifts.length]],
   });
   const translateY = progress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -verticalDistances[index]],
+    outputRange: [0, -(distance + verticalVariations[index % verticalVariations.length])],
   });
 
   return (
     <Animated.View
       style={{
-        left: `${horizontalPositions[index]}%`,
+        bottom: 0,
+        left: `${horizontalPositions[index % horizontalPositions.length]}%`,
         opacity,
         position: 'absolute',
         transform: [{ translateX }, { translateY }, { scale }],
@@ -113,7 +127,10 @@ export function StoryReactionBurst({
   storyId,
 }: StoryReactionBurstProps) {
   const shouldReduceMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const particles = useMemo(() => createReactionParticles(reactions), [reactions]);
+  const travelDistance = Math.max(280, height - insets.top - insets.bottom - 210);
   const signature = reactions
     .map(({ count, reaction }) => `${reaction}-${count}`)
     .join(':');
@@ -132,7 +149,8 @@ export function StoryReactionBurst({
     >
       {particles.map((particle, index) => (
         <FloatingReaction
-          delay={index * 55}
+          distance={travelDistance}
+          delay={(index % particlesPerWave) * 55 + Math.floor(index / particlesPerWave) * 160}
           emoji={particle.emoji}
           index={index}
           key={`${storyId}-${signature}-${particle.reaction}-${index}`}
@@ -144,11 +162,11 @@ export function StoryReactionBurst({
 
 const styles = StyleSheet.create({
   container: {
-    bottom: 112,
+    bottom: 106,
     left: 20,
     position: 'absolute',
     right: 20,
-    top: 92,
+    top: 104,
   },
-  emoji: { fontSize: 28 },
+  emoji: { fontSize: 30 },
 });
