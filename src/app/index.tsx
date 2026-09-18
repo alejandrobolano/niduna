@@ -25,6 +25,11 @@ import { BabyContactsScreen } from '@/features/baby-contacts/presentation/baby-c
 import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
 import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
+  createCareSummaryReportFileName,
+  createCareSummaryReportHtml,
+  type CareSummaryPdfReportInput,
+} from '@/features/care-summary/application/care-summary-report';
+import {
   createCareHistoryCsv,
   createCareHistoryFileName,
 } from '@/features/care/application/care-history-csv';
@@ -112,6 +117,15 @@ async function exportCareReport(input: CareReportInput): Promise<void> {
   await exportCareReportFile({
     fileName: createCareReportFileName(input.babyName),
     html: createCareReportHtml(input),
+  });
+}
+
+async function exportCareSummaryReport(
+  input: CareSummaryPdfReportInput,
+): Promise<void> {
+  await exportCareReportFile({
+    fileName: createCareSummaryReportFileName(input.babyName, input.period),
+    html: createCareSummaryReportHtml(input),
   });
 }
 
@@ -600,6 +614,8 @@ function AuthenticatedApp({
       <DailyCareSummaryScreen
         babyId={context.activeBaby?.id}
         babyName={context.activeBaby?.name}
+        exportReport={exportCareSummaryReport}
+        familyName={activeFamily.name}
         key={context.activeBaby?.id ?? `${activeFamily.id}:summary-empty`}
         onOpenHistory={() => changeSection('history')}
         repository={supabaseCareSummaryRepository}

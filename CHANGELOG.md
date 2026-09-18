@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite guardar en PDF el resumen de 24 horas, 7 o 30 días con comparativa, ritmo de cuidados y evolución de medidas
 * compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales y los tipos de alimentación
 * recuerda en cada dispositivo el último tipo de alimentación utilizado para cada bebé y aclara las tomas combinadas como “Pecho + fórmula”
 * permite reaccionar a los Momentos con seis emociones y muestra al autor una ráfaga de las reacciones recibidas elevándose desde la parte inferior de la foto
