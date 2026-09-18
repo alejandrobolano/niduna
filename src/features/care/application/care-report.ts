@@ -1,5 +1,11 @@
 import type { BabyContact } from '@/features/baby-contacts/domain/baby-contact';
 import {
+  createReportSafeName,
+  escapeReportHtml,
+  formatReportDateTime,
+  nuniReportLogo,
+} from './care-report-html';
+import {
   careEventLabels,
   describeCareEvent,
 } from './care-event-description';
@@ -30,15 +36,6 @@ interface CareReportSummary {
   feeding: { averageIntervalMinutes?: number; count: number; totalAmountMilliliters: number };
   noteCount: number;
   sleepMinutes: number;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 }
 
 function summarizeEvents(events: CareEvent[]): CareReportSummary {
@@ -91,13 +88,6 @@ function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
   return remainder > 0 ? `${hours} h ${remainder} min` : `${hours} h`;
-}
-
-function formatDateTime(value: string | Date): string {
-  return new Intl.DateTimeFormat('es-ES', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(typeof value === 'string' ? new Date(value) : value);
 }
 
 function formatPeriod(events: CareEvent[]): string {
@@ -158,10 +148,10 @@ function renderContacts(contacts: BabyContact[]): string {
     <div class="contact-grid">
       ${contacts.map((contact) => `
         <article class="contact">
-          <strong>${escapeHtml(contact.name)}</strong>
-          ${contact.contactPerson ? `<span>${escapeHtml(contact.contactPerson)}</span>` : ''}
-          ${contact.phone ? `<span>${escapeHtml(contact.phone)}</span>` : ''}
-          ${contact.address ? `<span>${escapeHtml(contact.address)}</span>` : ''}
+          <strong>${escapeReportHtml(contact.name)}</strong>
+          ${contact.contactPerson ? `<span>${escapeReportHtml(contact.contactPerson)}</span>` : ''}
+          ${contact.phone ? `<span>${escapeReportHtml(contact.phone)}</span>` : ''}
+          ${contact.address ? `<span>${escapeReportHtml(contact.address)}</span>` : ''}
         </article>`).join('')}
     </div>
   </section>`;
@@ -181,28 +171,15 @@ function renderTable(events: CareEvent[], columns: CareReportColumn[]): string {
       ${events.map((event) => {
         const values: Record<CareReportColumn, string> = {
           author: event.recordedByName ?? 'Un familiar',
-          date: formatDateTime(event.occurredAt),
+          date: formatReportDateTime(event.occurredAt),
           detail: describeCareEvent(event),
           type: careEventLabels[event.type],
         };
-        return `<tr>${columns.map((column) => `<td class="${column}">${escapeHtml(values[column])}</td>`).join('')}</tr>`;
+        return `<tr>${columns.map((column) => `<td class="${column}">${escapeReportHtml(values[column])}</td>`).join('')}</tr>`;
       }).join('')}
     </tbody>
   </table>`;
 }
-
-const nuniLogo = `<svg aria-hidden="true" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="24" fill="#DFF5F6"/>
-  <rect x="6" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(24 19 68)"/>
-  <rect x="68" y="48" width="26" height="40" rx="13" fill="#FFD86B" transform="rotate(-24 81 68)"/>
-  <rect x="18" y="18" width="64" height="72" rx="40" fill="#48C9C4"/>
-  <ellipse cx="50" cy="72" rx="16" ry="18" fill="#DDF7F3" opacity=".74"/>
-  <rect x="47" y="2" width="10" height="22" rx="5.5" fill="#FF756B" transform="rotate(-24 45.5 24)"/>
-  <rect x="49" y="3" width="10" height="20" rx="5" fill="#FF756B" transform="rotate(28 55 23)"/>
-  <rect x="33" y="40" width="10" height="13" rx="5" fill="#18234B"/>
-  <rect x="57" y="40" width="10" height="13" rx="5" fill="#18234B"/>
-  <rect x="44" y="56" width="11" height="8" rx="4" fill="#FF756B" transform="rotate(45 49.5 60)"/>
-</svg>`;
 
 export function createCareReportHtml({
   babyName,
@@ -213,9 +190,9 @@ export function createCareReportHtml({
   filterLabel,
   generatedAt = new Date(),
 }: CareReportInput): string {
-  const safeBabyName = escapeHtml(babyName);
-  const safeFamilyName = escapeHtml(familyName);
-  const generatedLabel = formatDateTime(generatedAt);
+  const safeBabyName = escapeReportHtml(babyName);
+  const safeFamilyName = escapeReportHtml(familyName);
+  const generatedLabel = formatReportDateTime(generatedAt);
 
   return `<!DOCTYPE html>
   <html lang="es">
@@ -276,7 +253,7 @@ export function createCareReportHtml({
     </head>
     <body>
       <header>
-        <div class="brand">${nuniLogo}<div><strong>Niduna</strong><span>Coordinación familiar del cuidado</span></div></div>
+        <div class="brand">${nuniReportLogo}<div><strong>Niduna</strong><span>Coordinación familiar del cuidado</span></div></div>
         <div class="context"><strong>${safeFamilyName}</strong><span>Bebé: ${safeBabyName}</span></div>
       </header>
       <main>
@@ -284,8 +261,8 @@ export function createCareReportHtml({
         <h1>Cuidados de ${safeBabyName}</h1>
         <p class="lead">Resumen del relevo compartido por la familia durante el período seleccionado.</p>
         <section class="scope">
-          <div><span>PERÍODO</span><strong>${escapeHtml(formatPeriod(events))}</strong></div>
-          <div><span>FILTRO</span><strong>${escapeHtml(filterLabel)}</strong></div>
+          <div><span>PERÍODO</span><strong>${escapeReportHtml(formatPeriod(events))}</strong></div>
+          <div><span>FILTRO</span><strong>${escapeReportHtml(filterLabel)}</strong></div>
           <div><span>REGISTROS</span><strong>${events.length} resultados</strong></div>
           <div><span>COLUMNAS</span><strong>${columns.map((column) => careReportColumns.find((item) => item.value === column)?.label).filter(Boolean).join(', ')}</strong></div>
         </section>
@@ -296,7 +273,7 @@ export function createCareReportHtml({
       </main>
       <section class="report-end">
         <p class="notice"><strong>Importante:</strong> este informe ayuda a coordinar el cuidado familiar. No sustituye una historia clínica, una valoración médica ni los servicios de emergencia.</p>
-        <footer><div class="footer-line"><span>niduna.com · Generado el ${escapeHtml(generatedLabel)}</span><span>Informe de ${safeBabyName}</span></div></footer>
+        <footer><div class="footer-line"><span>niduna.com · Generado el ${escapeReportHtml(generatedLabel)}</span><span>Informe de ${safeBabyName}</span></div></footer>
       </section>
     </body>
   </html>`;
@@ -306,12 +283,7 @@ export function createCareReportFileName(
   babyName: string,
   date = new Date(),
 ): string {
-  const safeName = babyName
-    .normalize('NFD')
-    .replaceAll(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('es')
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/^-|-$/g, '') || 'bebe';
+  const safeName = createReportSafeName(babyName);
   const dateKey = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
     .map((part, index) => index === 0 ? String(part) : String(part).padStart(2, '0'))
     .join('-');
