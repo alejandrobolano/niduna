@@ -24,6 +24,19 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.8.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.7.0...niduna-v1.8.0) (2026-09-21)
+
+
+### Nuevas funciones
+
+* color recent feeding amount chips ([4383d41](https://github.com/alejandrobolano/niduna/commit/4383d419a760263f70842a44c7dec581443d10a7))
+* suggest recent feeding amounts ([1c92eaf](https://github.com/alejandrobolano/niduna/commit/1c92eafbe17f9937d4bd9f02005735c5a32c92b8))
+
+
+### Correcciones
+
+* satisfy recent feeding amount lint rule ([7bb4916](https://github.com/alejandrobolano/niduna/commit/7bb4916cce06030379f51ce9e845d49a45996043))
+
 ## [1.7.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.6.0...niduna-v1.7.0) (2026-09-18)
 
 
