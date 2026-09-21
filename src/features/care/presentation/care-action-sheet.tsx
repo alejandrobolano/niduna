@@ -1,5 +1,5 @@
 import { MoonStar, X } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -39,6 +39,7 @@ import {
   saveFeedingMethodPreference,
 } from '@/features/care/infrastructure/feeding-method-preference-storage';
 import { CareEntryTimeField } from '@/features/care/presentation/care-entry-time-field';
+import { RecentValueChips } from '@/features/care/presentation/recent-value-chips';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 
@@ -129,6 +130,7 @@ export function CareActionSheet({
   const [diaperCondition, setDiaperCondition] =
     useState<DiaperCondition>('wet');
   const [amount, setAmount] = useState('');
+  const [recentAmounts, setRecentAmounts] = useState<number[]>([]);
   const [notes, setNotes] = useState('');
   const [weight, setWeight] = useState('');
   const [length, setLength] = useState('');
@@ -165,6 +167,31 @@ export function CareActionSheet({
         headIsInvalid));
   const showsBreastSide =
     feedingMethod === 'breast' || feedingMethod === 'mixed';
+
+  useEffect(() => {
+    if (action !== 'feeding') {
+      return;
+    }
+
+    let active = true;
+
+    void repository
+      .loadRecentFeedingAmounts(babyId)
+      .then((amounts) => {
+        if (active) {
+          setRecentAmounts(amounts);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setRecentAmounts([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [action, babyId, repository]);
 
   function resetForm() {
     setFeedingMethod(loadFeedingMethodPreference(babyId));
@@ -330,18 +357,26 @@ export function CareActionSheet({
                   />
                 ) : null}
                 {feedingMethod !== 'breast' ? (
-                  <ProfileField
-                    error={
-                      amountIsInvalid
-                        ? 'Introduce una cantidad entre 1 y 2000 ml.'
-                        : undefined
-                    }
-                    keyboardType="number-pad"
-                    label="Cantidad en ml, opcional"
-                    onChangeText={setAmount}
-                    placeholder="Ej. 90"
-                    value={amount}
-                  />
+                  <>
+                    <RecentValueChips
+                      onSelect={(value) => setAmount(String(value))}
+                      selectedValue={parseAmount(amount)}
+                      unit="ml"
+                      values={recentAmounts}
+                    />
+                    <ProfileField
+                      error={
+                        amountIsInvalid
+                          ? 'Introduce una cantidad entre 1 y 2000 ml.'
+                          : undefined
+                      }
+                      keyboardType="number-pad"
+                      label="Cantidad en ml, opcional"
+                      onChangeText={setAmount}
+                      placeholder="Ej. 90"
+                      value={amount}
+                    />
+                  </>
                 ) : null}
               </>
             ) : null}

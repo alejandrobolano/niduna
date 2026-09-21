@@ -5,6 +5,9 @@ import {
     type CareHistoryQuery,
     type CareRepository,
 } from '@/features/care/application/care-repository';
+import { selectRecentFeedingAmounts } from '@/features/care/application/recent-feeding-amounts';
+import type { CareEvent } from '@/features/care/domain/care-event';
+import { isCareEntryTimeAllowed } from '@/features/care/domain/care-entry-time';
 import {
     mapBabyNote,
     mapCareEvent,
@@ -13,8 +16,6 @@ import {
     type CareEventAvatar,
     type CareTimelineRow,
 } from '@/features/care/infrastructure/supabase-care-event-mapper';
-import type { CareEvent } from '@/features/care/domain/care-event';
-import { isCareEntryTimeAllowed } from '@/features/care/domain/care-entry-time';
 import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import type { Database } from '@/shared/infrastructure/supabase/database.types';
@@ -200,6 +201,26 @@ async function loadHistoryPage(
 
 export const supabaseCareRepository: CareRepository = {
   loadHistory: loadHistoryPage,
+
+  async loadRecentFeedingAmounts(babyId) {
+    const { data, error } = await supabase
+      .from('care_events')
+      .select('amount_milliliters')
+      .eq('baby_id', babyId)
+      .eq('event_type', 'feeding')
+      .is('deleted_at', null)
+      .not('amount_milliliters', 'is', null)
+      .order('occurred_at', { ascending: false })
+      .limit(3);
+
+    if (error) {
+      throwOperationError(error.code, error.message);
+    }
+
+    return selectRecentFeedingAmounts(
+      (data ?? []).map((event) => event.amount_milliliters),
+    );
+  },
 
   async loadRetiredHistory(query) {
     return loadHistoryPage(query, true);
