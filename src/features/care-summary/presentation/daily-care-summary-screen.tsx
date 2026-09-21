@@ -1,5 +1,6 @@
 import {
   BabyIcon,
+  FileDown,
   GitCompareArrows,
   Milk,
   Moon,
@@ -15,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
 import { createCareSummaryObservations } from '@/features/care-summary/application/care-summary-observations';
+import type { CareSummaryPdfReportInput } from '@/features/care-summary/application/care-summary-report';
 import {
   compareCareSummaries,
   createCareSummaryRange,
@@ -25,6 +27,7 @@ import {
   type CareSummaryPeriod,
   type CareSummaryComparison,
   type CareSummaryReport,
+  type DailyCareSummaryRange,
   type DailyCareSummary,
 } from '@/features/care-summary/domain/daily-care-summary';
 import { CareTrendChart } from '@/features/care-summary/presentation/care-trend-chart';
@@ -36,6 +39,8 @@ import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presen
 interface DailyCareSummaryScreenProps {
   babyId?: string;
   babyName?: string;
+  exportReport: (input: CareSummaryPdfReportInput) => Promise<void>;
+  familyName: string;
   onOpenHistory: () => void;
   repository: CareSummaryRepository;
   topContent?: ReactNode;
@@ -98,13 +103,17 @@ function getMeasurementDetail(summary: DailyCareSummary): string {
 export function DailyCareSummaryScreen({
   babyId,
   babyName,
+  exportReport,
+  familyName,
   onOpenHistory,
   repository,
   topContent,
 }: DailyCareSummaryScreenProps) {
   const [period, setPeriod] = useState<CareSummaryPeriod>('24h');
   const [report, setReport] = useState<CareSummaryReport>();
+  const [reportRange, setReportRange] = useState<DailyCareSummaryRange>();
   const [comparison, setComparison] = useState<CareSummaryComparison>();
+  const [isReportGenerating, setIsReportGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(babyId));
   const [error, setError] = useState<string>();
   const [loadVersion, setLoadVersion] = useState(0);
@@ -124,6 +133,7 @@ export function DailyCareSummaryScreen({
       .then(([result, previousSummary]) => {
         if (!active) return;
         setReport(result);
+        setReportRange(currentRange);
         setComparison(compareCareSummaries(result.summary, previousSummary));
         setError(undefined);
       })
@@ -158,6 +168,27 @@ export function DailyCareSummaryScreen({
   const diaperDetail = summary?.diaper.total
     ? `${summary.diaper.wet} pipí · ${summary.diaper.dirty} caca · ${summary.diaper.both} mixtos.`
     : `Todavía no hay cambios registrados en ${periodLabel}.`;
+
+  async function handleExportReport() {
+    if (!babyName || !report || !reportRange || !comparison) return;
+    setIsReportGenerating(true);
+    setError(undefined);
+
+    try {
+      await exportReport({
+        babyName,
+        comparison,
+        familyName,
+        period,
+        range: reportRange,
+        report,
+      });
+    } catch {
+      setError('No pudimos generar el informe PDF del resumen.');
+    } finally {
+      setIsReportGenerating(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -199,6 +230,7 @@ export function DailyCareSummaryScreen({
                       onPress={() => {
                         setIsLoading(true);
                         setReport(undefined);
+                        setReportRange(undefined);
                         setComparison(undefined);
                         setPeriod(option.value);
                       }}
@@ -223,18 +255,36 @@ export function DailyCareSummaryScreen({
                     Datos de {periodLabel}
                   </Text>
                 </View>
-                <Pressable
-                  accessibilityLabel="Actualizar resumen"
-                  accessibilityRole="button"
-                  disabled={isLoading}
-                  onPress={() => {
-                    setIsLoading(true);
-                    setLoadVersion((value) => value + 1);
-                  }}
-                  style={({ pressed }) => [styles.refresh, pressed && styles.pressed]}
-                >
-                  <RefreshCw color={colors.primaryPressed} size={19} />
-                </Pressable>
+                <View style={styles.sectionActions}>
+                  <Pressable
+                    accessibilityLabel={`Guardar informe PDF de ${periodLabel}`}
+                    accessibilityRole="button"
+                    disabled={!report || !comparison || !reportRange || isLoading || isReportGenerating}
+                    onPress={() => void handleExportReport()}
+                    style={({ pressed }) => [
+                      styles.reportButton,
+                      (!report || !comparison || !reportRange || isLoading || isReportGenerating) && styles.disabled,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <FileDown color={colors.primaryPressed} size={17} />
+                    <Text style={styles.reportButtonText}>
+                      {isReportGenerating ? 'Preparando…' : 'Informe PDF'}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel="Actualizar resumen"
+                    accessibilityRole="button"
+                    disabled={isLoading}
+                    onPress={() => {
+                      setIsLoading(true);
+                      setLoadVersion((value) => value + 1);
+                    }}
+                    style={({ pressed }) => [styles.refresh, pressed && styles.pressed]}
+                  >
+                    <RefreshCw color={colors.primaryPressed} size={19} />
+                  </Pressable>
+                </View>
               </View>
 
               {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -410,6 +460,7 @@ const styles = createThemedStyleSheet((colors) => ({
   comparisonTitle: { color: colors.text, fontSize: 17, fontWeight: '900' },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   disclaimer: { color: colors.textMuted, fontSize: 11, lineHeight: 17 },
+  disabled: { opacity: 0.45 },
   empty: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.sm, padding: spacing.xxl },
   emptyText: { color: colors.textMuted, fontSize: 13 },
   emptyTitle: { color: colors.text, fontSize: 20, fontWeight: '900' },
@@ -438,7 +489,18 @@ const styles = createThemedStyleSheet((colors) => ({
   periodSelector: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', padding: spacing.xs },
   pressed: { opacity: 0.72, transform: [{ scale: 0.97 }] },
   refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
+  reportButton: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: radius.pill,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 48,
+    paddingHorizontal: spacing.md,
+  },
+  reportButtonText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '900' },
   safeArea: { backgroundColor: colors.background, flex: 1 },
+  sectionActions: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-end' },
   sectionCopy: { flex: 1, gap: 2 },
   sectionHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' },
   sectionSubtitle: { color: colors.textMuted, fontSize: 12 },

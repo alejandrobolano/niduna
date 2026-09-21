@@ -10,6 +10,7 @@ versión correspondiente.
 ### Nuevas funciones
 
 * permite reutilizar las cantidades de las tres últimas tomas medidas al registrar una alimentación
+* permite guardar en PDF el resumen de 24 horas, 7 o 30 días con comparativa, ritmo de cuidados y evolución de medidas
 * compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales y los tipos de alimentación
 * recuerda en cada dispositivo el último tipo de alimentación utilizado para cada bebé y aclara las tomas combinadas como “Pecho + fórmula”
 * permite reaccionar a los Momentos con seis emociones y muestra al autor una ráfaga de las reacciones recibidas elevándose desde la parte inferior de la foto
@@ -21,6 +22,14 @@ versión correspondiente.
 * protege los datos del widget al cerrar sesión o perder acceso a un bebé
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
+
+## [1.7.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.6.0...niduna-v1.7.0) (2026-09-18)
+
+
+### Nuevas funciones
+
+* export care summary reports ([0f391e4](https://github.com/alejandrobolano/niduna/commit/0f391e4ae9c2b756e1fdc9b1c098b605854ac264))
+* export care summary reports ([e8dccd3](https://github.com/alejandrobolano/niduna/commit/e8dccd3cbf0fa8aeca8f39e90e1df8f14c0e0379))
 
 ## [1.6.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.5.0...niduna-v1.6.0) (2026-09-16)
 
