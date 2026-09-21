@@ -18,6 +18,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* mejora el contraste y la selección visual de las cantidades recientes de alimentación
 * conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial
 * protege los datos del widget al cerrar sesión o perder acceso a un bebé
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo

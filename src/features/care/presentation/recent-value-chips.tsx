@@ -1,6 +1,12 @@
+import { Check } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
-import { createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import {
+  colors,
+  createThemedStyleSheet,
+  radius,
+  spacing,
+} from '@/shared/presentation/theme';
 
 interface RecentValueChipsProps {
   onSelect: (value: number) => void;
@@ -39,6 +45,7 @@ export function RecentValueChips({
                 pressed && styles.chipPressed,
               ]}
             >
+              {selected ? <Check color={colors.onAccent} size={15} strokeWidth={3} /> : null}
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
                 {value} {unit}
               </Text>
@@ -65,26 +72,30 @@ const styles = createThemedStyleSheet((colors) => ({
     gap: spacing.sm,
   },
   chip: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderColor: `${colors.aqua}66`,
     borderRadius: radius.pill,
     borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.xs,
+    minHeight: 40,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   chipPressed: {
-    opacity: 0.72,
+    opacity: 0.8,
   },
   chipSelected: {
-    backgroundColor: colors.aquaSoft,
-    borderColor: colors.aqua,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
-    color: colors.text,
+    color: colors.primaryPressed,
     fontSize: 14,
     fontWeight: '800',
   },
   chipTextSelected: {
-    color: colors.primaryPressed,
+    color: colors.onAccent,
   },
 }));
