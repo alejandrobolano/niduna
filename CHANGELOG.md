@@ -22,6 +22,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.7.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.6.0...niduna-v1.7.0) (2026-09-18)
+
+
+### Nuevas funciones
+
+* export care summary reports ([0f391e4](https://github.com/alejandrobolano/niduna/commit/0f391e4ae9c2b756e1fdc9b1c098b605854ac264))
+* export care summary reports ([e8dccd3](https://github.com/alejandrobolano/niduna/commit/e8dccd3cbf0fa8aeca8f39e90e1df8f14c0e0379))
+
 ## [1.6.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.5.0...niduna-v1.6.0) (2026-09-16)
 
 
