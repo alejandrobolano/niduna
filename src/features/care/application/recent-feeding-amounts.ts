@@ -1,7 +1,7 @@
 const recentFeedingAmountLimit = 3;
 
 export function selectRecentFeedingAmounts(
-  amounts: ReadonlyArray<number | null>,
+  amounts: readonly (number | null)[],
 ): number[] {
   const recentAmounts = amounts
     .filter((amount): amount is number => amount !== null && amount > 0)
