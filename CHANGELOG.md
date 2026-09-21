@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite reutilizar las cantidades de las tres últimas tomas medidas al registrar una alimentación
 * permite guardar en PDF el resumen de 24 horas, 7 o 30 días con comparativa, ritmo de cuidados y evolución de medidas
 * compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales y los tipos de alimentación
 * recuerda en cada dispositivo el último tipo de alimentación utilizado para cada bebé y aclara las tomas combinadas como “Pecho + fórmula”
@@ -17,6 +18,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* mejora el contraste y la selección visual de las cantidades recientes de alimentación
 * conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial
 * protege los datos del widget al cerrar sesión o perder acceso a un bebé
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo

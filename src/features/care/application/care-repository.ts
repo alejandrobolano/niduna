@@ -59,6 +59,7 @@ export interface CareHistoryPage {
 export interface CareRepository {
   finishSleep(eventId: string): Promise<void>;
   loadHistory(query: CareHistoryQuery): Promise<CareHistoryPage>;
+  loadRecentFeedingAmounts(babyId: string): Promise<number[]>;
   loadRetiredHistory(query: CareHistoryQuery): Promise<CareHistoryPage>;
   loadHistoryForExport(
     query: Omit<CareHistoryQuery, 'page' | 'pageSize'>,
