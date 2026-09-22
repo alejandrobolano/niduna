@@ -34,11 +34,13 @@ import {
   type CareEntryTimeSelection,
   resolveCareEntryTime,
 } from '@/features/care/domain/care-entry-time';
+import { formatFeedingVolumeInput, getFeedingVolumeInputHint, getFeedingVolumeUnitLabel, parseFeedingVolumeInput } from '@/features/care/domain/feeding-volume';
 import {
   loadFeedingMethodPreference,
   saveFeedingMethodPreference,
 } from '@/features/care/infrastructure/feeding-method-preference-storage';
 import { CareEntryTimeField } from '@/features/care/presentation/care-entry-time-field';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { RecentValueChips } from '@/features/care/presentation/recent-value-chips';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
@@ -85,17 +87,6 @@ interface CareActionSheetProps {
   repository: CareRepository;
 }
 
-function parseAmount(value: string): number | undefined {
-  if (!value.trim()) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 && parsed <= 2000
-    ? parsed
-    : undefined;
-}
-
 function getOperationMessage(error: unknown): string {
   if (!(error instanceof CareOperationError)) {
     return 'No pudimos guardar el registro. Inténtalo de nuevo.';
@@ -124,6 +115,7 @@ export function CareActionSheet({
   openSleep,
   repository,
 }: CareActionSheetProps) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const [feedingMethod, setFeedingMethod] =
     useState<FeedingMethod>(() => loadFeedingMethodPreference(babyId));
   const [breastSide, setBreastSide] = useState<BreastSide>();
@@ -142,7 +134,8 @@ export function CareActionSheet({
   const [timeSelection, setTimeSelection] = useState<CareEntryTimeSelection>({
     kind: 'now',
   });
-  const amountIsInvalid = Boolean(amount.trim()) && !parseAmount(amount);
+  const amountMilliliters = parseFeedingVolumeInput(amount, feedingVolumeUnit);
+  const amountIsInvalid = Boolean(amount.trim()) && amountMilliliters === undefined;
   const weightGrams = parseWeightGrams(weight);
   const lengthMillimeters = parseLengthMillimeters(length);
   const headCircumferenceMillimeters =
@@ -225,7 +218,7 @@ export function CareActionSheet({
 
       if (action === 'feeding') {
         await repository.recordFeeding({
-          amountMilliliters: parseAmount(amount),
+          amountMilliliters,
           babyId,
           breastSide: showsBreastSide ? breastSide : undefined,
           method: feedingMethod,
@@ -359,21 +352,22 @@ export function CareActionSheet({
                 {feedingMethod !== 'breast' ? (
                   <>
                     <RecentValueChips
-                      onSelect={(value) => setAmount(String(value))}
-                      selectedValue={parseAmount(amount)}
-                      unit="ml"
+                      formatValue={(value) => formatFeedingVolumeInput(value, feedingVolumeUnit)}
+                      onSelect={(value) => setAmount(formatFeedingVolumeInput(value, feedingVolumeUnit))}
+                      selectedValue={amountMilliliters}
+                      unit={getFeedingVolumeUnitLabel(feedingVolumeUnit)}
                       values={recentAmounts}
                     />
                     <ProfileField
                       error={
                         amountIsInvalid
-                          ? 'Introduce una cantidad entre 1 y 2000 ml.'
+                          ? getFeedingVolumeInputHint(feedingVolumeUnit)
                           : undefined
                       }
-                      keyboardType="number-pad"
-                      label="Cantidad en ml, opcional"
+                      keyboardType="decimal-pad"
+                      label={`Cantidad en ${getFeedingVolumeUnitLabel(feedingVolumeUnit)}, opcional`}
                       onChangeText={setAmount}
-                      placeholder="Ej. 90"
+                      placeholder={feedingVolumeUnit === 'ml' ? 'Ej. 90' : 'Ej. 3'}
                       value={amount}
                     />
                   </>

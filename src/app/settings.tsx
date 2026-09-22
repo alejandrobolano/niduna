@@ -16,6 +16,7 @@ import { ProfileAvatarEditor } from '@/features/avatars/presentation/profile-ava
 import { supabaseDataExportRepository } from '@/features/data-export/infrastructure/supabase-data-export-repository';
 import { DataExportAction } from '@/features/data-export/presentation/data-export-action';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
+import { FeedingVolumePreferenceControl } from '@/features/care/presentation/feeding-volume-preference-control';
 import { FamilyBabyContextErrorScreen } from '@/features/family/presentation/family-baby-switcher';
 import { useFamilyBabyContext } from '@/features/family/presentation/use-family-baby-context';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
@@ -108,7 +109,12 @@ function AuthenticatedSettings({
 
   return (
     <AccountSettingsScreen
-      appearanceContent={<ThemePreferenceControl />}
+      appearanceContent={
+        <View style={styles.preferencesContent}>
+          <ThemePreferenceControl />
+          <FeedingVolumePreferenceControl />
+        </View>
+      }
       dangerContent={
         <AccountDeletionPanel
           ownedFamilyNames={context.families
@@ -154,4 +160,5 @@ function AuthenticatedSettings({
 
 const styles = createThemedStyleSheet(() => ({
   deviceContent: { gap: spacing.lg },
+  preferencesContent: { gap: spacing.xl },
 }));

@@ -37,6 +37,7 @@ import { CareOperationError, type CareHistoryPage, type CareRepository } from '@
 import type { CareReportInput } from '@/features/care/application/care-report';
 import type { CareEvent } from '@/features/care/domain/care-event';
 import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { CareHistoryControls } from '@/features/care/presentation/care-history-controls';
 import {
   CareReportModal,
@@ -86,6 +87,7 @@ export function CareHistoryScreen({
   topContent,
   userId,
 }: CareHistoryScreenProps) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const { width } = useWindowDimensions();
   const isCompact = width < 720;
   const [filter, setFilter] = useState<CareEventFilter>('all');
@@ -349,7 +351,7 @@ export function CareHistoryScreen({
             </View>
             {selection}
           </View>
-          <Text style={styles.mobileDetail}>{describeCareEvent(event)}</Text>
+          <Text style={styles.mobileDetail}>{describeCareEvent(event, feedingVolumeUnit)}</Text>
           {retentionLabel ? (
             <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>
               {retentionLabel}
@@ -374,7 +376,7 @@ export function CareHistoryScreen({
         </Text>
         <View style={[styles.cell, styles.detailCell]}>
           <Text numberOfLines={3} style={styles.detailText}>
-            {describeCareEvent(event)}
+            {describeCareEvent(event, feedingVolumeUnit)}
           </Text>
           {retentionLabel ? (
             <Text style={retention?.isExpired ? styles.retentionExpired : styles.retentionText}>

@@ -30,6 +30,8 @@ import type {
   FeedingMethod,
   MeasurementSource,
 } from '@/features/care/domain/care-event';
+import { formatFeedingVolumeInput, getFeedingVolumeInputHint, getFeedingVolumeUnitLabel, parseFeedingVolumeInput } from '@/features/care/domain/feeding-volume';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -78,6 +80,7 @@ export function CareEditSheet({
   onSaved,
   repository,
 }: CareEditSheetProps) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const initialOccurrence = new Date(event.occurredAt);
   const [date, setDate] = useState(() => dateToIso(initialOccurrence));
   const [hour, setHour] = useState(() => String(initialOccurrence.getHours()).padStart(2, '0'));
@@ -85,7 +88,7 @@ export function CareEditSheet({
   const [notes, setNotes] = useState(() => event.type === 'note' ? event.content : event.notes ?? '');
   const [feedingMethod, setFeedingMethod] = useState<FeedingMethod>(() => event.type === 'feeding' ? event.method : 'breast');
   const [breastSide, setBreastSide] = useState<BreastSide | undefined>(() => event.type === 'feeding' ? event.breastSide : undefined);
-  const [amount, setAmount] = useState(() => event.type === 'feeding' ? decimalValue(event.amountMilliliters) : '');
+  const [amount, setAmount] = useState(() => event.type === 'feeding' ? formatFeedingVolumeInput(event.amountMilliliters, feedingVolumeUnit) : '');
   const [diaperCondition, setDiaperCondition] = useState<DiaperCondition>(() => event.type === 'diaper' ? event.condition : 'wet');
   const [measurementSource, setMeasurementSource] = useState<MeasurementSource>(() => event.type === 'measurement' ? event.source as MeasurementSource : 'home');
   const [weight, setWeight] = useState(() => event.type === 'measurement' ? formatGramsAsKilogramsInput(event.weightGrams) : '');
@@ -97,8 +100,8 @@ export function CareEditSheet({
   const weightGrams = parseWeightGrams(weight);
   const lengthMillimeters = parseLengthMillimeters(length);
   const headCircumferenceMillimeters = parseHeadCircumferenceMillimeters(headCircumference);
-  const amountMilliliters = amount.trim() ? Number(amount) : undefined;
-  const invalidAmount = Boolean(amount.trim()) && (!Number.isInteger(amountMilliliters) || amountMilliliters! < 1 || amountMilliliters! > 2000);
+  const amountMilliliters = parseFeedingVolumeInput(amount, feedingVolumeUnit);
+  const invalidAmount = Boolean(amount.trim()) && amountMilliliters === undefined;
   const invalidWeight = Boolean(weight.trim()) && weightGrams === undefined;
   const invalidLength = Boolean(length.trim()) && lengthMillimeters === undefined;
   const invalidHeadCircumference = Boolean(headCircumference.trim()) && headCircumferenceMillimeters === undefined;
@@ -193,7 +196,7 @@ export function CareEditSheet({
                   <SelectField label="Lado" onChange={setBreastSide} options={breastSideOptions} placeholder="Sin indicar" title="Lado" value={breastSide} />
                 ) : null}
                 {feedingMethod !== 'breast' ? (
-                  <ProfileField error={invalidAmount ? 'Introduce una cantidad entre 1 y 2000 ml.' : undefined} keyboardType="number-pad" label="Cantidad en ml, opcional" onChangeText={setAmount} value={amount} />
+                  <ProfileField error={invalidAmount ? getFeedingVolumeInputHint(feedingVolumeUnit) : undefined} keyboardType="decimal-pad" label={`Cantidad en ${getFeedingVolumeUnitLabel(feedingVolumeUnit)}, opcional`} onChangeText={setAmount} value={amount} />
                 ) : null}
               </>
             ) : null}

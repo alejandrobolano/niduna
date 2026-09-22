@@ -44,10 +44,12 @@ import type {
   MeasurementEvent,
 } from '@/features/care/domain/care-event';
 import { formatCareEventRecency } from '@/features/care/domain/care-time';
+import { formatFeedingVolume, type FeedingVolumeUnit } from '@/features/care/domain/feeding-volume';
 import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
@@ -177,9 +179,9 @@ function formatBabyAgeLabel(birthDate: string | undefined, now: Date): string | 
   return `${months} ${months === 1 ? 'mes' : 'meses'}`;
 }
 
-function getFeedingDetail(event: FeedingEvent): string {
+function getFeedingDetail(event: FeedingEvent, volumeUnit: FeedingVolumeUnit): string {
   const details = [
-    event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined,
+    event.amountMilliliters ? formatFeedingVolume(event.amountMilliliters, volumeUnit) : undefined,
     event.breastSide ? breastSideLabels[event.breastSide] : undefined,
   ].filter(Boolean);
 
@@ -231,11 +233,11 @@ function getMeasurementDetail(event: MeasurementEvent): string {
   }`;
 }
 
-function getEventPresentation(event: CareEvent, now: Date) {
+function getEventPresentation(event: CareEvent, now: Date, volumeUnit: FeedingVolumeUnit) {
   if (event.type === 'feeding') {
     return {
       accent: colors.coral,
-      description: getFeedingDetail(event),
+      description: getFeedingDetail(event, volumeUnit),
       icon: event.icon ?? Milk,
       title: feedingLabels[event.method],
     };
@@ -289,7 +291,8 @@ function TimelineEvent({
   event: CareEvent;
   now: Date;
 }) {
-  const presentation = getEventPresentation(event, now);
+  const { unit } = useFeedingVolumePreference();
+  const presentation = getEventPresentation(event, now, unit);
 
   return (
     <View style={styles.timelineEvent}>
@@ -575,6 +578,7 @@ function DashboardContent({
   onRefresh: () => void;
   storiesContent?: ReactNode;
 }) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const { width } = useWindowDimensions();
   const dashboardOffset = useRef(0);
   const quickActionsLocalLayout = useRef<LayoutRectangle | null>(null);
@@ -669,7 +673,7 @@ function DashboardContent({
       <View style={styles.summaryGrid}>
         <SummaryCard
           accent={colors.coral}
-          detail={feeding ? getFeedingDetail(feeding) : 'Todavía sin registros'}
+          detail={feeding ? getFeedingDetail(feeding, feedingVolumeUnit) : 'Todavía sin registros'}
           icon={Milk}
           title="Última alimentación"
           value={

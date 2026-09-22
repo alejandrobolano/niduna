@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite elegir entre mililitros y onzas líquidas de EE. UU. para introducir y consultar cantidades de alimentación
 * permite reutilizar las cantidades de las tres últimas tomas medidas al registrar una alimentación
 * permite guardar en PDF el resumen de 24 horas, 7 o 30 días con comparativa, ritmo de cuidados y evolución de medidas
 * compara los cuidados registrados con el periodo anterior y detalla la evolución de los pañales y los tipos de alimentación
