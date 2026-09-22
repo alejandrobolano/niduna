@@ -250,6 +250,7 @@ export function CareHistoryScreen({
           : selectedDate
           ? `${filterLabels[filter]} · ${new Intl.DateTimeFormat('es-ES', { dateStyle: 'long' }).format(new Date(`${selectedDate}T12:00:00`))}`
           : filterLabels[filter],
+        volumeUnit: feedingVolumeUnit,
       });
       setReportVisible(false);
     } catch {

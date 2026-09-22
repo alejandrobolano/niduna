@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type { CareRepository } from '@/features/care/application/care-repository';
 import { createCareWidgetSnapshot } from '@/features/care-widget/domain/care-widget-snapshot';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import {
   clearCareWidgetsForBaby,
   reconcileCareWidgets,
@@ -26,6 +27,7 @@ export function CareWidgetSynchronizer({
   synchronizeDashboard = true,
   userId,
 }: CareWidgetSynchronizerProps) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   useEffect(() => {
     void reconcileCareWidgets(accessibleBabyIds).catch(() => undefined);
   }, [accessibleBabyIds]);
@@ -55,7 +57,7 @@ export function CareWidgetSynchronizer({
 
           if (active) {
             if (dashboard) {
-              await updateCareWidget(createCareWidgetSnapshot(dashboard));
+              await updateCareWidget(createCareWidgetSnapshot(dashboard, new Date(), feedingVolumeUnit));
             } else {
               await clearCareWidgetsForBaby(babyId);
             }
@@ -87,6 +89,7 @@ export function CareWidgetSynchronizer({
   }, [
     babyId,
     enabled,
+    feedingVolumeUnit,
     repository,
     synchronizeDashboard,
     userId,

@@ -11,6 +11,7 @@ import {
 } from './care-event-description';
 import { getDurationMinutes } from './care-snapshot';
 import type { CareEvent } from '../domain/care-event';
+import { formatFeedingVolume, type FeedingVolumeUnit } from '../domain/feeding-volume';
 
 export type CareReportColumn = 'date' | 'type' | 'detail' | 'author';
 
@@ -29,6 +30,7 @@ export interface CareReportInput {
   familyName: string;
   filterLabel: string;
   generatedAt?: Date;
+  volumeUnit?: FeedingVolumeUnit;
 }
 
 interface CareReportSummary {
@@ -101,7 +103,7 @@ function formatPeriod(events: CareEvent[]): string {
   return start === end ? start : `${start} - ${end}`;
 }
 
-function renderSummaryCards(events: CareEvent[]): string {
+function renderSummaryCards(events: CareEvent[], volumeUnit: FeedingVolumeUnit): string {
   const summary = summarizeEvents(events);
   const eventTypes = new Set(events.map((event) => event.type));
   const cards = [
@@ -109,7 +111,7 @@ function renderSummaryCards(events: CareEvent[]): string {
       ? `<article class="summary-card coral">
           <span>ALIMENTACIÓN</span>
           <strong>${summary.feeding.count} ${summary.feeding.count === 1 ? 'toma' : 'tomas'}</strong>
-          <p>${summary.feeding.totalAmountMilliliters} ml registrados${summary.feeding.averageIntervalMinutes ? ` · intervalo medio ${formatDuration(summary.feeding.averageIntervalMinutes)}` : ''}</p>
+          <p>${formatFeedingVolume(summary.feeding.totalAmountMilliliters, volumeUnit)} registrados${summary.feeding.averageIntervalMinutes ? ` · intervalo medio ${formatDuration(summary.feeding.averageIntervalMinutes)}` : ''}</p>
         </article>`
       : '',
     eventTypes.has('diaper')
@@ -157,7 +159,7 @@ function renderContacts(contacts: BabyContact[]): string {
   </section>`;
 }
 
-function renderTable(events: CareEvent[], columns: CareReportColumn[]): string {
+function renderTable(events: CareEvent[], columns: CareReportColumn[], volumeUnit: FeedingVolumeUnit): string {
   const headers: Record<CareReportColumn, string> = {
     author: 'Registrado por',
     date: 'Fecha',
@@ -172,7 +174,7 @@ function renderTable(events: CareEvent[], columns: CareReportColumn[]): string {
         const values: Record<CareReportColumn, string> = {
           author: event.recordedByName ?? 'Un familiar',
           date: formatReportDateTime(event.occurredAt),
-          detail: describeCareEvent(event),
+          detail: describeCareEvent(event, volumeUnit),
           type: careEventLabels[event.type],
         };
         return `<tr>${columns.map((column) => `<td class="${column}">${escapeReportHtml(values[column])}</td>`).join('')}</tr>`;
@@ -189,6 +191,7 @@ export function createCareReportHtml({
   familyName,
   filterLabel,
   generatedAt = new Date(),
+  volumeUnit = 'ml',
 }: CareReportInput): string {
   const safeBabyName = escapeReportHtml(babyName);
   const safeFamilyName = escapeReportHtml(familyName);
@@ -266,10 +269,10 @@ export function createCareReportHtml({
           <div><span>REGISTROS</span><strong>${events.length} resultados</strong></div>
           <div><span>COLUMNAS</span><strong>${columns.map((column) => careReportColumns.find((item) => item.value === column)?.label).filter(Boolean).join(', ')}</strong></div>
         </section>
-        ${renderSummaryCards(events)}
+        ${renderSummaryCards(events, volumeUnit)}
         ${renderContacts(contacts)}
         <h2>Detalle de registros</h2>
-        ${renderTable(events, columns)}
+        ${renderTable(events, columns, volumeUnit)}
       </main>
       <section class="report-end">
         <p class="notice"><strong>Importante:</strong> este informe ayuda a coordinar el cuidado familiar. No sustituye una historia clínica, una valoración médica ni los servicios de emergencia.</p>

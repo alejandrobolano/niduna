@@ -3,6 +3,10 @@ import type {
   CareSummaryMetricComparison,
 } from '../domain/daily-care-summary';
 import { formatSummaryDuration } from '../domain/daily-care-summary';
+import {
+  formatFeedingVolume,
+  type FeedingVolumeUnit,
+} from '../../care/domain/feeding-volume';
 
 const maximumObservations = 4;
 
@@ -120,6 +124,7 @@ function describeFeedingChange(
 
 function describeFeedingAmountChange(
   comparison: CareSummaryComparison['feedingAmountMilliliters'],
+  volumeUnit: FeedingVolumeUnit,
 ): string | undefined {
   if (
     comparison.delta === 0 ||
@@ -129,7 +134,7 @@ function describeFeedingAmountChange(
     return undefined;
   }
 
-  return `En las tomas con cantidad indicada se registraron ${Math.abs(comparison.delta)} ml ${comparison.delta > 0 ? 'más' : 'menos'}.`;
+  return `En las tomas con cantidad indicada se registraron ${formatFeedingVolume(Math.abs(comparison.delta), volumeUnit)} ${comparison.delta > 0 ? 'más' : 'menos'}.`;
 }
 
 function describeFeedingIntervalChange(
@@ -151,6 +156,7 @@ function hasRecordedData(comparison: CareSummaryComparison): boolean {
 
 export function createCareSummaryObservations(
   comparison: CareSummaryComparison,
+  volumeUnit: FeedingVolumeUnit = 'ml',
 ): string[] {
   if (!hasRecordedData(comparison)) {
     return ['Aún no hay suficientes registros en ambos periodos para compararlos.'];
@@ -160,7 +166,7 @@ export function createCareSummaryObservations(
     describeFeedingChange(comparison.feeding),
     describeDiaperChange(comparison.diaper),
     describeSleepChange(comparison.sleepMinutes),
-    describeFeedingAmountChange(comparison.feedingAmountMilliliters),
+    describeFeedingAmountChange(comparison.feedingAmountMilliliters, volumeUnit),
     describeFeedingIntervalChange(comparison.feedingIntervalMinutes),
     describeCountChange(comparison.noteCount, 'nota', 'notas'),
   ].filter((observation): observation is string => Boolean(observation));

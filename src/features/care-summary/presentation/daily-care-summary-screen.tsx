@@ -157,7 +157,7 @@ export function DailyCareSummaryScreen({
 
   const summary = report?.summary;
   const observations = comparison
-    ? createCareSummaryObservations(comparison)
+    ? createCareSummaryObservations(comparison, feedingVolumeUnit)
     : [];
   const periodLabel = getCareSummaryPeriodLabel(period);
   const feedingDetail = summary?.feeding.count
@@ -185,6 +185,7 @@ export function DailyCareSummaryScreen({
         period,
         range: reportRange,
         report,
+        volumeUnit: feedingVolumeUnit,
       });
     } catch {
       setError('No pudimos generar el informe PDF del resumen.');
