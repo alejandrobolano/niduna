@@ -26,6 +26,19 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.9.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.8.0...niduna-v1.9.0) (2026-09-23)
+
+
+### Nuevas funciones
+
+* add feeding volume unit preference ([c4d54af](https://github.com/alejandrobolano/niduna/commit/c4d54afe44754af749d8512bad736cedf7cb0f0e))
+
+
+### Correcciones
+
+* apply feeding volume preference consistently ([4785ded](https://github.com/alejandrobolano/niduna/commit/4785ded4d2589e9a1d224e12c01745f322f4d6f2))
+* refresh widget volume preference ([6cca8ea](https://github.com/alejandrobolano/niduna/commit/6cca8eaa0daaf5d27920567e8f13fa95bb32c6ac))
+
 ## [1.8.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.7.0...niduna-v1.8.0) (2026-09-21)
 
 
