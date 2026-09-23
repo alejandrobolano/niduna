@@ -6,6 +6,10 @@ import {
 } from '../../care/application/care-report-html';
 import { createCareSummaryObservations } from './care-summary-observations';
 import {
+  formatFeedingVolume,
+  type FeedingVolumeUnit,
+} from '../../care/domain/feeding-volume';
+import {
   formatSummaryDuration,
   formatWeightGrams,
   getCareSummaryPeriodLabel,
@@ -27,6 +31,7 @@ export interface CareSummaryPdfReportInput {
   period: CareSummaryPeriod;
   range: DailyCareSummaryRange;
   report: CareSummaryReport;
+  volumeUnit?: FeedingVolumeUnit;
 }
 
 type TrendMetric = 'diaper' | 'feeding' | 'sleep';
@@ -153,11 +158,11 @@ function renderMeasurementChart(
   </article>`;
 }
 
-function renderSummaryCards(report: CareSummaryReport): string {
+function renderSummaryCards(report: CareSummaryReport, volumeUnit: FeedingVolumeUnit): string {
   const { summary } = report;
   const feedingDetail = summary.feeding.knownAmountCount > 0
-    ? `${summary.feeding.totalAmountMilliliters} ml en ${summary.feeding.knownAmountCount} tomas con cantidad`
-    : 'Sin cantidades en mililitros';
+    ? `${formatFeedingVolume(summary.feeding.totalAmountMilliliters, volumeUnit)} en ${summary.feeding.knownAmountCount} tomas con cantidad`
+    : 'Sin cantidades registradas';
   const interval = summary.feeding.averageIntervalMinutes
     ? ` · intervalo medio ${formatSummaryDuration(summary.feeding.averageIntervalMinutes)}`
     : '';
@@ -178,11 +183,12 @@ export function createCareSummaryReportHtml({
   period,
   range,
   report,
+  volumeUnit = 'ml',
 }: CareSummaryPdfReportInput): string {
   const safeBabyName = escapeReportHtml(babyName);
   const safeFamilyName = escapeReportHtml(familyName);
   const generatedLabel = formatReportDateTime(generatedAt);
-  const observations = createCareSummaryObservations(comparison);
+  const observations = createCareSummaryObservations(comparison, volumeUnit);
   const periodLabel = getCareSummaryPeriodLabel(period);
 
   return `<!DOCTYPE html>
@@ -268,7 +274,7 @@ export function createCareSummaryReportHtml({
           <div><span>FECHAS</span><strong>${escapeReportHtml(formatRange(range))}</strong></div>
           <div><span>GENERADO</span><strong>${escapeReportHtml(generatedLabel)}</strong></div>
         </section>
-        ${renderSummaryCards(report)}
+        ${renderSummaryCards(report, volumeUnit)}
         <section class="comparison">
           <h2>¿Qué ha cambiado?</h2>
           <p class="subtitle">Comparación con el periodo inmediatamente anterior de la misma duración.</p>

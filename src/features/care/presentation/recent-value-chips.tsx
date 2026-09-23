@@ -9,6 +9,7 @@ import {
 } from '@/shared/presentation/theme';
 
 interface RecentValueChipsProps {
+  formatValue?: (value: number) => string;
   onSelect: (value: number) => void;
   selectedValue?: number;
   unit: string;
@@ -16,6 +17,7 @@ interface RecentValueChipsProps {
 }
 
 export function RecentValueChips({
+  formatValue = (value) => String(value),
   onSelect,
   selectedValue,
   unit,
@@ -34,7 +36,7 @@ export function RecentValueChips({
 
           return (
             <Pressable
-              accessibilityLabel={`Usar ${value} ${unit}`}
+              accessibilityLabel={`Usar ${formatValue(value)} ${unit}`}
               accessibilityRole="button"
               accessibilityState={{ selected }}
               key={value}
@@ -47,7 +49,7 @@ export function RecentValueChips({
             >
               {selected ? <Check color={colors.onAccent} size={15} strokeWidth={3} /> : null}
               <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-                {value} {unit}
+                {formatValue(value)} {unit}
               </Text>
             </Pressable>
           );

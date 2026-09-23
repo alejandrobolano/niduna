@@ -1,5 +1,6 @@
 import { getDurationMinutes } from './care-snapshot';
 import type { CareEvent } from '../domain/care-event';
+import { formatFeedingVolume, type FeedingVolumeUnit } from '../domain/feeding-volume';
 
 export const careEventLabels: Record<CareEvent['type'], string> = {
   diaper: 'Pañal',
@@ -9,7 +10,7 @@ export const careEventLabels: Record<CareEvent['type'], string> = {
   sleep: 'Sueño',
 };
 
-export function describeCareEvent(event: CareEvent): string {
+export function describeCareEvent(event: CareEvent, volumeUnit: FeedingVolumeUnit = 'ml'): string {
   if (event.type === 'feeding') {
     const method = event.method === 'breast'
       ? 'Pecho'
@@ -21,7 +22,7 @@ export function describeCareEvent(event: CareEvent): string {
 
     return [
       method,
-      event.amountMilliliters ? `${event.amountMilliliters} ml` : undefined,
+      event.amountMilliliters ? formatFeedingVolume(event.amountMilliliters, volumeUnit) : undefined,
       event.notes,
     ].filter(Boolean).join(' · ');
   }

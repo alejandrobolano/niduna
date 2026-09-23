@@ -7,6 +7,7 @@ import type {
   DiaperEvent,
   FeedingEvent,
 } from '../../care/domain/care-event';
+import { formatFeedingVolume, type FeedingVolumeUnit } from '../../care/domain/feeding-volume';
 
 export interface CareWidgetItem {
   detail: string;
@@ -79,6 +80,7 @@ export function createEmptyCareWidgetSnapshot(
 export function createCareWidgetSnapshot(
   dashboard: CareDashboard,
   now = new Date(),
+  volumeUnit: FeedingVolumeUnit = 'ml',
 ): CareWidgetSnapshot {
   const snapshot = getCareSnapshot(dashboard.events);
   const feeding = snapshot.latestFeeding;
@@ -94,7 +96,7 @@ export function createCareWidgetSnapshot(
           detail: [
             feedingLabels[feeding.method],
             feeding.amountMilliliters
-              ? `${feeding.amountMilliliters} ml`
+              ? formatFeedingVolume(feeding.amountMilliliters, volumeUnit)
               : undefined,
           ]
             .filter(Boolean)

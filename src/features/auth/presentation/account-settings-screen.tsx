@@ -85,7 +85,7 @@ export function AccountSettingsScreen({
             <View style={styles.headingCopy}>
               <Text style={styles.title}>Mi cuenta y ajustes</Text>
               <Text style={styles.subtitle}>
-                Gestiona tus preferencias en este dispositivo.
+                Gestiona tu perfil y tus preferencias.
               </Text>
             </View>
           </View>

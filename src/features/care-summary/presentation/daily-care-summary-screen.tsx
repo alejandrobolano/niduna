@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
 import { createCareSummaryObservations } from '@/features/care-summary/application/care-summary-observations';
 import type { CareSummaryPdfReportInput } from '@/features/care-summary/application/care-summary-report';
+import { formatFeedingVolume } from '@/features/care/domain/feeding-volume';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import {
   compareCareSummaries,
   createCareSummaryRange,
@@ -109,6 +111,7 @@ export function DailyCareSummaryScreen({
   repository,
   topContent,
 }: DailyCareSummaryScreenProps) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const [period, setPeriod] = useState<CareSummaryPeriod>('24h');
   const [report, setReport] = useState<CareSummaryReport>();
   const [reportRange, setReportRange] = useState<DailyCareSummaryRange>();
@@ -154,13 +157,13 @@ export function DailyCareSummaryScreen({
 
   const summary = report?.summary;
   const observations = comparison
-    ? createCareSummaryObservations(comparison)
+    ? createCareSummaryObservations(comparison, feedingVolumeUnit)
     : [];
   const periodLabel = getCareSummaryPeriodLabel(period);
   const feedingDetail = summary?.feeding.count
     ? summary.feeding.knownAmountCount > 0
-      ? `${summary.feeding.totalAmountMilliliters} ml registrados en ${summary.feeding.knownAmountCount} tomas.`
-      : 'Las tomas no incluyen una cantidad en mililitros.'
+      ? `${formatFeedingVolume(summary.feeding.totalAmountMilliliters, feedingVolumeUnit)} registrados en ${summary.feeding.knownAmountCount} tomas.`
+      : 'Las tomas no incluyen una cantidad.'
     : `Todavía no hay tomas registradas en ${periodLabel}.`;
   const feedingInterval = summary?.feeding.averageIntervalMinutes
     ? ` Intervalo medio: ${formatSummaryDuration(summary.feeding.averageIntervalMinutes)}.`
@@ -182,6 +185,7 @@ export function DailyCareSummaryScreen({
         period,
         range: reportRange,
         report,
+        volumeUnit: feedingVolumeUnit,
       });
     } catch {
       setError('No pudimos generar el informe PDF del resumen.');

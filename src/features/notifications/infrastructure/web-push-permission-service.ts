@@ -72,7 +72,7 @@ function configureForegroundNotifications(
     return;
   }
 
-  onMessage(messaging, (payload) => {
+  onMessage(messaging, (payload: MessagePayload) => {
     publishCareDataChanged();
     const notification = mapForegroundNotification(payload);
 
@@ -136,7 +136,7 @@ async function getFirebaseInstallationId(
       reject(new Error('firebase_registration_timeout'));
     }, registrationTimeoutMilliseconds);
 
-    unsubscribe = onRegistered(messaging, (installationId) => {
+    unsubscribe = onRegistered(messaging, (installationId: string) => {
       window.clearTimeout(timeoutId);
       unsubscribe();
       resolve(installationId);
