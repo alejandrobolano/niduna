@@ -43,6 +43,7 @@ import { exportCareHistoryFile } from '@/features/care/infrastructure/care-histo
 import { exportCareReportFile } from '@/features/care/infrastructure/care-report-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import {
   createCareWidgetActionRequest,
   parseCareWidgetAction,
@@ -196,6 +197,7 @@ function AuthenticatedApp({
   initialSection: AppSection;
   user: AuthenticatedUser;
 }) {
+  const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -355,14 +357,16 @@ function AuthenticatedApp({
   const handleWidgetDashboardLoaded = useCallback(
     (dashboard: CareDashboard | null) => {
       const operation = dashboard
-        ? updateCareWidget(createCareWidgetSnapshot(dashboard))
+        ? updateCareWidget(
+            createCareWidgetSnapshot(dashboard, new Date(), feedingVolumeUnit),
+          )
         : activeBabyId
           ? clearCareWidgetsForBaby(activeBabyId)
           : Promise.resolve();
 
       void operation.catch(() => undefined);
     },
-    [activeBabyId],
+    [activeBabyId, feedingVolumeUnit],
   );
 
   if (context.status === 'loading') {

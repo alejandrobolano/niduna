@@ -19,6 +19,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* actualiza el widget al volver a la app cuando la unidad de alimentación cambia en otro dispositivo
 * mejora el contraste y la selección visual de las cantidades recientes de alimentación
 * conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial
 * protege los datos del widget al cerrar sesión o perder acceso a un bebé

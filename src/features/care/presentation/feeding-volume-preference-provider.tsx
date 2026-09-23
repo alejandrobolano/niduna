@@ -1,11 +1,13 @@
 import {
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from 'react';
+import { AppState, Platform } from 'react-native';
 
 import type { FeedingVolumePreferenceRepository } from '../application/feeding-volume-preference-repository';
 import type { FeedingVolumeUnit } from '../domain/feeding-volume';
@@ -31,6 +33,12 @@ export function FeedingVolumePreferenceProvider({
   const [unit, setUnitState] = useState<FeedingVolumeUnit>('ml');
   const [isSaving, setIsSaving] = useState(false);
 
+  const refreshUnit = useCallback(async () => {
+    if (!userId) return;
+    const loadedUnit = await repository.load(userId);
+    setUnitState(loadedUnit);
+  }, [repository, userId]);
+
   useEffect(() => {
     let active = true;
     if (!userId) return () => { active = false; };
@@ -41,6 +49,18 @@ export function FeedingVolumePreferenceProvider({
 
     return () => { active = false; };
   }, [repository, userId]);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' || !userId) return undefined;
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void refreshUnit().catch(() => undefined);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshUnit, userId]);
 
   const value = useMemo<FeedingVolumePreferenceContextValue>(() => ({
     isSaving,
