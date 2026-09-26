@@ -6,6 +6,7 @@ import {
   HeartHandshake,
   Lock,
   MapPinned,
+  WalletCards,
   MoveVertical,
   Plus,
   Sparkles,
@@ -212,6 +213,7 @@ interface BabyProfileScreenProps {
   onPhotoChanged?: () => Promise<void> | void;
   onOpenDocuments?: () => void;
   onOpenContacts?: () => void;
+  onOpenExpenses?: () => void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -228,6 +230,7 @@ export function BabyProfileScreen({
   onPhotoChanged,
   onOpenDocuments,
   onOpenContacts,
+  onOpenExpenses,
   onSaved,
   onUnfollow,
   repository,
@@ -839,6 +842,29 @@ export function BabyProfileScreen({
                 <Text style={styles.photoTitle}>Contactos importantes</Text>
                 <Text style={styles.photoHint}>
                   Pediatra, hospital, farmacia y otros lugares útiles. Podrás compartir información con otras personas.
+                </Text>
+              </View>
+              <Text style={styles.documentsLink}>Abrir</Text>
+            </Pressable>
+          ) : null}
+
+          {storedBabyId && onOpenExpenses ? (
+            <Pressable
+              accessibilityHint="Abre el registro familiar de gastos del bebé"
+              accessibilityRole="button"
+              onPress={onOpenExpenses}
+              style={({ pressed }) => [
+                styles.documentsCard,
+                pressed && styles.photoActionPressed,
+              ]}
+            >
+              <View style={styles.documentsIcon}>
+                <WalletCards color={colors.primaryPressed} size={24} />
+              </View>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Gastos del bebé</Text>
+                <Text style={styles.photoHint}>
+                  Registra compras y consulta cuánto habéis gastado por periodo.
                 </Text>
               </View>
               <Text style={styles.documentsLink}>Abrir</Text>

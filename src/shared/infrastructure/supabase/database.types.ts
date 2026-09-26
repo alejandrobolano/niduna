@@ -22,6 +22,15 @@ type BabyContactCategory =
   | 'activity'
   | 'emergency'
   | 'other';
+type BabyExpenseCategory =
+  | 'feeding'
+  | 'diapers'
+  | 'health'
+  | 'clothing'
+  | 'hygiene'
+  | 'equipment'
+  | 'childcare'
+  | 'other';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
 type BreastSide = 'left' | 'right' | 'both';
 type CareEventType = 'feeding' | 'diaper' | 'sleep';
@@ -80,14 +89,17 @@ export type Database = {
         {
           created_at: string;
           created_by: string;
+          expense_currency: string;
           id: string;
           name: string;
           updated_at: string;
         },
         {
+          expense_currency?: string;
           name: string;
         },
         {
+          expense_currency?: string;
           name?: string;
         }
       >;
@@ -537,6 +549,28 @@ export type Database = {
         Record<string, never>,
         Record<string, never>
       >;
+      baby_expenses: Table<
+        {
+          amount_minor: number;
+          baby_id: string;
+          category: BabyExpenseCategory;
+          concept: string;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          expense_date: string;
+          family_id: string;
+          id: string;
+          notes: string | null;
+          paid_by_user_id: string;
+          retired_at: string | null;
+          retired_by: string | null;
+          updated_at: string;
+          updated_by: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       family_audit_logs: Table<
         {
           action: 'created' | 'updated' | 'deleted';
@@ -549,6 +583,7 @@ export type Database = {
             | 'baby'
             | 'baby_contact'
             | 'baby_document'
+            | 'baby_expense'
             | 'baby_note'
             | 'care_event'
             | 'family_member'
@@ -788,6 +823,17 @@ export type Database = {
           sleep_minutes: number;
         }[];
       };
+      get_baby_expense_total: {
+        Args: {
+          target_baby_id: string;
+          target_category?: BabyExpenseCategory | null;
+          target_end_date: string;
+          target_paid_by_user_id?: string | null;
+          target_retired?: boolean;
+          target_start_date: string;
+        };
+        Returns: number;
+      };
       rename_family: {
         Args: {
           target_family_id: string;
@@ -827,6 +873,34 @@ export type Database = {
         Args: {
           target_reaction: FamilyStoryReaction | null;
           target_story_id: string;
+        };
+        Returns: undefined;
+      };
+      save_baby_expense: {
+        Args: {
+          target_amount_minor: number;
+          target_baby_id: string;
+          target_category: BabyExpenseCategory;
+          target_concept: string;
+          target_expense_date: string;
+          target_expense_id: string | null;
+          target_notes: string | null;
+          target_paid_by_user_id: string;
+          target_timezone_offset_minutes: number;
+        };
+        Returns: string;
+      };
+      set_baby_expense_retired: {
+        Args: {
+          should_retire: boolean;
+          target_expense_id: string;
+        };
+        Returns: undefined;
+      };
+      set_family_expense_currency: {
+        Args: {
+          target_currency: string;
+          target_family_id: string;
         };
         Returns: undefined;
       };
@@ -970,6 +1044,7 @@ export type Database = {
     Enums: {
       baby_contact_category: BabyContactCategory;
       baby_document_category: BabyDocumentCategory;
+      baby_expense_category: BabyExpenseCategory;
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;
       breast_side: BreastSide;
