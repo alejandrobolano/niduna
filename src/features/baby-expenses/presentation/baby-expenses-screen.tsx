@@ -1,6 +1,5 @@
 import {
   Archive,
-  ArrowLeft,
   Download,
   Pencil,
   Plus,
@@ -290,22 +289,14 @@ export function BabyExpensesScreen({
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
-          <View style={styles.backRow}>
-            <Pressable accessibilityLabel="Volver al perfil" onPress={onBack} style={styles.iconButton}>
-              <ArrowLeft color={colors.text} size={22} />
-            </Pressable>
-            <Pressable
-              accessibilityLabel="Actualizar gastos"
-              onPress={() => setReloadVersion((value) => value + 1)}
-              style={styles.iconButton}
-            >
-              <RefreshCw color={colors.primaryPressed} size={20} />
-            </Pressable>
-          </View>
           <ScreenHero
+            compactStack
             eyebrow="Organización familiar"
+            leading={<View style={styles.heroIcon}><ReceiptText color={colors.aqua} size={30} /></View>}
+            mascot={false}
             subtitle="Registra compras y consulta cuánto habéis gastado por periodo, categoría o persona."
             title={`Gastos de ${babyName}`}
+            trailing={<Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}><Text style={styles.backButtonText}>Volver al bebé</Text></Pressable>}
           />
 
           {error ? <Text accessibilityLiveRegion="polite" style={styles.errorBanner}>{error}</Text> : null}
@@ -420,7 +411,23 @@ export function BabyExpensesScreen({
           </View>
 
           <View style={styles.listCard}>
-            <Text style={styles.sectionTitle}>{retired ? 'Gastos retirados' : 'Gastos registrados'}</Text>
+            <View style={styles.listHeading}>
+              <View>
+                <Text style={styles.sectionTitle}>{retired ? 'Gastos retirados' : 'Gastos registrados'}</Text>
+                <Text style={styles.sectionHint}>{isLoading ? 'Actualizando…' : `${result?.totalCount ?? 0} gastos · ${babyName}`}</Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Actualizar gastos"
+                onPress={() => {
+                  setIsLoading(true);
+                  setError(undefined);
+                  setReloadVersion((value) => value + 1);
+                }}
+                style={styles.refresh}
+              >
+                <RefreshCw color={colors.aqua} size={19} />
+              </Pressable>
+            </View>
             {isLoading ? <ActivityIndicator color={colors.primaryPressed} size="large" /> : null}
             {!isLoading && !result?.expenses.length ? (
               <View style={styles.emptyState}>
@@ -486,9 +493,11 @@ export function BabyExpensesScreen({
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
-  page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 140 },
-  content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
-  backRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  page: { paddingBottom: 120 },
+  content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
+  heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 58, justifyContent: 'center', width: 58 },
+  backButton: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backButtonText: { color: colors.primaryPressed, fontWeight: '900' },
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
@@ -514,6 +523,9 @@ const styles = createThemedStyleSheet((colors) => ({
   secondaryAction: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 46, paddingHorizontal: spacing.lg },
   secondaryActionText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.md, padding: spacing.lg },
+  listHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
+  sectionHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   emptyState: { alignItems: 'center', gap: spacing.sm, padding: spacing.xxl },
   emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900', textAlign: 'center' },
   emptyText: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
