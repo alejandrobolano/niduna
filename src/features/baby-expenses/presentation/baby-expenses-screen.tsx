@@ -49,6 +49,7 @@ import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
+import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -65,9 +66,6 @@ const categoryOptions = [
 const categoryLabels = Object.fromEntries(
   categoryOptions.map(({ label, value }) => [value, label]),
 ) as Record<BabyExpenseCategory, string>;
-
-const currencyOptions = ['EUR', 'USD', 'GBP', 'CAD', 'MXN']
-  .map((value) => ({ label: value, value })) satisfies SelectOption<string>[];
 
 type RangePreset = 'month' | '30d' | 'custom';
 
@@ -118,7 +116,6 @@ export function BabyExpensesScreen({
   const [result, setResult] = useState<BabyExpensePage>();
   const [payers, setPayers] = useState<ExpensePayer[]>([]);
   const [currency, setCurrency] = useState('EUR');
-  const [isCurrencyLocked, setIsCurrencyLocked] = useState(true);
   const [reloadVersion, setReloadVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -159,15 +156,9 @@ export function BabyExpensesScreen({
 
   useEffect(() => {
     let active = true;
-    void Promise.all([
-      repository.loadPayers(familyId),
-      repository.loadCurrency(familyId),
-      repository.isCurrencyLocked(familyId),
-    ]).then(([nextPayers, nextCurrency, nextCurrencyLocked]) => {
+    void repository.loadPayers(familyId).then((nextPayers) => {
       if (!active) return;
       setPayers(nextPayers);
-      setCurrency(nextCurrency);
-      setIsCurrencyLocked(nextCurrencyLocked);
       setDraftPayerId(
         nextPayers.some((payer) => payer.userId === userId)
           ? userId
@@ -176,6 +167,15 @@ export function BabyExpensesScreen({
     }).catch((reason) => active && setError(errorMessage(reason)));
     return () => { active = false; };
   }, [familyId, repository, userId]);
+
+  useEffect(() => {
+    let active = true;
+    void repository.loadCurrency(familyId).then((nextCurrency) => {
+      if (!active) return;
+      setCurrency(nextCurrency);
+    }).catch((reason) => active && setError(errorMessage(reason)));
+    return () => { active = false; };
+  }, [familyId, repository]);
 
   useEffect(() => {
     let active = true;
@@ -246,7 +246,6 @@ export function BabyExpensesScreen({
         paidByUserId: draftPayerId,
       };
       await repository.save(babyId, draft, editing?.id);
-      setIsCurrencyLocked(true);
       resetForm();
       setReloadVersion((value) => value + 1);
     } catch (reason) {
@@ -288,29 +287,30 @@ export function BabyExpensesScreen({
 
   return (
     <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
-      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
-        {topContent}
-        <View style={styles.headerRow}>
-          <Pressable accessibilityLabel="Volver al perfil" onPress={onBack} style={styles.iconButton}>
-            <ArrowLeft color={colors.text} size={22} />
-          </Pressable>
-          <View style={styles.headerCopy}>
-            <Text style={styles.eyebrow}>ORGANIZACIÓN FAMILIAR</Text>
-            <Text style={styles.title}>Gastos de {babyName}</Text>
-            <Text style={styles.subtitle}>Un registro práctico, no una herramienta contable.</Text>
+      <KeyboardAwareScrollView contentContainerStyle={styles.page}>
+        <View style={styles.content}>
+          {topContent}
+          <View style={styles.backRow}>
+            <Pressable accessibilityLabel="Volver al perfil" onPress={onBack} style={styles.iconButton}>
+              <ArrowLeft color={colors.text} size={22} />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Actualizar gastos"
+              onPress={() => setReloadVersion((value) => value + 1)}
+              style={styles.iconButton}
+            >
+              <RefreshCw color={colors.primaryPressed} size={20} />
+            </Pressable>
           </View>
-          <Pressable
-            accessibilityLabel="Actualizar gastos"
-            onPress={() => setReloadVersion((value) => value + 1)}
-            style={styles.iconButton}
-          >
-            <RefreshCw color={colors.primaryPressed} size={20} />
-          </Pressable>
-        </View>
+          <ScreenHero
+            eyebrow="Organización familiar"
+            subtitle="Registra compras y consulta cuánto habéis gastado por periodo, categoría o persona."
+            title={`Gastos de ${babyName}`}
+          />
 
-        {error ? <Text accessibilityLiveRegion="polite" style={styles.errorBanner}>{error}</Text> : null}
+          {error ? <Text accessibilityLiveRegion="polite" style={styles.errorBanner}>{error}</Text> : null}
 
-        <View style={styles.summaryCard}>
+          <View style={styles.summaryCard}>
           <View>
             <Text style={styles.summaryLabel}>Total del periodo</Text>
             <Text style={styles.summaryValue}>
@@ -327,29 +327,9 @@ export function BabyExpensesScreen({
               <Text style={styles.primaryActionText}>Añadir gasto</Text>
             </Pressable>
           ) : null}
-        </View>
-
-        {!isCurrencyLocked && (familyRole === 'owner' || familyRole === 'admin') ? (
-          <View style={styles.currencyRow}>
-            <SelectField
-              label="Moneda de la familia"
-              onChange={(nextCurrency) => {
-                setCurrency(nextCurrency);
-                void repository.setCurrency(familyId, nextCurrency).catch((reason) => {
-                  setError(errorMessage(reason));
-                  void repository.loadCurrency(familyId).then(setCurrency);
-                });
-              }}
-              options={currencyOptions}
-              placeholder="Moneda"
-              title="Moneda para los gastos"
-              value={currency}
-            />
-            <Text style={styles.currencyHint}>Se bloqueará después del primer gasto.</Text>
           </View>
-        ) : null}
 
-        {showForm ? (
+          {showForm ? (
           <View style={styles.formCard}>
             <View style={styles.formHeading}>
               <Text style={styles.sectionTitle}>{editing ? 'Editar gasto' : 'Nuevo gasto'}</Text>
@@ -396,9 +376,9 @@ export function BabyExpensesScreen({
               {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>Guardar gasto</Text>}
             </Pressable>
           </View>
-        ) : null}
+          ) : null}
 
-        <View style={styles.filtersCard}>
+          <View style={styles.filtersCard}>
           <View style={styles.presetRow}>
             {([['month', 'Este mes'], ['30d', 'Últimos 30 días'], ['custom', 'Personalizado']] as const).map(([value, label]) => (
               <Pressable key={value} onPress={() => selectPreset(value)} style={[styles.chip, preset === value && styles.chipSelected]}>
@@ -437,52 +417,53 @@ export function BabyExpensesScreen({
               <Text style={styles.secondaryActionText}>{isExporting ? 'Preparando…' : 'Exportar CSV'}</Text>
             </Pressable>
           </View>
-        </View>
+          </View>
 
-        <View style={styles.listCard}>
-          <Text style={styles.sectionTitle}>{retired ? 'Gastos retirados' : 'Gastos registrados'}</Text>
-          {isLoading ? <ActivityIndicator color={colors.primaryPressed} size="large" /> : null}
-          {!isLoading && !result?.expenses.length ? (
-            <View style={styles.emptyState}>
-              <ReceiptText color={colors.primaryPressed} size={34} />
-              <Text style={styles.emptyTitle}>Todavía no hay gastos en este periodo</Text>
-              <Text style={styles.emptyText}>Cuando registres uno, aparecerá aquí y se sumará al total.</Text>
-            </View>
-          ) : null}
-          {result?.expenses.map((expense) => (
-            <View key={expense.id} style={[styles.expenseRow, compact && styles.expenseRowCompact]}>
-              <View style={styles.expenseMain}>
-                <Text style={styles.expenseConcept}>{expense.concept}</Text>
-                <Text style={styles.expenseMeta}>
-                  {expense.expenseDate} · {categoryLabels[expense.category]} · {payerNames.get(expense.paidByUserId) ?? 'Miembro retirado'}
-                </Text>
-                {expense.notes ? <Text style={styles.expenseNotes}>{expense.notes}</Text> : null}
+          <View style={styles.listCard}>
+            <Text style={styles.sectionTitle}>{retired ? 'Gastos retirados' : 'Gastos registrados'}</Text>
+            {isLoading ? <ActivityIndicator color={colors.primaryPressed} size="large" /> : null}
+            {!isLoading && !result?.expenses.length ? (
+              <View style={styles.emptyState}>
+                <ReceiptText color={colors.primaryPressed} size={34} />
+                <Text style={styles.emptyTitle}>Todavía no hay gastos en este periodo</Text>
+                <Text style={styles.emptyText}>Cuando registres uno, aparecerá aquí y se sumará al total.</Text>
               </View>
-              <Text style={styles.expenseAmount}>{formatExpenseAmount(expense.amountMinor, expense.currency)}</Text>
-              {canManageBabyExpense(expense, familyRole, userId) ? (
-                <View style={styles.rowActions}>
-                  {!expense.retiredAt ? (
-                    <Pressable accessibilityLabel="Editar gasto" onPress={() => beginEdit(expense)} style={styles.rowAction}>
-                      <Pencil color={colors.primaryPressed} size={17} />
-                    </Pressable>
-                  ) : null}
-                  <Pressable accessibilityLabel={expense.retiredAt ? 'Restaurar gasto' : 'Retirar gasto'} onPress={() => setConfirming(expense)} style={styles.rowAction}>
-                    {expense.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Archive color={colors.coral} size={17} />}
-                  </Pressable>
+            ) : null}
+            {result?.expenses.map((expense) => (
+              <View key={expense.id} style={[styles.expenseRow, compact && styles.expenseRowCompact]}>
+                <View style={styles.expenseMain}>
+                  <Text style={styles.expenseConcept}>{expense.concept}</Text>
+                  <Text style={styles.expenseMeta}>
+                    {expense.expenseDate} · {categoryLabels[expense.category]} · {payerNames.get(expense.paidByUserId) ?? 'Miembro retirado'}
+                  </Text>
+                  {expense.notes ? <Text style={styles.expenseNotes}>{expense.notes}</Text> : null}
                 </View>
-              ) : null}
-            </View>
-          ))}
-          {result ? (
-            <DataPagination
-              onChangePage={setPage}
-              onChangePageSize={(value) => { setPageSize(value); setPage(1); }}
-              page={page}
-              pageSize={pageSize}
-              total={result.totalCount}
-              totalPages={result.totalPages}
-            />
-          ) : null}
+                <Text style={styles.expenseAmount}>{formatExpenseAmount(expense.amountMinor, expense.currency)}</Text>
+                {canManageBabyExpense(expense, familyRole, userId) ? (
+                  <View style={styles.rowActions}>
+                    {!expense.retiredAt ? (
+                      <Pressable accessibilityLabel="Editar gasto" onPress={() => beginEdit(expense)} style={styles.rowAction}>
+                        <Pencil color={colors.primaryPressed} size={17} />
+                      </Pressable>
+                    ) : null}
+                    <Pressable accessibilityLabel={expense.retiredAt ? 'Restaurar gasto' : 'Retirar gasto'} onPress={() => setConfirming(expense)} style={styles.rowAction}>
+                      {expense.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Archive color={colors.coral} size={17} />}
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
+            ))}
+            {result ? (
+              <DataPagination
+                onChangePage={setPage}
+                onChangePageSize={(value) => { setPageSize(value); setPage(1); }}
+                page={page}
+                pageSize={pageSize}
+                total={result.totalCount}
+                totalPages={result.totalPages}
+              />
+            ) : null}
+          </View>
         </View>
       </KeyboardAwareScrollView>
 
@@ -504,13 +485,10 @@ export function BabyExpensesScreen({
 }
 
 const styles = createThemedStyleSheet((colors) => ({
-  safeArea: { flex: 1 },
-  content: { gap: spacing.xl, paddingBottom: 140 },
-  headerRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
-  headerCopy: { flex: 1, gap: spacing.xs },
-  eyebrow: { color: colors.coral, fontSize: 11, fontWeight: '900', letterSpacing: 1.4 },
-  title: { color: colors.text, fontSize: 30, fontWeight: '900' },
-  subtitle: { color: colors.textMuted, fontSize: 14 },
+  safeArea: { backgroundColor: colors.background, flex: 1 },
+  page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 140 },
+  content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
+  backRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
@@ -519,8 +497,6 @@ const styles = createThemedStyleSheet((colors) => ({
   summaryMeta: { color: colors.textMuted, fontSize: 12 },
   primaryAction: { alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.xl },
   primaryActionText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' },
-  currencyRow: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.md, padding: spacing.lg },
-  currencyHint: { color: colors.textMuted, fontSize: 12 },
   formCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.xl },
   formHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' },

@@ -577,6 +577,7 @@ function AuthenticatedApp({
         onExternalActionHandled={clearPendingCareAction}
         onDashboardLoaded={handleWidgetDashboardLoaded}
         onOpenBabyProfile={() => changeSection('baby')}
+        onOpenExpenses={() => changeSection('expenses')}
         repository={supabaseCareRepository}
         summaryRepository={supabaseCareSummaryRepository}
         storiesContent={
