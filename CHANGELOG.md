@@ -27,6 +27,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.10.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.9.0...niduna-v1.10.0) (2026-09-26)
+
+
+### Nuevas funciones
+
+* estimate next feeding window ([70e33e7](https://github.com/alejandrobolano/niduna/commit/70e33e79d4a1b8b43069f62dd54fbd070b7620c0))
+* estimate next feeding window ([fb4b274](https://github.com/alejandrobolano/niduna/commit/fb4b274140aab07e677cc3a5d0dbd7fc1478439f))
+
 ## [1.9.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.8.0...niduna-v1.9.0) (2026-09-23)
 
 
