@@ -576,6 +576,7 @@ function AuthenticatedApp({
         onDashboardLoaded={handleWidgetDashboardLoaded}
         onOpenBabyProfile={() => changeSection('baby')}
         repository={supabaseCareRepository}
+        summaryRepository={supabaseCareSummaryRepository}
         storiesContent={
           context.activeBaby ? (
             <FamilyStoriesStrip
