@@ -22,6 +22,8 @@ import { supabaseBabyDocumentRepository } from '@/features/baby-documents/infras
 import { BabyDocumentsScreen } from '@/features/baby-documents/presentation/baby-documents-screen';
 import { supabaseBabyContactRepository } from '@/features/baby-contacts/infrastructure/supabase-baby-contact-repository';
 import { BabyContactsScreen } from '@/features/baby-contacts/presentation/baby-contacts-screen';
+import { supabaseBabyExpenseRepository } from '@/features/baby-expenses/infrastructure/supabase-baby-expense-repository';
+import { BabyExpensesScreen } from '@/features/baby-expenses/presentation/baby-expenses-screen';
 import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
 import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
@@ -575,6 +577,7 @@ function AuthenticatedApp({
         onExternalActionHandled={clearPendingCareAction}
         onDashboardLoaded={handleWidgetDashboardLoaded}
         onOpenBabyProfile={() => changeSection('baby')}
+        onOpenExpenses={() => changeSection('expenses')}
         repository={supabaseCareRepository}
         summaryRepository={supabaseCareSummaryRepository}
         storiesContent={
@@ -669,6 +672,21 @@ function AuthenticatedApp({
     );
   }
 
+  if (activeSection === 'expenses' && context.activeBaby) {
+    return renderAppScreen(
+      <BabyExpensesScreen
+        babyId={context.activeBaby.id}
+        babyName={context.activeBaby.name}
+        familyId={activeFamily.id}
+        familyRole={activeFamily.role}
+        onBack={() => changeSection('baby')}
+        repository={supabaseBabyExpenseRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
   if (activeSection === 'baby' && !context.activeBaby && !canManageBabies) {
     return renderAppScreen(
       <FamilyScreen
@@ -710,6 +728,7 @@ function AuthenticatedApp({
           : undefined}
         onOpenDocuments={activeBabyId ? () => changeSection('documents') : undefined}
         onOpenContacts={activeBabyId ? () => changeSection('contacts') : undefined}
+        onOpenExpenses={activeBabyId ? () => changeSection('expenses') : undefined}
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}
@@ -737,6 +756,7 @@ function resolveInitialSection(value: string | undefined): AppSection {
     value === 'baby' ||
     value === 'documents' ||
     value === 'contacts' ||
+    value === 'expenses' ||
     value === 'family' ||
     value === 'activity'
     ? value

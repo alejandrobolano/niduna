@@ -32,6 +32,7 @@ const entityLabels = {
   baby: 'Bebé',
   baby_contact: 'Contacto',
   baby_document: 'Documento',
+  baby_expense: 'Gasto',
   baby_note: 'Nota',
   care_event: 'Cuidado',
   family_member: 'Familia',

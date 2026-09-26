@@ -17,6 +17,8 @@ import { supabaseDataExportRepository } from '@/features/data-export/infrastruct
 import { DataExportAction } from '@/features/data-export/presentation/data-export-action';
 import { supabaseFamilyBabyContextRepository } from '@/features/family/infrastructure/supabase-family-baby-context-repository';
 import { FeedingVolumePreferenceControl } from '@/features/care/presentation/feeding-volume-preference-control';
+import { supabaseBabyExpenseRepository } from '@/features/baby-expenses/infrastructure/supabase-baby-expense-repository';
+import { FamilyExpenseCurrencyControl } from '@/features/baby-expenses/presentation/family-expense-currency-control';
 import { FamilyBabyContextErrorScreen } from '@/features/family/presentation/family-baby-switcher';
 import { useFamilyBabyContext } from '@/features/family/presentation/use-family-baby-context';
 import { pushPermissionService } from '@/features/notifications/infrastructure/push-permission-service';
@@ -113,6 +115,14 @@ function AuthenticatedSettings({
         <View style={styles.preferencesContent}>
           <ThemePreferenceControl />
           <FeedingVolumePreferenceControl />
+          {activeFamily ? (
+            <FamilyExpenseCurrencyControl
+              familyId={activeFamily.id}
+              familyName={activeFamily.name}
+              familyRole={activeFamily.role}
+              repository={supabaseBabyExpenseRepository}
+            />
+          ) : null}
         </View>
       }
       dangerContent={
