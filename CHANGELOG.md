@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* muestra en Relevo un rango orientativo para la siguiente toma según el ritmo registrado durante las últimas 24 horas
 * permite elegir entre mililitros y onzas líquidas de EE. UU. para introducir y consultar cantidades de alimentación
 * permite reutilizar las cantidades de las tres últimas tomas medidas al registrar una alimentación
 * permite guardar en PDF el resumen de 24 horas, 7 o 30 días con comparativa, ritmo de cuidados y evolución de medidas

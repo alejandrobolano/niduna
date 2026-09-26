@@ -32,6 +32,11 @@ import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { getBabyWeightProgress } from '@/features/care/application/baby-weight-progress';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type { CareRepository } from '@/features/care/application/care-repository';
+import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
+import {
+  createCareSummaryRange,
+  type DailyCareSummary,
+} from '@/features/care-summary/domain/daily-care-summary';
 import {
   getCareSnapshot,
   getDurationMinutes,
@@ -45,11 +50,13 @@ import type {
 } from '@/features/care/domain/care-event';
 import { formatCareEventRecency } from '@/features/care/domain/care-time';
 import { formatFeedingVolume, type FeedingVolumeUnit } from '@/features/care/domain/feeding-volume';
+import { createFeedingRhythmEstimate } from '@/features/care/domain/feeding-rhythm-estimate';
 import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
 import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
+import { FeedingRhythmInfo } from '@/features/care/presentation/feeding-rhythm-info';
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
@@ -94,12 +101,14 @@ interface CareHandoffScreenProps {
   onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
   repository: CareRepository;
+  summaryRepository: CareSummaryRepository;
   storiesContent?: ReactNode;
   topContent?: ReactNode;
   userId: string;
 }
 
 interface SummaryCardProps {
+  accessory?: ReactNode;
   accent: string;
   detail: string;
   icon: LucideIcon;
@@ -108,6 +117,7 @@ interface SummaryCardProps {
 }
 
 function SummaryCard({
+  accessory,
   accent,
   detail,
   icon: Icon,
@@ -122,7 +132,8 @@ function SummaryCard({
         >
           <Icon color={accent} size={16} />
         </View>
-        <Text style={styles.summaryTitle}>{title}</Text>
+        <Text numberOfLines={1} style={styles.summaryTitle}>{title}</Text>
+        {accessory}
       </View>
       <Text style={styles.summaryValue}>{value}</Text>
       <Text style={styles.summaryDetail}>{detail}</Text>
@@ -561,6 +572,7 @@ function QuickActionPicker({
 
 function DashboardContent({
   dashboard,
+  feedingSummary,
   isRefreshing,
   now,
   onAction,
@@ -568,8 +580,10 @@ function DashboardContent({
   onQuickActionsLayout,
   onRefresh,
   storiesContent,
+  userId,
 }: {
   dashboard: CareDashboard;
+  feedingSummary?: DailyCareSummary['feeding'];
   isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
@@ -577,6 +591,7 @@ function DashboardContent({
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
   storiesContent?: ReactNode;
+  userId: string;
 }) {
   const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const { width } = useWindowDimensions();
@@ -588,6 +603,11 @@ function DashboardContent({
     [dashboard.events],
   );
   const feeding = snapshot.latestFeeding;
+  const feedingRhythmEstimate = createFeedingRhythmEstimate({
+    averageIntervalMinutes: feedingSummary?.averageIntervalMinutes,
+    feedingCount: feedingSummary?.count ?? 0,
+    latestFeedingAt: feeding?.occurredAt,
+  });
   const diaper = snapshot.latestDiaper;
   const openSleep = snapshot.openSleep;
   const finishedSleep = snapshot.latestFinishedSleep;
@@ -672,6 +692,14 @@ function DashboardContent({
 
       <View style={styles.summaryGrid}>
         <SummaryCard
+          accessory={feedingRhythmEstimate ? (
+            <FeedingRhythmInfo
+              babyId={dashboard.baby.id}
+              estimate={feedingRhythmEstimate}
+              now={now}
+              userId={userId}
+            />
+          ) : undefined}
           accent={colors.coral}
           detail={feeding ? getFeedingDetail(feeding, feedingVolumeUnit) : 'Todavía sin registros'}
           icon={Milk}
@@ -837,11 +865,13 @@ export function CareHandoffScreen({
   onDashboardLoaded,
   onOpenBabyProfile,
   repository,
+  summaryRepository,
   storiesContent,
   topContent,
   userId,
 }: CareHandoffScreenProps) {
   const [dashboard, setDashboard] = useState<CareDashboard | null>();
+  const [feedingSummary, setFeedingSummary] = useState<DailyCareSummary['feeding']>();
   const [isLoading, setIsLoading] = useState(Boolean(selectedBabyId));
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -893,6 +923,28 @@ export function CareHandoffScreen({
       active = false;
     };
   }, [loadAttempt, onDashboardLoaded, repository, selectedBabyId, userId]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!selectedBabyId) {
+      return () => { active = false; };
+    }
+
+    void summaryRepository
+      .loadSummary({
+        babyId: selectedBabyId,
+        ...createCareSummaryRange('24h'),
+      })
+      .then((summary) => {
+        if (active) setFeedingSummary(summary.feeding);
+      })
+      .catch(() => {
+        if (active) setFeedingSummary(undefined);
+      });
+
+    return () => { active = false; };
+  }, [loadAttempt, selectedBabyId, summaryRepository]);
 
   const babyId = dashboard?.baby.id;
 
@@ -1058,6 +1110,7 @@ export function CareHandoffScreen({
           {topContent}
           <DashboardContent
             dashboard={dashboard}
+            feedingSummary={feedingSummary}
             isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
@@ -1065,6 +1118,7 @@ export function CareHandoffScreen({
             onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
             storiesContent={storiesContent}
+            userId={userId}
           />
         </View>
       </ScrollView>
@@ -1196,6 +1250,7 @@ const styles = createThemedStyleSheet((colors) => ({
   },
   summaryTitle: {
     color: colors.textMuted,
+    flexShrink: 1,
     fontSize: 13,
     fontWeight: '800',
   },

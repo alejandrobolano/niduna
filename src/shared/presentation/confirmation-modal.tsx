@@ -24,6 +24,7 @@ interface ConfirmationModalProps {
   isPending?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  showCancel?: boolean;
   title: string;
   tone?: ConfirmationTone;
   visible: boolean;
@@ -40,6 +41,7 @@ export function ConfirmationModal({
   isPending = false,
   onCancel,
   onConfirm,
+  showCancel = true,
   title,
   tone = 'primary',
   visible,
@@ -110,18 +112,20 @@ export function ConfirmationModal({
           {children}
 
           <View style={styles.actions}>
-            <Pressable
-              accessibilityRole="button"
-              disabled={isPending}
-              onPress={close}
-              style={({ pressed }) => [
-                styles.button,
-                styles.cancelButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
-            </Pressable>
+            {showCancel ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={isPending}
+                onPress={close}
+                style={({ pressed }) => [
+                  styles.button,
+                  styles.cancelButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.cancelText}>{cancelLabel}</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               accessibilityRole="button"
               disabled={isPending}
