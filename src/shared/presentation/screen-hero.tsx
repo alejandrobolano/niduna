@@ -48,6 +48,37 @@ export function ScreenHero({
   const { width } = useWindowDimensions();
   const compact = width < 640;
 
+  if (compact && compactStack) {
+    return (
+      <View
+        style={[
+          styles.hero,
+          styles.heroCompact,
+          styles.heroCompactStack,
+          { backgroundColor: colors[backgroundByTone[tone]] },
+        ]}
+      >
+        <View style={styles.compactHeading}>
+          {leading ? <View style={styles.compactLeading}>{leading}</View> : null}
+          <View style={styles.compactTitleGroup}>
+            <Text
+              style={[
+                styles.eyebrow,
+                { color: colors[accentByTone[tone]] },
+              ]}
+            >
+              {eyebrow}
+            </Text>
+            <Text style={[styles.title, styles.titleCompact]}>{title}</Text>
+          </View>
+        </View>
+        <Text style={styles.subtitle}>{subtitle}</Text>
+        {children}
+        {trailing ? <View style={styles.compactTrailing}>{trailing}</View> : null}
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -80,6 +111,15 @@ export function ScreenHero({
 const styles = createThemedStyleSheet((colors) => ({
   copy: { flex: 1, gap: spacing.sm, zIndex: 1 },
   copyStack: { alignSelf: 'stretch', flex: 0 },
+  compactHeading: {
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  compactLeading: { flexShrink: 0 },
+  compactTitleGroup: { flex: 1, gap: spacing.xs, minWidth: 0 },
+  compactTrailing: { alignSelf: 'stretch', marginTop: spacing.xs },
   eyebrow: {
     fontSize: 11,
     fontWeight: '900',

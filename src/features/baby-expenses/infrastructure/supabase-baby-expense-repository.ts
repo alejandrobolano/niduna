@@ -18,6 +18,9 @@ function mapError(error?: { code?: string; message?: string } | null): BabyExpen
   if (error?.code === '22023' || error?.message?.includes('invalid')) {
     return new BabyExpenseError('invalid');
   }
+  if (error?.message?.includes('recovery_expired')) {
+    return new BabyExpenseError('recovery_expired');
+  }
   return new BabyExpenseError('unavailable');
 }
 

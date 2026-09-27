@@ -35,6 +35,7 @@ export type BabyExpenseErrorReason =
   | 'currency_locked'
   | 'invalid'
   | 'not_allowed'
+  | 'recovery_expired'
   | 'unavailable';
 
 export class BabyExpenseError extends Error {
@@ -57,4 +58,21 @@ export interface BabyExpenseRepository {
   save(babyId: string, draft: BabyExpenseDraft, expenseId?: string): Promise<string>;
   setCurrency(familyId: string, currency: string): Promise<void>;
   setRetired(expenseId: string, retired: boolean): Promise<void>;
+}
+
+export function removeExpenseFromPage(
+  current: BabyExpensePage,
+  expense: BabyExpense,
+): BabyExpensePage {
+  const expenses = current.expenses.filter((item) => item.id !== expense.id);
+  if (expenses.length === current.expenses.length) return current;
+
+  const totalCount = Math.max(0, current.totalCount - 1);
+  return {
+    ...current,
+    expenses,
+    totalAmountMinor: Math.max(0, current.totalAmountMinor - expense.amountMinor),
+    totalCount,
+    totalPages: Math.max(1, Math.ceil(totalCount / current.pageSize)),
+  };
 }

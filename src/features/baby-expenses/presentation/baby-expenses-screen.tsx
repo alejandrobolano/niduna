@@ -30,6 +30,7 @@ import {
   type BabyExpensePage,
   type BabyExpensePageSize,
   type BabyExpenseRepository,
+  removeExpenseFromPage,
 } from '@/features/baby-expenses/application/baby-expense-repository';
 import {
   createExpensePresetRange,
@@ -88,6 +89,9 @@ function errorMessage(error: unknown): string {
   }
   if (error instanceof BabyExpenseError && error.reason === 'invalid') {
     return 'Revisa el importe, la fecha y los datos del gasto.';
+  }
+  if (error instanceof BabyExpenseError && error.reason === 'recovery_expired') {
+    return 'Este gasto superó los 30 días de recuperación y ya no puede restaurarse.';
   }
   return 'No pudimos completar la acción. Comprueba la conexión e inténtalo de nuevo.';
 }
@@ -256,12 +260,24 @@ export function BabyExpensesScreen({
 
   async function changeRetirement() {
     if (!confirming) return;
+    const expense = confirming;
+    const previousResult = result;
+    const nextResult = previousResult
+      ? removeExpenseFromPage(previousResult, expense)
+      : undefined;
+
+    setConfirming(undefined);
+    setError(undefined);
+    if (nextResult) {
+      setResult(nextResult);
+      if (page > nextResult.totalPages) setPage(nextResult.totalPages);
+    }
     setIsSaving(true);
     try {
-      await repository.setRetired(confirming.id, !confirming.retiredAt);
-      setConfirming(undefined);
+      await repository.setRetired(expense.id, !expense.retiredAt);
       setReloadVersion((value) => value + 1);
     } catch (reason) {
+      if (previousResult) setResult(previousResult);
       setError(errorMessage(reason));
     } finally {
       setIsSaving(false);
@@ -378,25 +394,33 @@ export function BabyExpensesScreen({
             ))}
           </View>
           {preset === 'custom' ? (
-            <View style={styles.filterGrid}>
-              <DatePickerField label="Desde" maximumDate={range.endDate} onChange={(startDate) => { setRange((current) => ({ ...current, startDate })); setPage(1); }} value={range.startDate} />
-              <DatePickerField
-                label="Hasta"
-                maximumDate={dateToIso(new Date())}
-                onChange={(endDate) => {
-                  setRange((current) => ({
-                    endDate,
-                    startDate: current.startDate > endDate ? endDate : current.startDate,
-                  }));
-                  setPage(1);
-                }}
-                value={range.endDate}
-              />
+            <View style={[styles.filterGrid, compact && styles.filterGridCompact]}>
+              <View style={[styles.filterField, compact && styles.filterFieldCompact]}>
+                <DatePickerField label="Desde" maximumDate={range.endDate} onChange={(startDate) => { setRange((current) => ({ ...current, startDate })); setPage(1); }} value={range.startDate} />
+              </View>
+              <View style={[styles.filterField, compact && styles.filterFieldCompact]}>
+                <DatePickerField
+                  label="Hasta"
+                  maximumDate={dateToIso(new Date())}
+                  onChange={(endDate) => {
+                    setRange((current) => ({
+                      endDate,
+                      startDate: current.startDate > endDate ? endDate : current.startDate,
+                    }));
+                    setPage(1);
+                  }}
+                  value={range.endDate}
+                />
+              </View>
             </View>
           ) : null}
-          <View style={styles.filterGrid}>
-            <SelectField label="Categoría" onChange={(value) => { setCategory(value); setPage(1); }} options={categoryFilterOptions} placeholder="Todas" title="Filtrar por categoría" value={category} />
-            <SelectField label="Pagado por" onChange={(value) => { setPayerId(value); setPage(1); }} options={payerFilterOptions} placeholder="Todos" title="Filtrar por persona" value={payerId} />
+          <View style={[styles.filterGrid, compact && styles.filterGridCompact]}>
+            <View style={[styles.filterField, compact && styles.filterFieldCompact]}>
+              <SelectField label="Categoría" onChange={(value) => { setCategory(value); setPage(1); }} options={categoryFilterOptions} placeholder="Todas" title="Filtrar por categoría" value={category} />
+            </View>
+            <View style={[styles.filterField, compact && styles.filterFieldCompact]}>
+              <SelectField label="Pagado por" onChange={(value) => { setPayerId(value); setPage(1); }} options={payerFilterOptions} placeholder="Todos" title="Filtrar por persona" value={payerId} />
+            </View>
           </View>
           <View style={styles.filterActions}>
             <Pressable onPress={() => { setRetired((value) => !value); setPage(1); }} style={styles.secondaryAction}>
@@ -478,7 +502,7 @@ export function BabyExpensesScreen({
         confirmLabel={confirming?.retiredAt ? 'Restaurar' : 'Retirar'}
         description={confirming?.retiredAt
           ? 'El gasto volverá al listado y a los totales.'
-          : 'El gasto dejará de aparecer en los totales, pero conservará su auditoría.'}
+          : 'El gasto dejará de aparecer en los totales. Podrás restaurarlo durante 30 días; después se eliminará definitivamente.'}
         isPending={isSaving}
         icon={<ReceiptText color={colors.coral} size={24} />}
         onCancel={() => setConfirming(undefined)}
@@ -496,8 +520,8 @@ const styles = createThemedStyleSheet((colors) => ({
   page: { paddingBottom: 120 },
   content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
   heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 58, justifyContent: 'center', width: 58 },
-  backButton: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backButtonText: { color: colors.primaryPressed, fontWeight: '900' },
+  backButton: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.pill, justifyContent: 'center', minHeight: 46, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  backButtonText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
@@ -513,12 +537,15 @@ const styles = createThemedStyleSheet((colors) => ({
   saveAction: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52 },
   saveActionText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' },
   filtersCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.lg },
-  presetRow: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, padding: spacing.xs },
-  chip: { alignItems: 'center', borderRadius: radius.pill, flexGrow: 1, minHeight: 44, minWidth: 110, justifyContent: 'center', paddingHorizontal: spacing.md },
+  presetRow: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.xs, padding: spacing.xs },
+  chip: { alignItems: 'center', borderRadius: radius.pill, flex: 1, justifyContent: 'center', minHeight: 44, minWidth: 0, paddingHorizontal: spacing.sm },
   chipSelected: { backgroundColor: colors.primaryPressed },
   chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
   chipTextSelected: { color: colors.onAccent },
-  filterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
+  filterGrid: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.lg },
+  filterGridCompact: { flexDirection: 'column' },
+  filterField: { flex: 1, minWidth: 0 },
+  filterFieldCompact: { flexBasis: '100%', width: '100%' },
   filterActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   secondaryAction: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 46, paddingHorizontal: spacing.lg },
   secondaryActionText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
