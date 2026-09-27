@@ -334,40 +334,52 @@ export function BabyExpensesScreen({
                 <X color={colors.text} size={20} />
               </Pressable>
             </View>
-            <View style={styles.formGrid}>
-              <ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} />
-              <ProfileField
-                error={validation.amount}
-                keyboardType="decimal-pad"
-                label={`Importe (${currency})`}
-                onChangeText={setAmount}
-                value={amount}
-              />
-              <SelectField
-                label="Categoría"
-                onChange={setDraftCategory}
-                options={categoryOptions}
-                placeholder="Categoría"
-                title="Categoría del gasto"
-                value={draftCategory}
-              />
-              <SelectField
-                error={validation.payer}
-                label="Pagado por"
-                onChange={setDraftPayerId}
-                options={payerOptions}
-                placeholder="Persona"
-                title="¿Quién pagó?"
-                value={draftPayerId}
-              />
-              <DatePickerField
-                error={validation.date}
-                label="Fecha"
-                maximumDate={dateToIso(new Date())}
-                onChange={setExpenseDate}
-                value={expenseDate}
-              />
-              <ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} />
+            <View style={[styles.formGrid, compact && styles.formGridCompact]}>
+              <View style={[styles.formField, compact && styles.formFieldCompact]}>
+                <ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} />
+              </View>
+              <View style={[styles.formField, compact && styles.formFieldCompact]}>
+                <ProfileField
+                  error={validation.amount}
+                  keyboardType="decimal-pad"
+                  label={`Importe (${currency})`}
+                  onChangeText={setAmount}
+                  value={amount}
+                />
+              </View>
+              <View style={[styles.formField, compact && styles.formFieldCompact]}>
+                <SelectField
+                  label="Categoría"
+                  onChange={setDraftCategory}
+                  options={categoryOptions}
+                  placeholder="Categoría"
+                  title="Categoría del gasto"
+                  value={draftCategory}
+                />
+              </View>
+              <View style={[styles.formField, compact && styles.formFieldCompact]}>
+                <SelectField
+                  error={validation.payer}
+                  label="Pagado por"
+                  onChange={setDraftPayerId}
+                  options={payerOptions}
+                  placeholder="Persona"
+                  title="¿Quién pagó?"
+                  value={draftPayerId}
+                />
+              </View>
+              <View style={[styles.formField, compact && styles.formFieldCompact]}>
+                <DatePickerField
+                  error={validation.date}
+                  label="Fecha"
+                  maximumDate={dateToIso(new Date())}
+                  onChange={setExpenseDate}
+                  value={expenseDate}
+                />
+              </View>
+              <View style={[styles.formField, styles.formFieldWide, compact && styles.formFieldCompact]}>
+                <ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} />
+              </View>
             </View>
             <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>
               {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>Guardar gasto</Text>}
@@ -376,10 +388,10 @@ export function BabyExpensesScreen({
           ) : null}
 
           <View style={styles.filtersCard}>
-          <View style={styles.presetRow}>
+          <View style={[styles.presetRow, compact && styles.presetRowCompact]}>
             {([['month', 'Este mes'], ['30d', 'Últimos 30 días'], ['custom', 'Personalizado']] as const).map(([value, label]) => (
-              <Pressable key={value} onPress={() => selectPreset(value)} style={[styles.chip, preset === value && styles.chipSelected]}>
-                <Text style={[styles.chipText, preset === value && styles.chipTextSelected]}>{label}</Text>
+              <Pressable key={value} onPress={() => selectPreset(value)} style={[styles.chip, compact && styles.chipCompact, preset === value && styles.chipSelected]}>
+                <Text style={[styles.chipText, compact && styles.chipTextCompact, preset === value && styles.chipTextSelected]}>{label}</Text>
               </Pressable>
             ))}
           </View>
@@ -521,18 +533,25 @@ const styles = createThemedStyleSheet((colors) => ({
   formHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' },
   formGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
+  formGridCompact: { flexDirection: 'column' },
+  formField: { flexBasis: 300, flexGrow: 1, minWidth: 0 },
+  formFieldCompact: { flexBasis: 'auto', flexGrow: 0, width: '100%' },
+  formFieldWide: { flexBasis: 620 },
   saveAction: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52 },
   saveActionText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' },
   filtersCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.lg },
   presetRow: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.xs, padding: spacing.xs },
+  presetRowCompact: { gap: 2, padding: 3 },
   chip: { alignItems: 'center', borderRadius: radius.pill, flex: 1, justifyContent: 'center', minHeight: 44, minWidth: 0, paddingHorizontal: spacing.sm },
+  chipCompact: { minHeight: 42, paddingHorizontal: spacing.xs },
   chipSelected: { backgroundColor: colors.primaryPressed },
   chipText: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
+  chipTextCompact: { fontSize: 11, textAlign: 'center' },
   chipTextSelected: { color: colors.onAccent },
   filterGrid: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.lg },
   filterGridCompact: { flexDirection: 'column' },
   filterField: { flex: 1, minWidth: 0 },
-  filterFieldCompact: { flexBasis: '100%', width: '100%' },
+  filterFieldCompact: { flex: 0, width: '100%' },
   filterActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   secondaryAction: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 46, paddingHorizontal: spacing.lg },
   secondaryActionText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
