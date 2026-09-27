@@ -67,7 +67,7 @@ export type Database = {
           avatar_path: string | null;
           created_at: string;
           display_name: string | null;
-          expense_display_currency: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN' | 'CUP';
+          expense_display_currency: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN';
           feeding_volume_unit: 'ml' | 'us_oz';
           id: string;
           updated_at: string;
@@ -76,7 +76,7 @@ export type Database = {
           avatar_key?: MemberAvatarKey | null;
           avatar_path?: string | null;
           display_name?: string | null;
-          expense_display_currency?: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN' | 'CUP';
+          expense_display_currency?: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN';
           feeding_volume_unit?: 'ml' | 'us_oz';
           id: string;
         },
@@ -84,7 +84,7 @@ export type Database = {
           avatar_key?: MemberAvatarKey | null;
           avatar_path?: string | null;
           display_name?: string | null;
-          expense_display_currency?: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN' | 'CUP';
+          expense_display_currency?: 'EUR' | 'USD' | 'GBP' | 'CAD' | 'MXN';
           feeding_volume_unit?: 'ml' | 'us_oz';
         }
       >;

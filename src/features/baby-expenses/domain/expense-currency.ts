@@ -1,4 +1,4 @@
-export const expenseCurrencies = ['EUR', 'USD', 'GBP', 'CAD', 'MXN', 'CUP'] as const;
+export const expenseCurrencies = ['EUR', 'USD', 'GBP', 'CAD', 'MXN'] as const;
 
 export type ExpenseCurrency = (typeof expenseCurrencies)[number];
 

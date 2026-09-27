@@ -11,7 +11,6 @@ const options: { label: string; value: ExpenseCurrency }[] = [
   { label: 'GBP', value: 'GBP' },
   { label: 'CAD', value: 'CAD' },
   { label: 'MXN', value: 'MXN' },
-  { label: 'CUP', value: 'CUP' },
 ];
 
 export function ExpenseCurrencyPreferenceControl() {
