@@ -5,5 +5,6 @@ export type AppSection =
   | 'baby'
   | 'documents'
   | 'contacts'
+  | 'expenses'
   | 'family'
   | 'activity';

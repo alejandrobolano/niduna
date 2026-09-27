@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* incorpora un registro de gastos por bebé con moneda de visualización configurable por usuario desde Ajustes, acceso desde Relevo, una interfaz adaptable coherente con Documentos y Contactos, filtros por periodo, categoría y persona, totales, exportación CSV y recuperación de gastos retirados durante 30 días
 * muestra en Relevo un rango orientativo para la siguiente toma según el ritmo registrado durante las últimas 24 horas
 * permite elegir entre mililitros y onzas líquidas de EE. UU. para introducir y consultar cantidades de alimentación
 * permite reutilizar las cantidades de las tres últimas tomas medidas al registrar una alimentación
@@ -20,6 +21,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* corrige el tamaño y la disposición de los filtros y del formulario de gastos en pantallas móviles web y nativas
 * actualiza el widget al volver a la app cuando la unidad de alimentación cambia en otro dispositivo
 * mejora el contraste y la selección visual de las cantidades recientes de alimentación
 * conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial

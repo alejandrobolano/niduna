@@ -6,6 +6,7 @@ import {
   Moon,
   NotebookPen,
   Plus,
+  ReceiptText,
   RefreshCw,
   Scale,
   Star,
@@ -100,6 +101,7 @@ interface CareHandoffScreenProps {
   onExternalActionHandled?: () => void;
   onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
+  onOpenExpenses: () => void;
   repository: CareRepository;
   summaryRepository: CareSummaryRepository;
   storiesContent?: ReactNode;
@@ -346,10 +348,12 @@ function QuickActionsSection({
   compact = false,
   isSleeping,
   onAction,
+  onOpenExpenses,
 }: {
   compact?: boolean;
   isSleeping: boolean;
   onAction: (action: CareAction) => void;
+  onOpenExpenses: () => void;
 }) {
   return (
     <View style={styles.quickActionsSection}>
@@ -476,6 +480,20 @@ function QuickActionsSection({
             {compact ? 'Nota' : 'Añadir nota'}
           </Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenExpenses}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            compact && styles.secondaryActionCompact,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <ReceiptText color={colors.primaryPressed} size={17} />
+          <Text style={styles.secondaryActionLabel}>
+            {compact ? 'Gasto' : 'Añadir gasto'}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -577,6 +595,7 @@ function DashboardContent({
   now,
   onAction,
   onOpenBabyProfile,
+  onOpenExpenses,
   onQuickActionsLayout,
   onRefresh,
   storiesContent,
@@ -588,6 +607,7 @@ function DashboardContent({
   now: Date;
   onAction: (action: CareAction) => void;
   onOpenBabyProfile: () => void;
+  onOpenExpenses: () => void;
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
   storiesContent?: ReactNode;
@@ -684,6 +704,7 @@ function DashboardContent({
             compact={isCompact}
             isSleeping={Boolean(openSleep)}
             onAction={onAction}
+            onOpenExpenses={onOpenExpenses}
           />
         </View>
       ) : null}
@@ -864,6 +885,7 @@ export function CareHandoffScreen({
   onExternalActionHandled,
   onDashboardLoaded,
   onOpenBabyProfile,
+  onOpenExpenses,
   repository,
   summaryRepository,
   storiesContent,
@@ -1115,6 +1137,7 @@ export function CareHandoffScreen({
             now={now}
             onAction={setAction}
             onOpenBabyProfile={onOpenBabyProfile}
+            onOpenExpenses={onOpenExpenses}
             onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
             storiesContent={storiesContent}

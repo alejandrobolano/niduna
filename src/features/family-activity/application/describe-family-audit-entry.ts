@@ -139,6 +139,17 @@ export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
               : entry.action === 'created'
                 ? 'añadió un documento del bebé'
                 : 'eliminó un documento del bebé';
+  } else if (entry.entityType === 'baby_expense') {
+    action =
+      changeKind === 'retired'
+        ? 'retiró un gasto del bebé'
+        : changeKind === 'restored'
+          ? 'restauró un gasto del bebé'
+          : entry.action === 'created'
+            ? 'añadió un gasto del bebé'
+            : entry.action === 'deleted'
+              ? 'eliminó un gasto del bebé'
+              : 'actualizó un gasto del bebé';
   } else if (entry.entityType === 'measurement') {
     action = describeMeasurement(details, entry.action);
   } else if (entry.entityType === 'family_member') {

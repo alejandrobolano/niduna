@@ -7,6 +7,7 @@ export type FamilyAuditEntityType =
   | 'baby'
   | 'baby_contact'
   | 'baby_document'
+  | 'baby_expense'
   | 'baby_note'
   | 'care_event'
   | 'family_member'
