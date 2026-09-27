@@ -29,6 +29,26 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.11.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.10.0...niduna-v1.11.0) (2026-09-27)
+
+
+### Nuevas funciones
+
+* **expenses:** add baby expenses feature with CRUD operations and UI integration ([74f654d](https://github.com/alejandrobolano/niduna/commit/74f654d6bad3d8b8d92a9374794354eab8b38321))
+* **expenses:** add baby expenses feature with CRUD operations and UI… ([62dd409](https://github.com/alejandrobolano/niduna/commit/62dd409fd7ed0c2f5e3e2d3e97a813715ef3fcf0))
+* **expenses:** implement expense recovery and retention features with UI updates ([dbd100d](https://github.com/alejandrobolano/niduna/commit/dbd100d746786f2061c8674aba288bad93d9dcde))
+
+
+### Correcciones
+
+* **expenses:** adjust mobile layout for expense form and filters ([908cd94](https://github.com/alejandrobolano/niduna/commit/908cd94fb40b1dc44536f57f57d8cf71225b97bf))
+* **expenses:** align screen with baby resources ([37c8aad](https://github.com/alejandrobolano/niduna/commit/37c8aad5853e36c0f2bd4dab5e933e2961137b1e))
+* **expenses:** complete family expense experience ([3ff51a0](https://github.com/alejandrobolano/niduna/commit/3ff51a0d773582d3b7f9ca0fca5ac191f5c0afdf))
+* **expenses:** improve layout and sizing of filters and expense form on mobile screens ([f124cf9](https://github.com/alejandrobolano/niduna/commit/f124cf9d78f497e1f711c09ff34926747df7be9a))
+* **expenses:** polish responsive controls ([20d8b8a](https://github.com/alejandrobolano/niduna/commit/20d8b8aeff9628ca13b36e63cc819f07b3634f64))
+* **expenses:** remove unsupported CUP preference ([1039cfb](https://github.com/alejandrobolano/niduna/commit/1039cfbea2ce863d7414af82ac5590a54ce19d95))
+* **expenses:** unify resource headers and currency display ([2059bf1](https://github.com/alejandrobolano/niduna/commit/2059bf14ff48d5354b1f2987118e361b5e69ca02))
+
 ## [1.10.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.9.0...niduna-v1.10.0) (2026-09-26)
 
 
