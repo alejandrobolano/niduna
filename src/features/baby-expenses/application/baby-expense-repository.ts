@@ -46,8 +46,6 @@ export class BabyExpenseError extends Error {
 
 export interface BabyExpenseRepository {
   exportAll(babyId: string, filters: BabyExpenseFilters): Promise<BabyExpense[]>;
-  isCurrencyLocked(familyId: string): Promise<boolean>;
-  loadCurrency(familyId: string): Promise<string>;
   loadPage(
     babyId: string,
     page: number,
@@ -56,7 +54,6 @@ export interface BabyExpenseRepository {
   ): Promise<BabyExpensePage>;
   loadPayers(familyId: string): Promise<ExpensePayer[]>;
   save(babyId: string, draft: BabyExpenseDraft, expenseId?: string): Promise<string>;
-  setCurrency(familyId: string, currency: string): Promise<void>;
   setRetired(expenseId: string, retired: boolean): Promise<void>;
 }
 

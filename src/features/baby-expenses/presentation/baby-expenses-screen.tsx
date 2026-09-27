@@ -41,6 +41,7 @@ import {
   type ExpensePayer,
 } from '@/features/baby-expenses/domain/baby-expense';
 import { exportBabyExpenseFile } from '@/features/baby-expenses/infrastructure/baby-expense-file';
+import { useExpenseCurrencyPreference } from '@/features/baby-expenses/presentation/expense-currency-preference-provider';
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
@@ -49,7 +50,7 @@ import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
-import { ScreenHero } from '@/shared/presentation/screen-hero';
+import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -108,6 +109,7 @@ export function BabyExpensesScreen({
 }: BabyExpensesScreenProps) {
   const { width } = useWindowDimensions();
   const compact = width < 720;
+  const { currency } = useExpenseCurrencyPreference();
   const initialRange = createExpensePresetRange('month');
   const [preset, setPreset] = useState<RangePreset>('month');
   const [range, setRange] = useState(initialRange);
@@ -118,7 +120,6 @@ export function BabyExpensesScreen({
   const [pageSize, setPageSize] = useState<BabyExpensePageSize>(20);
   const [result, setResult] = useState<BabyExpensePage>();
   const [payers, setPayers] = useState<ExpensePayer[]>([]);
-  const [currency, setCurrency] = useState('EUR');
   const [reloadVersion, setReloadVersion] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -170,15 +171,6 @@ export function BabyExpensesScreen({
     }).catch((reason) => active && setError(errorMessage(reason)));
     return () => { active = false; };
   }, [familyId, repository, userId]);
-
-  useEffect(() => {
-    let active = true;
-    void repository.loadCurrency(familyId).then((nextCurrency) => {
-      if (!active) return;
-      setCurrency(nextCurrency);
-    }).catch((reason) => active && setError(errorMessage(reason)));
-    return () => { active = false; };
-  }, [familyId, repository]);
 
   useEffect(() => {
     let active = true;
@@ -290,7 +282,7 @@ export function BabyExpensesScreen({
     try {
       const expenses = await repository.exportAll(babyId, filters);
       await exportBabyExpenseFile({
-        content: `\uFEFF${createBabyExpenseCsv(expenses, payerNames)}`,
+        content: `\uFEFF${createBabyExpenseCsv(expenses, payerNames, currency)}`,
         fileName: `niduna-gastos-${babyName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${range.startDate}-${range.endDate}.csv`,
       });
     } catch (reason) {
@@ -305,14 +297,12 @@ export function BabyExpensesScreen({
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
-          <ScreenHero
-            compactStack
+          <ResourceScreenHero
             eyebrow="Organización familiar"
-            leading={<View style={styles.heroIcon}><ReceiptText color={colors.aqua} size={30} /></View>}
-            mascot={false}
+            icon={<ReceiptText color={colors.aqua} size={30} />}
+            onBack={onBack}
             subtitle="Registra compras y consulta cuánto habéis gastado por periodo, categoría o persona."
             title={`Gastos de ${babyName}`}
-            trailing={<Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}><Text style={styles.backButtonText}>Volver al bebé</Text></Pressable>}
           />
 
           {error ? <Text accessibilityLiveRegion="polite" style={styles.errorBanner}>{error}</Text> : null}
@@ -469,7 +459,7 @@ export function BabyExpensesScreen({
                   </Text>
                   {expense.notes ? <Text style={styles.expenseNotes}>{expense.notes}</Text> : null}
                 </View>
-                <Text style={styles.expenseAmount}>{formatExpenseAmount(expense.amountMinor, expense.currency)}</Text>
+                <Text style={styles.expenseAmount}>{formatExpenseAmount(expense.amountMinor, currency)}</Text>
                 {canManageBabyExpense(expense, familyRole, userId) ? (
                   <View style={styles.rowActions}>
                     {!expense.retiredAt ? (
@@ -519,9 +509,6 @@ const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { paddingBottom: 120 },
   content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
-  heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 58, justifyContent: 'center', width: 58 },
-  backButton: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.pill, justifyContent: 'center', minHeight: 46, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
-  backButtonText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },

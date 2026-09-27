@@ -93,25 +93,6 @@ export const supabaseBabyExpenseRepository: BabyExpenseRepository = {
     }
   },
 
-  async isCurrencyLocked(familyId) {
-    const { count, error } = await supabase
-      .from('baby_expenses')
-      .select('id', { count: 'exact', head: true })
-      .eq('family_id', familyId);
-    if (error) throw mapError(error);
-    return (count ?? 0) > 0;
-  },
-
-  async loadCurrency(familyId) {
-    const { data, error } = await supabase
-      .from('families')
-      .select('expense_currency')
-      .eq('id', familyId)
-      .single();
-    if (error) throw mapError(error);
-    return data.expense_currency;
-  },
-
   async loadPage(babyId, page, pageSize, filters) {
     const start = (page - 1) * pageSize;
     let query = supabase
@@ -182,14 +163,6 @@ export const supabaseBabyExpenseRepository: BabyExpenseRepository = {
     });
     if (error || !data) throw mapError(error);
     return data;
-  },
-
-  async setCurrency(familyId, currency) {
-    const { error } = await supabase.rpc('set_family_expense_currency', {
-      target_currency: currency,
-      target_family_id: familyId,
-    });
-    if (error) throw mapError(error);
   },
 
   async setRetired(expenseId, retired) {

@@ -14,7 +14,7 @@ import { SelectField, type SelectOption } from '@/features/baby-profile/presenta
 import type { FamilyRole } from '@/features/family/domain/family';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
-import { ScreenHero } from '@/shared/presentation/screen-hero';
+import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
 
 const categoryOptions = [
   { label: 'Informe', value: 'report' },
@@ -151,14 +151,12 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
-          <ScreenHero
-            compactStack
+          <ResourceScreenHero
             eyebrow="Documentación privada"
-            leading={<View style={styles.heroIcon}><FolderOpen color={colors.aqua} size={30} /></View>}
-            mascot={false}
+            icon={<FolderOpen color={colors.aqua} size={30} />}
+            onBack={onBack}
             subtitle="Informes, autorizaciones y carnets disponibles solo para esta familia."
             title={`Documentos de ${babyName}`}
-            trailing={<Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}><Text style={styles.backButtonText}>Volver al bebé</Text></Pressable>}
           />
 
           <View style={styles.formCard}>
@@ -216,7 +214,6 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 }, page: { paddingBottom: 112 }, content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
-  heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.lg, height: 64, justifyContent: 'center', width: 64 }, backButton: { backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.md }, backButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
   formCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 13, marginTop: 3 }, cancelText: { color: colors.error, fontWeight: '800' }, fileButton: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 54, paddingHorizontal: spacing.lg }, fileButtonText: { color: colors.primaryPressed, flex: 1, fontWeight: '800' }, formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, error: { color: colors.error, fontSize: 13, lineHeight: 19 }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.55 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, listHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 44, justifyContent: 'center', width: 44 }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent }, loader: { marginVertical: spacing.xl }, empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl }, emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900' }, emptyText: { color: colors.textMuted, textAlign: 'center' }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg }, gridCompact: { flexDirection: 'column' }, documentCard: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, flexBasis: 360, flexGrow: 1, gap: spacing.md, minWidth: 280, padding: spacing.lg }, documentHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.md }, documentIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 46, justifyContent: 'center', width: 46 }, documentCopy: { flex: 1 }, documentTitle: { color: colors.text, fontSize: 16, fontWeight: '900' }, documentMeta: { color: colors.textMuted, fontSize: 12, lineHeight: 17 }, documentDescription: { color: colors.text, fontSize: 13, lineHeight: 19 }, documentActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, secondaryAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, secondaryActionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '800' }, dangerActionText: { color: colors.error, fontSize: 12, fontWeight: '800' }, retiredLink: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800', textAlign: 'center' },
 }));

@@ -6,6 +6,8 @@ import '@/global.css';
 import { AppUpdateNotificationObserver } from '@/features/app-updates/presentation/app-update-notification-observer';
 import { AuthProvider, useAuth } from '@/features/auth/presentation/auth-provider';
 import { supabaseAuthService } from '@/features/auth/infrastructure/supabase-auth-service';
+import { supabaseExpenseCurrencyPreferenceRepository } from '@/features/baby-expenses/infrastructure/supabase-expense-currency-preference-repository';
+import { ExpenseCurrencyPreferenceProvider } from '@/features/baby-expenses/presentation/expense-currency-preference-provider';
 import { supabaseFeedingVolumePreferenceRepository } from '@/features/care/infrastructure/supabase-feeding-volume-preference-repository';
 import { FeedingVolumePreferenceProvider } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { NativeNotificationObserver } from '@/features/notifications/presentation/native-notification-observer';
@@ -39,10 +41,15 @@ function AuthenticatedApp({ palette, scheme }: { palette: ReturnType<typeof getC
       repository={supabaseFeedingVolumePreferenceRepository}
       userId={session?.user.id}
     >
-      <AppUpdateNotificationObserver />
-      <NativeNotificationObserver />
-      <Stack screenOptions={{ contentStyle: { backgroundColor: palette.background }, headerShown: false }} />
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <ExpenseCurrencyPreferenceProvider
+        repository={supabaseExpenseCurrencyPreferenceRepository}
+        userId={session?.user.id}
+      >
+        <AppUpdateNotificationObserver />
+        <NativeNotificationObserver />
+        <Stack screenOptions={{ contentStyle: { backgroundColor: palette.background }, headerShown: false }} />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      </ExpenseCurrencyPreferenceProvider>
     </FeedingVolumePreferenceProvider>
   );
 }
