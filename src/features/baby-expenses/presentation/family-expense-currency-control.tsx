@@ -1,10 +1,11 @@
+import { LockKeyhole } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import type { BabyExpenseRepository } from '@/features/baby-expenses/application/baby-expense-repository';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
 import type { FamilyRole } from '@/features/family/domain/family';
-import { colors, createThemedStyleSheet, spacing } from '@/shared/presentation/theme';
+import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const currencyOptions = [
   { label: 'Euro (EUR)', value: 'EUR' },
@@ -74,9 +75,21 @@ export function FamilyExpenseCurrencyControl({
           Se aplica a toda {familyName}. Para evitar mezclar importes, no puede cambiarse después del primer gasto.
         </Text>
       </View>
-      {currency ? (
+      {currency && isLocked ? (
+        <View style={styles.lockedValue}>
+          <View style={styles.lockedIcon}>
+            <LockKeyhole color={colors.primaryPressed} size={18} />
+          </View>
+          <View style={styles.lockedCopy}>
+            <Text style={styles.lockedLabel}>Moneda actual</Text>
+            <Text style={styles.lockedCurrency}>
+              {currencyOptions.find((option) => option.value === currency)?.label ?? currency}
+            </Text>
+          </View>
+        </View>
+      ) : currency ? (
         <SelectField
-          disabled={!canChange || isLocked || isSaving}
+          disabled={!canChange || isSaving}
           label="Moneda"
           onChange={(value) => void changeCurrency(value)}
           options={currencyOptions}
@@ -88,7 +101,9 @@ export function FamilyExpenseCurrencyControl({
         <ActivityIndicator color={colors.primaryPressed} />
       )}
       {isLocked ? (
-        <Text style={styles.hint}>Configuración bloqueada porque la familia ya tiene gastos.</Text>
+        <Text style={styles.hint}>
+          La moneda queda protegida después del primer gasto para que los totales no mezclen importes de monedas diferentes.
+        </Text>
       ) : !canChange ? (
         <Text style={styles.hint}>Solo propietarios y administradores pueden cambiarla.</Text>
       ) : null}
@@ -104,4 +119,26 @@ const styles = createThemedStyleSheet((colors) => ({
   description: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   hint: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
   error: { color: colors.error, fontSize: 11, lineHeight: 16 },
+  lockedValue: {
+    alignItems: 'center',
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 68,
+    paddingHorizontal: spacing.md,
+  },
+  lockedIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: 22,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  lockedCopy: { flex: 1, gap: 2 },
+  lockedLabel: { color: colors.textMuted, fontSize: 11, fontWeight: '700' },
+  lockedCurrency: { color: colors.text, fontSize: 15, fontWeight: '800' },
 }));

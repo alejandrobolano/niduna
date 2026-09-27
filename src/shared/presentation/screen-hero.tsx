@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Text, useWindowDimensions, View } from 'react-native';
+import { Platform, Text, useWindowDimensions, View } from 'react-native';
 
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import {
@@ -47,8 +47,9 @@ export function ScreenHero({
 }: ScreenHeroProps) {
   const { width } = useWindowDimensions();
   const compact = width < 640;
+  const useWebCompactLayout = Platform.OS === 'web' && compact && compactStack;
 
-  if (compact && compactStack) {
+  if (useWebCompactLayout) {
     return (
       <View
         style={[
