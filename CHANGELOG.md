@@ -21,7 +21,7 @@ versión correspondiente.
 
 ### Correcciones
 
-* corrige el crecimiento vertical de los filtros y organiza el formulario de gastos en una sola columna en móviles
+* corrige el tamaño y la disposición de los filtros y del formulario de gastos en pantallas móviles web y nativas
 * actualiza el widget al volver a la app cuando la unidad de alimentación cambia en otro dispositivo
 * mejora el contraste y la selección visual de las cantidades recientes de alimentación
 * conserva los registros seleccionados al cambiar de página o de tamaño de página en el historial

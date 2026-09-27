@@ -551,7 +551,12 @@ const styles = createThemedStyleSheet((colors) => ({
   filterGrid: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.lg },
   filterGridCompact: { flexDirection: 'column' },
   filterField: { flex: 1, minWidth: 0 },
-  filterFieldCompact: { flex: 0, width: '100%' },
+  filterFieldCompact: {
+    flexBasis: 'auto',
+    flexGrow: 0,
+    flexShrink: 0,
+    width: '100%',
+  },
   filterActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   secondaryAction: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 46, paddingHorizontal: spacing.lg },
   secondaryActionText: { color: colors.primaryPressed, fontSize: 13, fontWeight: '900' },
