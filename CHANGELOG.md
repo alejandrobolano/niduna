@@ -30,6 +30,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.12.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.11.0...niduna-v1.12.0) (2026-10-01)
+
+
+### Nuevas funciones
+
+* **care:** edit complete sleep intervals ([b6fa551](https://github.com/alejandrobolano/niduna/commit/b6fa5514b9301f5a30717d293ded3aa76efcf7c8))
+* **care:** edit complete sleep intervals ([ec38ff5](https://github.com/alejandrobolano/niduna/commit/ec38ff5e9737d6170a7001d937fccd68ddd84e9c))
+
 ## [1.11.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.10.0...niduna-v1.11.0) (2026-09-27)
 
 
