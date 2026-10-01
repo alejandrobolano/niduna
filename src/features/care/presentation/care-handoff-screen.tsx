@@ -49,7 +49,7 @@ import type {
   FeedingEvent,
   MeasurementEvent,
 } from '@/features/care/domain/care-event';
-import { formatCareEventRecency } from '@/features/care/domain/care-time';
+import { formatCareDuration, formatCareEventRecency } from '@/features/care/domain/care-time';
 import { formatFeedingVolume, type FeedingVolumeUnit } from '@/features/care/domain/feeding-volume';
 import { createFeedingRhythmEstimate } from '@/features/care/domain/feeding-rhythm-estimate';
 import {
@@ -141,18 +141,6 @@ function SummaryCard({
       <Text style={styles.summaryDetail}>{detail}</Text>
     </View>
   );
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return remainingMinutes > 0
-    ? `${hours} h ${remainingMinutes} min`
-    : `${hours} h`;
 }
 
 function formatBabyAgeLabel(birthDate: string | undefined, now: Date): string | undefined {
@@ -286,10 +274,10 @@ function getEventPresentation(event: CareEvent, now: Date, volumeUnit: FeedingVo
   return {
     accent: colors.lavender,
     description: event.endedAt
-      ? `Durmió ${formatDuration(
+      ? `Durmió ${formatCareDuration(
           getDurationMinutes(event.occurredAt, event.endedAt),
         )}`
-      : `Durmiendo ${formatDuration(
+      : `Durmiendo ${formatCareDuration(
           getDurationMinutes(event.occurredAt, now.toISOString()),
         )}`,
     icon: event.icon ?? Moon,
@@ -751,7 +739,7 @@ function DashboardContent({
                   now,
                 ).toLowerCase()}`
               : finishedSleep?.endedAt
-                ? `Duró ${formatDuration(
+                ? `Duró ${formatCareDuration(
                     getDurationMinutes(
                       finishedSleep.occurredAt,
                       finishedSleep.endedAt,

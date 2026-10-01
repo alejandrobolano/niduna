@@ -1,4 +1,19 @@
-import type { CareEvent } from '@/features/care/domain/care-event';
+import type { CareEvent, SleepEvent } from '@/features/care/domain/care-event';
+
+export function createCareRecordTimestamp(
+  date: string,
+  hour: string,
+  minute: string,
+): string {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(
+    year,
+    month - 1,
+    day,
+    Number(hour),
+    Number(minute),
+  ).toISOString();
+}
 
 export function getCareRecordKey(event: CareEvent): string {
   return `${event.sourceType}:${event.id}`;
@@ -82,14 +97,17 @@ export function replaceCareRecordOccurrence(
   hour: string,
   minute: string,
 ): CareEvent {
-  const [year, month, day] = date.split('-').map(Number);
-  const occurredAt = new Date(
-    year,
-    month - 1,
-    day,
-    Number(hour),
-    Number(minute),
-  ).toISOString();
+  return { ...event, occurredAt: createCareRecordTimestamp(date, hour, minute) };
+}
 
-  return { ...event, occurredAt };
+export function replaceSleepInterval(
+  event: SleepEvent,
+  start: { date: string; hour: string; minute: string },
+  end: { date: string; hour: string; minute: string },
+): SleepEvent {
+  return {
+    ...event,
+    endedAt: createCareRecordTimestamp(end.date, end.hour, end.minute),
+    occurredAt: createCareRecordTimestamp(start.date, start.hour, start.minute),
+  };
 }

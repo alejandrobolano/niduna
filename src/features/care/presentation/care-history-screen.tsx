@@ -73,6 +73,37 @@ const filterLabels: Record<CareEventFilter, string> = {
   sleep: 'Sueño',
 };
 
+const shortDateFormatter = new Intl.DateTimeFormat('es-ES', { dateStyle: 'short' });
+const shortTimeFormatter = new Intl.DateTimeFormat('es-ES', {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const shortDateTimeFormatter = new Intl.DateTimeFormat('es-ES', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+});
+
+function formatCareEventMoment(event: CareEvent): string {
+  const start = new Date(event.occurredAt);
+
+  if (event.type !== 'sleep') {
+    return shortDateTimeFormatter.format(start);
+  }
+
+  const startDate = shortDateFormatter.format(start);
+  const startTime = shortTimeFormatter.format(start);
+  if (!event.endedAt) {
+    return `${startDate}\n${startTime} → En curso`;
+  }
+
+  const end = new Date(event.endedAt);
+  const endDate = shortDateFormatter.format(end);
+  const endTime = shortTimeFormatter.format(end);
+  return startDate === endDate
+    ? `${startDate}\n${startTime} → ${endTime}`
+    : `${startDate}, ${startTime}\n→ ${endDate}, ${endTime}`;
+}
+
 export function CareHistoryScreen({
   babyId,
   babyName,
@@ -280,10 +311,7 @@ export function CareHistoryScreen({
     const retention = showRetired
       ? getCareRecordRetention(event.deletedAt)
       : undefined;
-    const occurredAt = new Intl.DateTimeFormat('es-ES', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date(event.occurredAt));
+    const occurredAt = formatCareEventMoment(event);
     const selection = canManage && !showRetired ? (
       <Pressable
         accessibilityLabel={selectedKeys.has(key) ? 'Quitar de la selección' : 'Seleccionar registro'}
@@ -371,7 +399,7 @@ export function CareHistoryScreen({
     return (
       <View key={key} style={styles.row}>
         {selection}
-        <Text style={[styles.cell, styles.dateCell]}>{occurredAt}</Text>
+        <Text style={[styles.cell, styles.dateCell, event.type === 'sleep' && styles.sleepDateCell]}>{occurredAt}</Text>
         <Text style={[styles.cell, styles.typeCell, styles.typeText]}>
           {careEventLabels[event.type]}
         </Text>
@@ -615,6 +643,7 @@ const styles = createThemedStyleSheet((colors) => ({
   headerText: { color: colors.textMuted, fontSize: 10, fontWeight: '900', letterSpacing: 0.5, textTransform: 'uppercase' },
   selectCell: { alignItems: 'center', justifyContent: 'center', width: 42 },
   dateCell: { width: 145 },
+  sleepDateCell: { fontVariant: ['tabular-nums'], lineHeight: 19 },
   typeCell: { width: 120 },
   typeText: { fontWeight: '900' },
   detailCell: { flex: 1, minWidth: 250 },
