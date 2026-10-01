@@ -15,7 +15,12 @@ import {
   SelectField,
   type SelectOption,
 } from '@/features/baby-profile/presentation/select-field';
-import { replaceCareRecordOccurrence } from '@/features/care/application/care-record-management';
+import {
+  createCareRecordTimestamp,
+  replaceCareRecordOccurrence,
+  replaceSleepInterval,
+} from '@/features/care/application/care-record-management';
+import { getDurationMinutes } from '@/features/care/application/care-snapshot';
 import { TimePickerField } from '@/features/care/presentation/time-picker-field';
 import {
   parseHeadCircumferenceMillimeters,
@@ -30,6 +35,7 @@ import type {
   FeedingMethod,
   MeasurementSource,
 } from '@/features/care/domain/care-event';
+import { formatCareDuration } from '@/features/care/domain/care-time';
 import { formatFeedingVolumeInput, getFeedingVolumeInputHint, getFeedingVolumeUnitLabel, parseFeedingVolumeInput } from '@/features/care/domain/feeding-volume';
 import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
@@ -82,9 +88,16 @@ export function CareEditSheet({
 }: CareEditSheetProps) {
   const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const initialOccurrence = new Date(event.occurredAt);
+  const initialEnd = event.type === 'sleep' && event.endedAt
+    ? new Date(event.endedAt)
+    : undefined;
   const [date, setDate] = useState(() => dateToIso(initialOccurrence));
+  const [latestAllowedTimestamp] = useState(() => Date.now());
   const [hour, setHour] = useState(() => String(initialOccurrence.getHours()).padStart(2, '0'));
   const [minute, setMinute] = useState(() => String(initialOccurrence.getMinutes()).padStart(2, '0'));
+  const [endDate, setEndDate] = useState(() => initialEnd ? dateToIso(initialEnd) : '');
+  const [endHour, setEndHour] = useState(() => initialEnd ? String(initialEnd.getHours()).padStart(2, '0') : '00');
+  const [endMinute, setEndMinute] = useState(() => initialEnd ? String(initialEnd.getMinutes()).padStart(2, '0') : '00');
   const [notes, setNotes] = useState(() => event.type === 'note' ? event.content : event.notes ?? '');
   const [feedingMethod, setFeedingMethod] = useState<FeedingMethod>(() => event.type === 'feeding' ? event.method : 'breast');
   const [breastSide, setBreastSide] = useState<BreastSide | undefined>(() => event.type === 'feeding' ? event.breastSide : undefined);
@@ -112,12 +125,36 @@ export function CareEditSheet({
       invalidHeadCircumference ||
       (weightGrams === undefined && lengthMillimeters === undefined && headCircumferenceMillimeters === undefined));
   const invalidNote = event.type === 'note' && !notes.trim();
+  const sleepStart = event.type === 'sleep'
+    ? createCareRecordTimestamp(date, hour, minute)
+    : undefined;
+  const sleepEnd = event.type === 'sleep' && event.endedAt
+    ? createCareRecordTimestamp(endDate, endHour, endMinute)
+    : undefined;
+  const invalidSleepInterval = Boolean(
+    sleepStart && (
+      Date.parse(sleepStart) > latestAllowedTimestamp ||
+      (sleepEnd && (
+        Date.parse(sleepEnd) <= Date.parse(sleepStart) ||
+        Date.parse(sleepEnd) > latestAllowedTimestamp
+      ))
+    ),
+  );
+  const sleepDuration = sleepStart && sleepEnd && !invalidSleepInterval
+    ? formatCareDuration(getDurationMinutes(sleepStart, sleepEnd))
+    : undefined;
 
   async function save() {
-    if (invalidAmount || invalidMeasurement || invalidNote) return;
+    if (invalidAmount || invalidMeasurement || invalidNote || invalidSleepInterval) return;
     setIsSaving(true);
     setError(undefined);
-    let updated = replaceCareRecordOccurrence(event, date, hour, minute);
+    let updated = event.type === 'sleep' && event.endedAt
+      ? replaceSleepInterval(
+          event,
+          { date, hour, minute },
+          { date: endDate, hour: endHour, minute: endMinute },
+        )
+      : replaceCareRecordOccurrence(event, date, hour, minute);
 
     if (updated.type === 'feeding') {
       updated = {
@@ -182,13 +219,39 @@ export function CareEditSheet({
             </Pressable>
           </View>
           <KeyboardAwareScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-            <DatePickerField label="Fecha" maximumDate={dateToIso(new Date())} onChange={setDate} value={date} />
+            <DatePickerField label={event.type === 'sleep' ? 'Fecha de inicio' : 'Fecha'} maximumDate={dateToIso(new Date())} onChange={setDate} value={date} />
             <TimePickerField
               hour={hour}
+              label={event.type === 'sleep' ? 'Hora de inicio' : 'Hora'}
               minute={minute}
               onHourChange={setHour}
               onMinuteChange={setMinute}
+              title={event.type === 'sleep' ? 'Inicio del sueño' : 'Hora del registro'}
             />
+            {event.type === 'sleep' && event.endedAt ? (
+              <>
+                <DatePickerField label="Fecha de fin" maximumDate={dateToIso(new Date())} onChange={setEndDate} value={endDate} />
+                <TimePickerField
+                  hour={endHour}
+                  label="Hora de fin"
+                  minute={endMinute}
+                  onHourChange={setEndHour}
+                  onMinuteChange={setEndMinute}
+                  title="Fin del sueño"
+                />
+                {sleepDuration ? (
+                  <View style={styles.durationSummary}>
+                    <Text style={styles.durationLabel}>Duración calculada</Text>
+                    <Text style={styles.durationValue}>{sleepDuration}</Text>
+                  </View>
+                ) : null}
+              </>
+            ) : null}
+            {event.type === 'sleep' && invalidSleepInterval ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                El final debe ser posterior al inicio y ninguna hora puede estar en el futuro.
+              </Text>
+            ) : null}
             {event.type === 'feeding' ? (
               <>
                 <SelectField label="Tipo de alimentación" onChange={setFeedingMethod} options={feedingOptions} placeholder="Selecciona el tipo" title="Tipo de alimentación" value={feedingMethod} />
@@ -221,7 +284,7 @@ export function CareEditSheet({
               value={notes}
             />
             {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-            <Pressable disabled={isSaving || invalidAmount || invalidMeasurement || invalidNote} onPress={() => void save()} style={[styles.saveButton, (isSaving || invalidAmount || invalidMeasurement || invalidNote) && styles.disabled]}>
+            <Pressable disabled={isSaving || invalidAmount || invalidMeasurement || invalidNote || invalidSleepInterval} onPress={() => void save()} style={[styles.saveButton, (isSaving || invalidAmount || invalidMeasurement || invalidNote || invalidSleepInterval) && styles.disabled]}>
               <Text style={styles.saveText}>{isSaving ? 'Guardando…' : 'Guardar cambios'}</Text>
             </Pressable>
           </KeyboardAwareScrollView>
@@ -241,6 +304,9 @@ const styles = createThemedStyleSheet((colors) => ({
   closeButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 40, justifyContent: 'center', width: 40 },
   form: { gap: spacing.lg, padding: spacing.xl },
   error: { color: colors.error, fontSize: 12, fontWeight: '700' },
+  durationSummary: { alignItems: 'center', backgroundColor: colors.lavenderSoft, borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', padding: spacing.md },
+  durationLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
+  durationValue: { color: colors.text, fontSize: 17, fontWeight: '900' },
   saveButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, minHeight: 54, justifyContent: 'center' },
   disabled: { opacity: 0.48 },
   saveText: { color: colors.onAccent, fontSize: 16, fontWeight: '900' },

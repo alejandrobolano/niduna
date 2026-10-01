@@ -12,16 +12,20 @@ import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presen
 
 interface TimePickerFieldProps {
   hour: string;
+  label?: string;
   minute: string;
   onHourChange: (value: string) => void;
   onMinuteChange: (value: string) => void;
+  title?: string;
 }
 
 export function TimePickerField({
   hour,
+  label = 'Hora',
   minute,
   onHourChange,
   onMinuteChange,
+  title = 'Hora del registro',
 }: TimePickerFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [draftHour, setDraftHour] = useState(hour);
@@ -41,10 +45,10 @@ export function TimePickerField({
 
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>Hora</Text>
+      <Text style={styles.label}>{label}</Text>
       <Pressable
         accessibilityHint="Abre un selector de hora y minutos"
-        accessibilityLabel={`Hora. ${hour}:${minute}`}
+        accessibilityLabel={`${label}. ${hour}:${minute}`}
         accessibilityRole="button"
         onPress={open}
         style={({ pressed }) => [styles.trigger, pressed && styles.pressed]}
@@ -77,7 +81,7 @@ export function TimePickerField({
             <View style={styles.sheetHeader}>
               <View>
                 <Text style={styles.eyebrow}>AJUSTA EL MOMENTO</Text>
-                <Text style={styles.title}>Hora del registro</Text>
+                <Text style={styles.title}>{title}</Text>
               </View>
               <Pressable
                 accessibilityLabel="Cerrar selector de hora"

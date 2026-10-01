@@ -11,6 +11,7 @@ import {
 } from './care-event-description';
 import { getDurationMinutes } from './care-snapshot';
 import type { CareEvent } from '../domain/care-event';
+import { formatCareDuration } from '../domain/care-time';
 import { formatFeedingVolume, type FeedingVolumeUnit } from '../domain/feeding-volume';
 
 export type CareReportColumn = 'date' | 'type' | 'detail' | 'author';
@@ -85,13 +86,6 @@ function summarizeEvents(events: CareEvent[]): CareReportSummary {
   };
 }
 
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  return remainder > 0 ? `${hours} h ${remainder} min` : `${hours} h`;
-}
-
 function formatPeriod(events: CareEvent[]): string {
   if (events.length === 0) return 'Sin registros';
   const times = events.map((event) => Date.parse(event.occurredAt));
@@ -111,7 +105,7 @@ function renderSummaryCards(events: CareEvent[], volumeUnit: FeedingVolumeUnit):
       ? `<article class="summary-card coral">
           <span>ALIMENTACIÓN</span>
           <strong>${summary.feeding.count} ${summary.feeding.count === 1 ? 'toma' : 'tomas'}</strong>
-          <p>${formatFeedingVolume(summary.feeding.totalAmountMilliliters, volumeUnit)} registrados${summary.feeding.averageIntervalMinutes ? ` · intervalo medio ${formatDuration(summary.feeding.averageIntervalMinutes)}` : ''}</p>
+          <p>${formatFeedingVolume(summary.feeding.totalAmountMilliliters, volumeUnit)} registrados${summary.feeding.averageIntervalMinutes ? ` · intervalo medio ${formatCareDuration(summary.feeding.averageIntervalMinutes)}` : ''}</p>
         </article>`
       : '',
     eventTypes.has('diaper')
@@ -124,7 +118,7 @@ function renderSummaryCards(events: CareEvent[], volumeUnit: FeedingVolumeUnit):
     eventTypes.has('sleep')
       ? `<article class="summary-card lavender">
           <span>SUEÑO</span>
-          <strong>${formatDuration(summary.sleepMinutes)}</strong>
+          <strong>${formatCareDuration(summary.sleepMinutes)}</strong>
           <p>Tiempo de sueño finalizado en el período</p>
         </article>`
       : '',

@@ -1,5 +1,6 @@
 import { getDurationMinutes } from './care-snapshot';
 import type { CareEvent } from '../domain/care-event';
+import { formatCareDuration } from '../domain/care-time';
 import { formatFeedingVolume, type FeedingVolumeUnit } from '../domain/feeding-volume';
 
 export const careEventLabels: Record<CareEvent['type'], string> = {
@@ -39,7 +40,7 @@ export function describeCareEvent(event: CareEvent, volumeUnit: FeedingVolumeUni
 
   if (event.type === 'sleep') {
     return event.endedAt
-      ? `${getDurationMinutes(event.occurredAt, event.endedAt)} min`
+      ? formatCareDuration(getDurationMinutes(event.occurredAt, event.endedAt))
       : 'Sueño en curso';
   }
 

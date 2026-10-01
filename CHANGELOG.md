@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* muestra el intervalo completo de cada sueño y permite corregir sus fechas y horas de inicio y fin con una duración legible
 * incorpora un registro de gastos por bebé con moneda de visualización configurable por usuario desde Ajustes, acceso desde Relevo, una interfaz adaptable coherente con Documentos y Contactos, filtros por periodo, categoría y persona, totales, exportación CSV y recuperación de gastos retirados durante 30 días
 * muestra en Relevo un rango orientativo para la siguiente toma según el ritmo registrado durante las últimas 24 horas
 * permite elegir entre mililitros y onzas líquidas de EE. UU. para introducir y consultar cantidades de alimentación
