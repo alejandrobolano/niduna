@@ -34,6 +34,22 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.14.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.13.0...niduna-v1.14.0) (2026-10-06)
+
+
+### Nuevas funciones
+
+* support videos in family moments ([a6c7ba7](https://github.com/alejandrobolano/niduna/commit/a6c7ba790e895a553a04230f532c27f83a6b85d5))
+* vídeos cortos en Momentos familiares ([1c7dcd3](https://github.com/alejandrobolano/niduna/commit/1c7dcd3636ab8a66c47aaaa5705481751fe8783b))
+
+
+### Correcciones
+
+* increase family story video limit ([e1edbce](https://github.com/alejandrobolano/niduna/commit/e1edbce948e8469fdd2aa0bbb950cf17d4a7f17a))
+* read mobile web story videos directly ([40b3fb4](https://github.com/alejandrobolano/niduna/commit/40b3fb485ae72bf5675cf8f4528f0cb7d888116f))
+* start resumable video uploads on web ([28f1300](https://github.com/alejandrobolano/niduna/commit/28f1300ec5338e00b62deeb12d61b45904187dbc))
+* upload story videos reliably ([379ec29](https://github.com/alejandrobolano/niduna/commit/379ec29b1e99cb4303bb99a78f0909c6bdacfb81))
+
 ## [1.13.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.12.0...niduna-v1.13.0) (2026-10-06)
 
 
