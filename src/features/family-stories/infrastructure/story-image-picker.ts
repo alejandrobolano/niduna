@@ -5,12 +5,18 @@ import { Platform } from 'react-native';
 
 import {
   FamilyStoryError,
-  type PreparedStoryImage,
+  type PreparedStoryMedia,
 } from '@/features/family-stories/application/family-story-repository';
 
 const maximumInputBytes = 15 * 1024 * 1024;
-const maximumOutputBytes = 5 * 1024 * 1024;
+const maximumImageBytes = 5 * 1024 * 1024;
 const maximumDimension = 1600;
+const maximumVideoDurationMs = 15_000;
+const supportedVideoMimeTypes = new Set([
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+]);
 
 async function readBytes(uri: string): Promise<ArrayBuffer> {
   if (uri.startsWith('file:') || uri.startsWith('content:')) {
@@ -20,44 +26,46 @@ async function readBytes(uri: string): Promise<ArrayBuffer> {
   const response = await fetch(uri, { cache: 'no-store' });
 
   if (!response.ok && !uri.startsWith('blob:') && !uri.startsWith('data:')) {
-    throw new FamilyStoryError('invalid_image');
+    throw new FamilyStoryError('invalid_media');
   }
 
   return response.arrayBuffer();
 }
 
-export async function pickAndPrepareStoryImage(): Promise<
-  PreparedStoryImage | undefined
-> {
-  if (Platform.OS !== 'web') {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+async function prepareVideo(
+  asset: ImagePicker.ImagePickerAsset,
+): Promise<PreparedStoryMedia> {
+  const mimeType = asset.mimeType?.toLowerCase();
+  const durationMs = asset.duration ?? 0;
 
-    if (!permission.granted) {
-      throw new FamilyStoryError('not_allowed');
-    }
+  if (
+    !mimeType ||
+    !supportedVideoMimeTypes.has(mimeType) ||
+    durationMs < 1 ||
+    durationMs > maximumVideoDurationMs
+  ) {
+    throw new FamilyStoryError('invalid_media');
   }
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    allowsEditing: true,
-    exif: false,
-    mediaTypes: ['images'],
-    quality: 1,
-  });
+  const bytes = await readBytes(asset.uri);
 
-  if (result.canceled) {
-    return undefined;
+  if (bytes.byteLength < 1 || bytes.byteLength > maximumInputBytes) {
+    throw new FamilyStoryError('invalid_media');
   }
 
-  const asset = result.assets[0];
+  return {
+    bytes,
+    durationMs,
+    mediaType: 'video',
+    mimeType: mimeType as PreparedStoryMedia['mimeType'],
+    previewUri: asset.uri,
+    size: bytes.byteLength,
+  };
+}
 
-  if (!asset || asset.type === 'video' || asset.type === 'livePhoto') {
-    throw new FamilyStoryError('invalid_image');
-  }
-
-  if (asset.fileSize && asset.fileSize > maximumInputBytes) {
-    throw new FamilyStoryError('invalid_image');
-  }
-
+async function prepareImage(
+  asset: ImagePicker.ImagePickerAsset,
+): Promise<PreparedStoryMedia> {
   const longestSide = Math.max(asset.width, asset.height);
   const scale = longestSide > maximumDimension
     ? maximumDimension / longestSide
@@ -78,14 +86,52 @@ export async function pickAndPrepareStoryImage(): Promise<
   });
   const bytes = await readBytes(saved.uri);
 
-  if (bytes.byteLength < 1 || bytes.byteLength > maximumOutputBytes) {
-    throw new FamilyStoryError('invalid_image');
+  if (bytes.byteLength < 1 || bytes.byteLength > maximumImageBytes) {
+    throw new FamilyStoryError('invalid_media');
   }
 
   return {
     bytes,
+    mediaType: 'image',
     mimeType: 'image/jpeg',
     previewUri: saved.uri,
     size: bytes.byteLength,
   };
+}
+
+export async function pickAndPrepareStoryMedia(): Promise<
+  PreparedStoryMedia | undefined
+> {
+  if (Platform.OS !== 'web') {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      throw new FamilyStoryError('not_allowed');
+    }
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    allowsEditing: true,
+    exif: false,
+    mediaTypes: ['images', 'videos'],
+    quality: 1,
+    videoMaxDuration: maximumVideoDurationMs / 1000,
+    videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+  });
+
+  if (result.canceled) {
+    return undefined;
+  }
+
+  const asset = result.assets[0];
+
+  if (!asset || asset.type === 'livePhoto') {
+    throw new FamilyStoryError('invalid_media');
+  }
+
+  if (asset.fileSize && asset.fileSize > maximumInputBytes) {
+    throw new FamilyStoryError('invalid_media');
+  }
+
+  return asset.type === 'video' ? prepareVideo(asset) : prepareImage(asset);
 }

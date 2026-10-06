@@ -1,5 +1,7 @@
 import { Image } from 'expo-image';
-import { Camera, Pause, Play, Plus, RefreshCw, ShieldCheck, Trash2, X } from 'lucide-react-native';
+import { useEventListener } from 'expo';
+import { type VideoPlayer, useVideoPlayer, VideoView } from 'expo-video';
+import { Camera, Pause, Play, Plus, RefreshCw, ShieldCheck, Trash2, Volume2, VolumeX, X } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   FamilyStoryError,
   type FamilyStoryRepository,
-  type PreparedStoryImage,
+  type PreparedStoryMedia,
 } from '@/features/family-stories/application/family-story-repository';
 import {
   applyFamilyStoryReaction,
@@ -24,13 +26,17 @@ import {
   type FamilyStoryReaction,
   type FamilyStoryGroup,
 } from '@/features/family-stories/domain/family-story';
-import { pickAndPrepareStoryImage } from '@/features/family-stories/infrastructure/story-image-picker';
+import { pickAndPrepareStoryMedia } from '@/features/family-stories/infrastructure/story-image-picker';
 import { StoryReactionBurst } from '@/features/family-stories/presentation/story-reaction-burst';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 
 const storyDurationMilliseconds = 5_000;
+
+function setVideoMuted(player: VideoPlayer, muted: boolean): void {
+  player.muted = muted;
+}
 
 interface FamilyStoriesStripProps {
   babyId: string;
@@ -41,8 +47,8 @@ interface FamilyStoriesStripProps {
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof FamilyStoryError) {
-    if (error.reason === 'invalid_image') {
-      return 'Elige una foto válida. Niduna admite imágenes de hasta 15 MB.';
+    if (error.reason === 'invalid_media') {
+      return 'Elige una foto válida o un vídeo de hasta 15 segundos y 15 MB.';
     }
 
     if (error.reason === 'not_allowed') {
@@ -51,6 +57,68 @@ function getErrorMessage(error: unknown): string {
   }
 
   return 'No pudimos publicar la historia. Comprueba la conexión e inténtalo de nuevo.';
+}
+
+function StoryVideo({
+  durationMs,
+  isPaused,
+  onEnd,
+  onProgress,
+  url,
+}: {
+  durationMs: number;
+  isPaused: boolean;
+  onEnd: () => void;
+  onProgress: (progress: number) => void;
+  url: string;
+}) {
+  const [isMuted, setIsMuted] = useState(true);
+  const player = useVideoPlayer({ uri: url, useCaching: true }, (videoPlayer) => {
+    videoPlayer.loop = false;
+    videoPlayer.muted = true;
+    videoPlayer.timeUpdateEventInterval = 0.1;
+  });
+
+  useEffect(() => {
+    if (isPaused) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  }, [isPaused, player]);
+
+  useEventListener(player, 'timeUpdate', ({ currentTime }) => {
+    onProgress(Math.min(1, currentTime * 1000 / durationMs));
+  });
+  useEventListener(player, 'playToEnd', onEnd);
+
+  return (
+    <View style={styles.viewerImage}>
+      <VideoView
+        contentFit="contain"
+        nativeControls={false}
+        player={player}
+        style={styles.viewerImage}
+        surfaceType="textureView"
+      />
+      <Pressable
+        accessibilityLabel={isMuted ? 'Activar sonido' : 'Silenciar vídeo'}
+        accessibilityRole="button"
+        onPress={() => {
+          const nextMuted = !isMuted;
+          setVideoMuted(player, nextMuted);
+          setIsMuted(nextMuted);
+        }}
+        style={styles.videoSoundButton}
+      >
+        {isMuted ? (
+          <VolumeX color={colors.white} size={20} />
+        ) : (
+          <Volume2 color={colors.white} size={20} />
+        )}
+      </Pressable>
+    </View>
+  );
 }
 
 function StoryViewer({
@@ -87,6 +155,10 @@ function StoryViewer({
   }, [onViewed, story.id, story.isViewed]);
 
   useEffect(() => {
+    if (story.mediaType === 'video') {
+      return;
+    }
+
     if (isConfirmingRetire || isPaused || isReacting) {
       return;
     }
@@ -113,12 +185,13 @@ function StoryViewer({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [group.stories.length, isConfirmingRetire, isPaused, isReacting, onClose, storyIndex]);
+  }, [group.stories.length, isConfirmingRetire, isPaused, isReacting, onClose, story.mediaType, storyIndex]);
 
   function goBack() {
     if (storyIndex > 0) {
       progressRef.current = 0;
       setProgress(0);
+      setIsPaused(false);
       setStoryIndex((current) => current - 1);
     }
   }
@@ -127,6 +200,7 @@ function StoryViewer({
     if (storyIndex < group.stories.length - 1) {
       progressRef.current = 0;
       setProgress(0);
+      setIsPaused(false);
       setStoryIndex((current) => current + 1);
     } else {
       onClose();
@@ -165,7 +239,21 @@ function StoryViewer({
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible>
       <View style={styles.viewer}>
-        <Image cachePolicy="memory" contentFit="contain" source={story.imageUrl} style={styles.viewerImage} />
+        {story.mediaType === 'video' && story.durationMs ? (
+          <StoryVideo
+            durationMs={story.durationMs}
+            isPaused={isPaused || isConfirmingRetire || isReacting}
+            key={story.id}
+            onEnd={goForward}
+            onProgress={(nextProgress) => {
+              progressRef.current = nextProgress;
+              setProgress(nextProgress);
+            }}
+            url={story.mediaUrl}
+          />
+        ) : (
+          <Image cachePolicy="memory" contentFit="contain" source={story.mediaUrl} style={styles.viewerImage} />
+        )}
         <View style={[styles.progressRow, { top: insets.top + spacing.sm }]}>
           {group.stories.map((candidate, index) => (
             <View key={candidate.id} style={styles.progressTrack}>
@@ -323,7 +411,7 @@ export function FamilyStoriesStrip({
   const [selectedAuthorId, setSelectedAuthorId] = useState<string>();
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
-  const [pendingImage, setPendingImage] = useState<PreparedStoryImage>();
+  const [pendingMedia, setPendingMedia] = useState<PreparedStoryMedia>();
   const [error, setError] = useState<string>();
   const loadPromiseRef = useRef<Promise<void> | undefined>(undefined);
   const viewedStoryIdsRef = useRef(new Set<string>());
@@ -395,15 +483,15 @@ export function FamilyStoriesStrip({
     return () => clearTimeout(timer);
   }, [stories]);
 
-  async function uploadStory(image: PreparedStoryImage) {
+  async function uploadStory(media: PreparedStoryMedia) {
     setIsUploading(true);
 
     try {
-      await repository.create(babyId, image);
-      setPendingImage(undefined);
+      await repository.create(babyId, media);
+      setPendingMedia(undefined);
       await loadStories();
     } catch (caughtError) {
-      setPendingImage(image);
+      setPendingMedia(media);
       setError(getErrorMessage(caughtError));
     } finally {
       setIsUploading(false);
@@ -414,12 +502,12 @@ export function FamilyStoriesStrip({
     setError(undefined);
 
     try {
-      const image = await pickAndPrepareStoryImage();
-      if (!image) {
+      const media = await pickAndPrepareStoryMedia();
+      if (!media) {
         return;
       }
 
-      await uploadStory(image);
+      await uploadStory(media);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
     }
@@ -499,7 +587,7 @@ export function FamilyStoriesStrip({
           <Pressable
             accessibilityLabel="Reintentar"
             disabled={isUploading}
-            onPress={() => pendingImage ? void uploadStory(pendingImage) : void loadStories()}
+            onPress={() => pendingMedia ? void uploadStory(pendingMedia) : void loadStories()}
           >
             <RefreshCw color={colors.error} size={17} />
           </Pressable>
@@ -547,6 +635,7 @@ const styles = createThemedStyleSheet((colors) => ({
   viewerAuthorName: { color: colors.white, fontSize: 14, fontWeight: '900' },
   viewerTime: { color: '#FFFFFFBB', fontSize: 11, fontWeight: '700' },
   viewerIconButton: { alignItems: 'center', backgroundColor: '#00000055', borderRadius: radius.pill, height: 40, justifyContent: 'center', width: 40 },
+  videoSoundButton: { alignItems: 'center', backgroundColor: '#00000088', borderRadius: radius.pill, height: 40, justifyContent: 'center', position: 'absolute', right: spacing.md, top: 92, width: 40 },
   viewerNavigation: { bottom: 132, flexDirection: 'row', left: 0, position: 'absolute', right: 0, top: 84 },
   viewerHalf: { flex: 1 },
   reactionArea: { alignItems: 'center', bottom: 62, gap: spacing.xs, left: spacing.lg, position: 'absolute', right: spacing.lg },

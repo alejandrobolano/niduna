@@ -26,13 +26,14 @@ async function dispatchStoryNotification(storyId: string): Promise<void> {
 }
 
 export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
-  async create(babyId, image) {
+  async create(babyId, media) {
     const { data: preparedRows, error: prepareError } = await supabase.rpc(
-      'prepare_family_story',
+      'prepare_family_story_media',
       {
         target_baby_id: babyId,
-        target_file_size_bytes: image.size,
-        target_mime_type: image.mimeType,
+        target_duration_ms: media.durationMs ?? null,
+        target_file_size_bytes: media.size,
+        target_mime_type: media.mimeType,
       },
     );
     const prepared = preparedRows?.[0];
@@ -43,9 +44,9 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
 
     const { error: uploadError } = await supabase.storage
       .from('family-stories')
-      .upload(prepared.storage_path, image.bytes, {
+      .upload(prepared.storage_path, media.bytes, {
         cacheControl: '300',
-        contentType: image.mimeType,
+        contentType: media.mimeType,
         upsert: false,
       });
 
@@ -74,7 +75,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
   async load(babyId, userId) {
     const { data: rows, error } = await supabase
       .from('family_stories')
-      .select('id, author_user_id, family_id, created_at, expires_at, storage_path')
+      .select('id, author_user_id, family_id, created_at, duration_ms, expires_at, media_type, storage_path')
       .eq('baby_id', babyId)
       .order('created_at', { ascending: true });
 
@@ -166,7 +167,9 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         createdAt: row.created_at,
         expiresAt: row.expires_at,
         id: row.id,
-        imageUrl: signedUrl.signedUrl,
+        durationMs: row.duration_ms ?? undefined,
+        mediaType: row.media_type,
+        mediaUrl: signedUrl.signedUrl,
         isViewed: viewedIds.has(row.id),
         reactions: familyStoryReactionOptions.flatMap(({ value }) => {
           const count = reactionsByStory.get(row.id)?.get(value) ?? 0;

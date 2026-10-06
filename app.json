@@ -125,7 +125,8 @@
         }
       ],
       "./plugins/with-android-widget-container-background",
-      "./plugins/with-android-work-manager-resolution"
+      "./plugins/with-android-work-manager-resolution",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
