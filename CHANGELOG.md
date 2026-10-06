@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido
 * permite pausar y reanudar los Momentos familiares sin perder el progreso de visualización
 * identifica en las notificaciones nativas y web si el nuevo cuidado es una toma, un cambio de pañal o una actualización del sueño
 * muestra el intervalo completo de cada sueño y permite corregir sus fechas y horas de inicio y fin con una duración legible
@@ -24,6 +25,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* hace reanudable la subida de vídeos de Momentos, usa directamente el archivo elegido en web y normaliza su duración para evitar fallos o reproducciones instantáneas
 * corrige el tamaño y la disposición de los filtros y del formulario de gastos en pantallas móviles web y nativas
 * actualiza el widget al volver a la app cuando la unidad de alimentación cambia en otro dispositivo
 * mejora el contraste y la selección visual de las cantidades recientes de alimentación

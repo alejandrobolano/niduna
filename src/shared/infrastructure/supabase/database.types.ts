@@ -138,11 +138,19 @@ export type Database = {
           cleanup_last_error: string | null;
           cleanup_status: 'not_due' | 'pending' | 'processing' | 'failed';
           created_at: string;
+          duration_ms: number | null;
           expires_at: string;
           family_id: string;
           file_size_bytes: number;
           id: string;
-          mime_type: 'image/jpeg' | 'image/png' | 'image/webp';
+          media_type: 'image' | 'video';
+          mime_type:
+            | 'image/jpeg'
+            | 'image/png'
+            | 'image/webp'
+            | 'video/mp4'
+            | 'video/quicktime'
+            | 'video/webm';
           published_at: string | null;
           removed_at: string | null;
           storage_path: string;
@@ -855,6 +863,19 @@ export type Database = {
       prepare_family_story: {
         Args: {
           target_baby_id: string;
+          target_file_size_bytes: number;
+          target_mime_type: string;
+        };
+        Returns: {
+          expires_at: string;
+          id: string;
+          storage_path: string;
+        }[];
+      };
+      prepare_family_story_media: {
+        Args: {
+          target_baby_id: string;
+          target_duration_ms: number | null;
           target_file_size_bytes: number;
           target_mime_type: string;
         };

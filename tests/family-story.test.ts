@@ -18,7 +18,8 @@ function story(
     createdAt,
     expiresAt: '2026-08-12T12:00:00.000Z',
     id,
-    imageUrl: `https://example.test/${id}`,
+    mediaType: 'image',
+    mediaUrl: `https://example.test/${id}`,
     isViewed,
     reactions: [],
   };

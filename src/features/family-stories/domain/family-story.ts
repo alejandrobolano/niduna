@@ -28,7 +28,9 @@ export interface FamilyStory {
   createdAt: string;
   expiresAt: string;
   id: string;
-  imageUrl: string;
+  durationMs?: number;
+  mediaType: 'image' | 'video';
+  mediaUrl: string;
   isViewed: boolean;
   reactions: FamilyStoryReactionSummary[];
   viewerReaction?: FamilyStoryReaction;

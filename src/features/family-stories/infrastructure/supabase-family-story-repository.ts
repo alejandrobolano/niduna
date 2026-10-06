@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
 import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
+import { uploadStoryVideo } from '@/features/family-stories/infrastructure/resumable-story-upload';
 
 const signedUrlLifetimeSeconds = 5 * 60;
 
@@ -26,13 +27,14 @@ async function dispatchStoryNotification(storyId: string): Promise<void> {
 }
 
 export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
-  async create(babyId, image) {
+  async create(babyId, media) {
     const { data: preparedRows, error: prepareError } = await supabase.rpc(
-      'prepare_family_story',
+      'prepare_family_story_media',
       {
         target_baby_id: babyId,
-        target_file_size_bytes: image.size,
-        target_mime_type: image.mimeType,
+        target_duration_ms: media.durationMs ?? null,
+        target_file_size_bytes: media.size,
+        target_mime_type: media.mimeType,
       },
     );
     const prepared = preparedRows?.[0];
@@ -41,15 +43,26 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
       throw mapError(prepareError?.code);
     }
 
-    const { error: uploadError } = await supabase.storage
-      .from('family-stories')
-      .upload(prepared.storage_path, image.bytes, {
-        cacheControl: '300',
-        contentType: image.mimeType,
-        upsert: false,
-      });
+    let uploadFailed = false;
 
-    if (uploadError) {
+    if (media.mediaType === 'video') {
+      try {
+        await uploadStoryVideo(prepared.storage_path, media);
+      } catch {
+        uploadFailed = true;
+      }
+    } else {
+      const { error } = await supabase.storage
+        .from('family-stories')
+        .upload(prepared.storage_path, media.bytes, {
+          cacheControl: '300',
+          contentType: media.mimeType,
+          upsert: false,
+        });
+      uploadFailed = Boolean(error);
+    }
+
+    if (uploadFailed) {
       await supabase.rpc('retire_family_story', {
         target_story_id: prepared.id,
       });
@@ -74,7 +87,7 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
   async load(babyId, userId) {
     const { data: rows, error } = await supabase
       .from('family_stories')
-      .select('id, author_user_id, family_id, created_at, expires_at, storage_path')
+      .select('id, author_user_id, family_id, created_at, duration_ms, expires_at, media_type, storage_path')
       .eq('baby_id', babyId)
       .order('created_at', { ascending: true });
 
@@ -166,7 +179,9 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
         createdAt: row.created_at,
         expiresAt: row.expires_at,
         id: row.id,
-        imageUrl: signedUrl.signedUrl,
+        durationMs: row.duration_ms ?? undefined,
+        mediaType: row.media_type,
+        mediaUrl: signedUrl.signedUrl,
         isViewed: viewedIds.has(row.id),
         reactions: familyStoryReactionOptions.flatMap(({ value }) => {
           const count = reactionsByStory.get(row.id)?.get(value) ?? 0;
