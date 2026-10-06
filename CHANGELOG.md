@@ -33,6 +33,19 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.13.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.12.0...niduna-v1.13.0) (2026-10-06)
+
+
+### Nuevas funciones
+
+* pause family stories and describe care alerts ([aabf2c9](https://github.com/alejandrobolano/niduna/commit/aabf2c9f8567fc008be0ec134136d805fef4b931))
+* pause family stories and describe care alerts ([0e87138](https://github.com/alejandrobolano/niduna/commit/0e87138dedf3790b201f77b5d6bb989f02740761))
+
+
+### Documentación
+
+* update unreleased changelog ([e965922](https://github.com/alejandrobolano/niduna/commit/e965922acaf186b0c200b607a4e125cfc40f2259))
+
 ## [1.12.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.11.0...niduna-v1.12.0) (2026-10-01)
 
 
