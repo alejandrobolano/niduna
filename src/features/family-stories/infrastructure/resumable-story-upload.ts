@@ -1,4 +1,5 @@
 import { Upload } from 'tus-js-client';
+import { Platform } from 'react-native';
 
 import type { PreparedStoryMedia } from '@/features/family-stories/application/family-story-repository';
 import { supabase } from '@/shared/infrastructure/supabase/client';
@@ -29,8 +30,12 @@ export async function uploadStoryVideo(
     throw new Error('Authentication session is unavailable');
   }
 
+  const uploadSource = Platform.OS === 'web'
+    ? new Blob([new Uint8Array(media.bytes)], { type: media.mimeType })
+    : media.bytes;
+
   await new Promise<void>((resolve, reject) => {
-    const upload = new Upload(media.bytes, {
+    const upload = new Upload(uploadSource, {
       chunkSize: chunkSizeBytes,
       endpoint: getResumableEndpoint(),
       headers: {

@@ -25,7 +25,7 @@ versión correspondiente.
 
 ### Correcciones
 
-* hace reanudable la subida de vídeos de Momentos para evitar fallos en archivos mayores de 6 MB o conexiones inestables
+* hace reanudable la subida de vídeos de Momentos y corrige su inicio en navegadores para evitar fallos en archivos mayores de 6 MB o conexiones inestables
 * corrige el tamaño y la disposición de los filtros y del formulario de gastos en pantallas móviles web y nativas
 * actualiza el widget al volver a la app cuando la unidad de alimentación cambia en otro dispositivo
 * mejora el contraste y la selección visual de las cantidades recientes de alimentación

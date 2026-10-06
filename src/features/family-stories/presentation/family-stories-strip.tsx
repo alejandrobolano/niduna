@@ -54,6 +54,10 @@ function getErrorMessage(error: unknown): string {
     if (error.reason === 'not_allowed') {
       return 'Necesitamos permiso para acceder a tus fotos.';
     }
+
+    if (error.reason === 'upload_failed') {
+      return 'No pudimos subir el archivo. Revisa la conexión y toca reintentar.';
+    }
   }
 
   return 'No pudimos publicar la historia. Comprueba la conexión e inténtalo de nuevo.';
