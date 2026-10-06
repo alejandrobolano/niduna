@@ -10,6 +10,7 @@ import {
 import { supabase } from '@/shared/infrastructure/supabase/client';
 import { createRealtimeChannelTopic } from '@/shared/infrastructure/supabase/realtime-channel-topic';
 import { createProfilePhotoUrls } from '@/features/avatars/infrastructure/profile-photo-urls';
+import { uploadStoryVideo } from '@/features/family-stories/infrastructure/resumable-story-upload';
 
 const signedUrlLifetimeSeconds = 5 * 60;
 
@@ -42,15 +43,26 @@ export const supabaseFamilyStoryRepository: FamilyStoryRepository = {
       throw mapError(prepareError?.code);
     }
 
-    const { error: uploadError } = await supabase.storage
-      .from('family-stories')
-      .upload(prepared.storage_path, media.bytes, {
-        cacheControl: '300',
-        contentType: media.mimeType,
-        upsert: false,
-      });
+    let uploadFailed = false;
 
-    if (uploadError) {
+    if (media.mediaType === 'video') {
+      try {
+        await uploadStoryVideo(prepared.storage_path, media);
+      } catch {
+        uploadFailed = true;
+      }
+    } else {
+      const { error } = await supabase.storage
+        .from('family-stories')
+        .upload(prepared.storage_path, media.bytes, {
+          cacheControl: '300',
+          contentType: media.mimeType,
+          upsert: false,
+        });
+      uploadFailed = Boolean(error);
+    }
+
+    if (uploadFailed) {
       await supabase.rpc('retire_family_story', {
         target_story_id: prepared.id,
       });
