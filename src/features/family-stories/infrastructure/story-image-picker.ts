@@ -8,7 +8,7 @@ import {
   type PreparedStoryMedia,
 } from '@/features/family-stories/application/family-story-repository';
 
-const maximumInputBytes = 15 * 1024 * 1024;
+const maximumInputBytes = 50 * 1024 * 1024;
 const maximumImageBytes = 5 * 1024 * 1024;
 const maximumDimension = 1600;
 const maximumVideoDurationMs = 15_000;

@@ -9,7 +9,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
-* permite compartir en Momentos vídeos privados de hasta 15 segundos y 15 MB, con reproducción, pausa y control de sonido
+* permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido
 * permite pausar y reanudar los Momentos familiares sin perder el progreso de visualización
 * identifica en las notificaciones nativas y web si el nuevo cuidado es una toma, un cambio de pañal o una actualización del sueño
 * muestra el intervalo completo de cada sueño y permite corregir sus fechas y horas de inicio y fin con una duración legible

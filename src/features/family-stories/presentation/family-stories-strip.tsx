@@ -48,7 +48,7 @@ interface FamilyStoriesStripProps {
 function getErrorMessage(error: unknown): string {
   if (error instanceof FamilyStoryError) {
     if (error.reason === 'invalid_media') {
-      return 'Elige una foto válida o un vídeo de hasta 15 segundos y 15 MB.';
+      return 'Elige una foto válida o un vídeo de hasta 15 segundos y 50 MB.';
     }
 
     if (error.reason === 'not_allowed') {
