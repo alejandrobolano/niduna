@@ -36,7 +36,10 @@ async function prepareVideo(
   asset: ImagePicker.ImagePickerAsset,
 ): Promise<PreparedStoryMedia> {
   const mimeType = asset.mimeType?.toLowerCase();
-  const durationMs = asset.duration ?? 0;
+  const reportedDuration = asset.duration ?? 0;
+  const durationMs = Platform.OS === 'web'
+    ? Math.round(reportedDuration * 1000)
+    : reportedDuration;
 
   if (
     !mimeType ||
@@ -47,7 +50,9 @@ async function prepareVideo(
     throw new FamilyStoryError('invalid_media');
   }
 
-  const bytes = await readBytes(asset.uri);
+  const bytes = asset.file
+    ? await asset.file.arrayBuffer()
+    : await readBytes(asset.uri);
 
   if (bytes.byteLength < 1 || bytes.byteLength > maximumInputBytes) {
     throw new FamilyStoryError('invalid_media');
