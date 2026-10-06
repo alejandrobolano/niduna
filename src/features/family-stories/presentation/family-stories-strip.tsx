@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Camera, Plus, RefreshCw, ShieldCheck, Trash2, X } from 'lucide-react-native';
+import { Camera, Pause, Play, Plus, RefreshCw, ShieldCheck, Trash2, X } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -71,9 +71,11 @@ function StoryViewer({
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isConfirmingRetire, setIsConfirmingRetire] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isReacting, setIsReacting] = useState(false);
   const [isRetiring, setIsRetiring] = useState(false);
   const [reactionError, setReactionError] = useState<string>();
+  const progressRef = useRef(0);
   const insets = useSafeAreaInsets();
   const story = group.stories[storyIndex];
   const isOwnStory = story.author.id === userId;
@@ -85,21 +87,23 @@ function StoryViewer({
   }, [onViewed, story.id, story.isViewed]);
 
   useEffect(() => {
-    if (isConfirmingRetire || isReacting) {
+    if (isConfirmingRetire || isPaused || isReacting) {
       return;
     }
 
-    const startedAt = Date.now();
+    const startedAt = Date.now() - progressRef.current * storyDurationMilliseconds;
     const timer = setInterval(() => {
       const nextProgress = Math.min(
         1,
         (Date.now() - startedAt) / storyDurationMilliseconds,
       );
+      progressRef.current = nextProgress;
       setProgress(nextProgress);
 
       if (nextProgress >= 1) {
         clearInterval(timer);
         if (storyIndex < group.stories.length - 1) {
+          progressRef.current = 0;
           setProgress(0);
           setStoryIndex((current) => current + 1);
         } else {
@@ -109,10 +113,11 @@ function StoryViewer({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [group.stories.length, isConfirmingRetire, isReacting, onClose, storyIndex]);
+  }, [group.stories.length, isConfirmingRetire, isPaused, isReacting, onClose, storyIndex]);
 
   function goBack() {
     if (storyIndex > 0) {
+      progressRef.current = 0;
       setProgress(0);
       setStoryIndex((current) => current - 1);
     }
@@ -120,6 +125,7 @@ function StoryViewer({
 
   function goForward() {
     if (storyIndex < group.stories.length - 1) {
+      progressRef.current = 0;
       setProgress(0);
       setStoryIndex((current) => current + 1);
     } else {
@@ -147,6 +153,7 @@ function StoryViewer({
 
     try {
       await onReact(story.id, nextReaction);
+      progressRef.current = 0;
       setProgress(0);
     } catch {
       setReactionError('No pudimos guardar tu reacción.');
@@ -190,6 +197,18 @@ function StoryViewer({
               <Trash2 color={colors.white} size={20} />
             </Pressable>
           ) : null}
+          <Pressable
+            accessibilityLabel={isPaused ? 'Reanudar historia' : 'Pausar historia'}
+            accessibilityRole="button"
+            onPress={() => setIsPaused((current) => !current)}
+            style={styles.viewerIconButton}
+          >
+            {isPaused ? (
+              <Play color={colors.white} fill={colors.white} size={20} />
+            ) : (
+              <Pause color={colors.white} fill={colors.white} size={20} />
+            )}
+          </Pressable>
           <Pressable accessibilityLabel="Cerrar historias" onPress={onClose} style={styles.viewerIconButton}>
             <X color={colors.white} size={24} />
           </Pressable>

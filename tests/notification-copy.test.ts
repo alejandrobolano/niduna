@@ -2,22 +2,34 @@ import { describe, expect, it } from 'vitest';
 
 import {
   activityNotificationCopy,
-  careNotificationCopy,
+  getCareNotificationCopy,
   previewBuildNotificationCopy,
 } from '../supabase/functions/_shared/notification-copy';
 
 describe('notification copy', () => {
   it('keeps the same readable Spanish copy for native and web delivery', () => {
-    expect(careNotificationCopy).toEqual({
-      body: 'Alguien de tu familia actualizó el relevo.',
-      title: 'Nuevo cuidado registrado',
+    expect(getCareNotificationCopy('feeding')).toEqual({
+      body: 'Se ha registrado una nueva toma.',
+      title: 'Nueva toma registrada',
+    });
+    expect(getCareNotificationCopy('diaper')).toEqual({
+      body: 'Se ha registrado un cambio de pañal.',
+      title: 'Cambio de pañal registrado',
+    });
+    expect(getCareNotificationCopy('sleep')).toEqual({
+      body: 'Se ha actualizado el sueño del bebé.',
+      title: 'Sueño actualizado',
     });
   });
 
   it('does not contain common mojibake sequences', () => {
     const notificationCopies = {
       activityNotificationCopy,
-      careNotificationCopy,
+      careNotificationCopies: [
+        getCareNotificationCopy('feeding'),
+        getCareNotificationCopy('diaper'),
+        getCareNotificationCopy('sleep'),
+      ],
       previewBuildNotificationCopy,
     };
 
