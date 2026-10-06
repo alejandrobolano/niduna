@@ -4,7 +4,10 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
-import { careNotificationCopy } from '../_shared/notification-copy.ts';
+import {
+  getCareNotificationCopy,
+  type NotificationCopy,
+} from '../_shared/notification-copy.ts';
 import { selectEligibleCareDevices } from '../_shared/notification-rules.ts';
 
 type CareEventType = 'diaper' | 'feeding' | 'sleep';
@@ -216,6 +219,7 @@ async function sendWebNotification(
   accessToken: string,
   appUrl: string,
   installationId: string,
+  notificationCopy: NotificationCopy,
 ): Promise<{ errorCode?: string; messageId?: string }> {
   const response = await fetch(
     `https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`,
@@ -223,7 +227,7 @@ async function sendWebNotification(
       body: JSON.stringify({
         message: {
           fid: installationId,
-          notification: careNotificationCopy,
+          notification: notificationCopy,
           webpush: {
             fcm_options: { link: appUrl },
             headers: { Urgency: 'normal' },
@@ -378,6 +382,9 @@ const authenticatedHandler = withSupabase(
       const deviceById = new Map(
         eligibleDevices.map((device) => [device.id, device]),
       );
+      const notificationCopy = getCareNotificationCopy(
+        event.event_type as CareEventType,
+      );
       const results = await Promise.all(
         deliveries.map(async (delivery) => {
           const device = deviceById.get(delivery.web_push_device_id);
@@ -391,6 +398,7 @@ const authenticatedHandler = withSupabase(
             accessToken,
             appUrl,
             device.firebase_installation_id,
+            notificationCopy,
           );
           await adminClient
             .from('web_notification_deliveries')

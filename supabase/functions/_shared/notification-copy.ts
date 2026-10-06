@@ -3,10 +3,28 @@ export interface NotificationCopy {
   title: string;
 }
 
-export const careNotificationCopy: NotificationCopy = {
-  body: 'Alguien de tu familia actualiz\u00f3 el relevo.',
-  title: 'Nuevo cuidado registrado',
-};
+export type CareNotificationType = 'diaper' | 'feeding' | 'sleep';
+
+const careNotificationCopyByType = {
+  diaper: {
+    body: 'Se ha registrado un cambio de pa\u00f1al.',
+    title: 'Cambio de pa\u00f1al registrado',
+  },
+  feeding: {
+    body: 'Se ha registrado una nueva toma.',
+    title: 'Nueva toma registrada',
+  },
+  sleep: {
+    body: 'Se ha actualizado el sue\u00f1o del beb\u00e9.',
+    title: 'Sue\u00f1o actualizado',
+  },
+} satisfies Record<CareNotificationType, NotificationCopy>;
+
+export function getCareNotificationCopy(
+  eventType: CareNotificationType,
+): NotificationCopy {
+  return careNotificationCopyByType[eventType];
+}
 
 export const activityNotificationCopy = {
   measurement: {
