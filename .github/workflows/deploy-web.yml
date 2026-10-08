@@ -36,6 +36,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm web:export
         env:
+          NIDUNA_WEB_ENV: ${{ github.event_name == 'pull_request' && 'development' || 'production' }}
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_FIREBASE_API_KEY: ${{ vars.EXPO_PUBLIC_FIREBASE_API_KEY }}

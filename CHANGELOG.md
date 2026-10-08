@@ -7,6 +7,10 @@ versión correspondiente.
 
 ## Unreleased
 
+### Correcciones
+
+* retira la ruta interna de depuración de Expo Router y evita que `dev.niduna.com` sea indexado por buscadores
+
 ### Nuevas funciones
 
 * permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido
