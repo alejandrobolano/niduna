@@ -38,6 +38,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.14.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.14.0...niduna-v1.14.1) (2026-10-08)
+
+
+### Correcciones
+
+* impedir la indexación del entorno de desarrollo ([aa17610](https://github.com/alejandrobolano/niduna/commit/aa176100bb6b2951953dd0b701d4f2b2b90bf69c))
+* prevent development indexing ([b198ce9](https://github.com/alejandrobolano/niduna/commit/b198ce9fdbc3f6970d6d132403736c501c9acf8a))
+
 ## [1.14.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.13.0...niduna-v1.14.0) (2026-10-06)
 
 
