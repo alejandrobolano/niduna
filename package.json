@@ -64,7 +64,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "web:export": "expo export --platform web && node scripts/write-web-push-worker.mjs",
+    "web:export": "expo export --platform web && node scripts/write-web-push-worker.mjs && node scripts/write-web-indexing.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
