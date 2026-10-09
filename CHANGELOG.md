@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* corrige el desbordamiento horizontal del directorio de contactos en pantallas móviles
 * retira la ruta interna de depuración de Expo Router y evita que `dev.niduna.com` sea indexado por buscadores
 
 ### Nuevas funciones
