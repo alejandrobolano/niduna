@@ -40,6 +40,15 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.14.2](https://github.com/alejandrobolano/niduna/compare/niduna-v1.14.1...niduna-v1.14.2) (2026-10-09)
+
+
+### Correcciones
+
+* contain contact directory on mobile ([b17cf7e](https://github.com/alejandrobolano/niduna/commit/b17cf7e901ab89c09587355094b6ea73c473a0ff))
+* corregir el directorio de contactos en móvil ([2d81bfd](https://github.com/alejandrobolano/niduna/commit/2d81bfdb06ce90391f901b62902d86a14be28105))
+* size document cards correctly on mobile ([5bb38f2](https://github.com/alejandrobolano/niduna/commit/5bb38f2521d8abf400da70d2c971d375d6d141cf))
+
 ## [1.14.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.14.0...niduna-v1.14.1) (2026-10-08)
 
 
