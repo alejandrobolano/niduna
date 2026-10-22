@@ -85,8 +85,13 @@ export function PrenatalContractionTracker({
   }, [babyId, contactRepository, contractionRepository]);
 
   useEffect(() => {
-    void load();
-    return contractionRepository.subscribe(babyId, () => void load());
+    const initialLoadTimer = setTimeout(() => void load(), 0);
+    const unsubscribe = contractionRepository.subscribe(babyId, () => void load());
+
+    return () => {
+      clearTimeout(initialLoadTimer);
+      unsubscribe();
+    };
   }, [babyId, contractionRepository, load]);
 
   const activeContraction = useMemo(
