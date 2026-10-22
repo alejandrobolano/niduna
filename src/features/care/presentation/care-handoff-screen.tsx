@@ -30,6 +30,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { resolveStableMemberAvatar } from '@/features/avatars/domain/avatar';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
+import type { BabyContactRepository } from '@/features/baby-contacts/application/baby-contact-repository';
 import { getBabyWeightProgress } from '@/features/care/application/baby-weight-progress';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
 import type { CareRepository } from '@/features/care/application/care-repository';
@@ -59,6 +60,8 @@ import {
 import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { FeedingRhythmInfo } from '@/features/care/presentation/feeding-rhythm-info';
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
+import type { ContractionRepository } from '@/features/contractions/application/contraction-repository';
+import { PrenatalContractionTracker } from '@/features/contractions/presentation/prenatal-contraction-tracker';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -97,10 +100,13 @@ interface CareHandoffScreenProps {
   babyId?: string;
   bottomNavigationInset?: number;
   canCreateBaby: boolean;
+  contactRepository: BabyContactRepository;
+  contractionRepository: ContractionRepository;
   initialAction?: CareAction;
   onExternalActionHandled?: () => void;
   onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
+  onOpenContacts: () => void;
   onOpenExpenses: () => void;
   repository: CareRepository;
   summaryRepository: CareSummaryRepository;
@@ -586,6 +592,7 @@ function DashboardContent({
   onOpenExpenses,
   onQuickActionsLayout,
   onRefresh,
+  prenatalContent,
   storiesContent,
   userId,
 }: {
@@ -598,6 +605,7 @@ function DashboardContent({
   onOpenExpenses: () => void;
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
+  prenatalContent?: ReactNode;
   storiesContent?: ReactNode;
   userId: string;
 }) {
@@ -638,6 +646,33 @@ function DashboardContent({
       ...layout,
       y: dashboardOffset.current + layout.y,
     });
+  }
+
+  if (isExpected) {
+    return (
+      <View style={styles.dashboardContent}>
+        <ScreenHero
+          eyebrow="Relevo familiar"
+          subtitle="Una ayuda práctica para registrar el patrón sin intentar interpretar el parto."
+          title={`Esperando a ${dashboard.baby.name}`}
+        />
+        {prenatalContent}
+        <View style={styles.expectedNotice}>
+          <View style={styles.expectedNoticeCopy}>
+            <Text style={styles.expectedNoticeTitle}>Todo listo para cuando nazca</Text>
+            <Text style={styles.expectedNoticeText}>
+              Los cuidados de alimentación, pañal y sueño se activarán al cambiar el perfil a “ya nació”.
+            </Text>
+          </View>
+          <Pressable
+            onPress={onOpenBabyProfile}
+            style={({ pressed }) => [styles.expectedButton, pressed && styles.actionPressed]}
+          >
+            <Text style={styles.expectedButtonText}>Ver perfil</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -869,10 +904,13 @@ export function CareHandoffScreen({
   babyId: selectedBabyId,
   bottomNavigationInset = 0,
   canCreateBaby,
+  contactRepository,
+  contractionRepository,
   initialAction,
   onExternalActionHandled,
   onDashboardLoaded,
   onOpenBabyProfile,
+  onOpenContacts,
   onOpenExpenses,
   repository,
   summaryRepository,
@@ -1128,6 +1166,17 @@ export function CareHandoffScreen({
             onOpenExpenses={onOpenExpenses}
             onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
+            prenatalContent={
+              <PrenatalContractionTracker
+                babyId={dashboard.baby.id}
+                canManage={dashboard.canManage}
+                canRecord={dashboard.canRecord}
+                contactRepository={contactRepository}
+                contractionRepository={contractionRepository}
+                onOpenContacts={onOpenContacts}
+                userId={userId}
+              />
+            }
             storiesContent={storiesContent}
             userId={userId}
           />

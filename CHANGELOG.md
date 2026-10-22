@@ -383,6 +383,8 @@ versión correspondiente.
 
 ### Fixed
 
+- El recorrido guiado espera a que existan una familia activa y un bebé antes
+  de mostrarse, evitando un onboarding sin contexto útil.
 - El widget Android vuelve a mostrar la hora exacta de cada cuidado para evitar
   tiempos relativos obsoletos cuando el sistema retrasa su actualización.
 - Corregido el cierre de la aplicación Android al abrir una acción del widget.
@@ -397,6 +399,8 @@ versión correspondiente.
 
 ### Added
 
+- Contador prenatal de contracciones con duración, intervalo, histórico familiar
+  persistente, advertencia de seguridad y llamadas rápidas a contactos importantes.
 - Cada instancia del widget Android puede configurarse para mostrar un bebé
   diferente y abre sus registros rápidos en el contexto correcto.
 - Widget nativo de Relevo para consultar la última alimentación, pañal y sueño

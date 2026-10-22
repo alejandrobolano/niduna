@@ -1,7 +1,13 @@
 import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
 import type { AppSection } from '@/features/home/domain/app-section';
 
-const careSections = new Set<AppSection>(['handoff', 'history', 'summary']);
+const postnatalCareSections = new Set<AppSection>(['history', 'summary']);
+
+export function canAccessHandoff(
+  lifeStage: BabyLifeStage | undefined,
+): boolean {
+  return lifeStage === 'expected' || lifeStage === 'born';
+}
 
 export function canAccessCare(
   lifeStage: BabyLifeStage | undefined,
@@ -13,7 +19,11 @@ export function resolveAccessibleAppSection(
   section: AppSection,
   lifeStage: BabyLifeStage | undefined,
 ): AppSection {
-  if (!canAccessCare(lifeStage) && careSections.has(section)) {
+  if (section === 'handoff' && !canAccessHandoff(lifeStage)) {
+    return 'baby';
+  }
+
+  if (!canAccessCare(lifeStage) && postnatalCareSections.has(section)) {
     return 'baby';
   }
 
