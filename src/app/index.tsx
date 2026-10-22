@@ -249,21 +249,28 @@ function AuthenticatedApp({
   );
 
   const hasActiveFamily = Boolean(context.activeFamily);
+  const hasActiveBaby = Boolean(context.activeBaby);
   const activeBabyLifeStage = context.activeBaby?.lifeStage;
   const careAvailable = canAccessCare(activeBabyLifeStage);
   const onboardingSteps = useMemo(
     () =>
       getGuidedOnboardingSteps({
         careAvailable,
-        hasActiveBaby: Boolean(context.activeBaby),
+        hasActiveBaby,
         hasActiveFamily,
       }),
-    [careAvailable, context.activeBaby, hasActiveFamily],
+    [careAvailable, hasActiveBaby, hasActiveFamily],
   );
   const onboardingShouldStart =
     context.status === 'ready' &&
     (replayRequested ||
-      shouldStartGuidedOnboarding(onboardingState, hasActiveFamily));
+      shouldStartGuidedOnboarding(
+        onboardingState,
+        hasActiveBaby,
+        hasActiveFamily,
+      )) &&
+    hasActiveBaby &&
+    hasActiveFamily;
   const isOnboardingVisible =
     onboardingShouldStart && !onboardingSessionFinished;
 

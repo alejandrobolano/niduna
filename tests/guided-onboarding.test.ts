@@ -10,10 +10,11 @@ import {
 
 describe('guided onboarding', () => {
   it('starts for a first visit and after a version change', () => {
-    expect(shouldStartGuidedOnboarding(undefined, true)).toBe(true);
+    expect(shouldStartGuidedOnboarding(undefined, true, true)).toBe(true);
     expect(
       shouldStartGuidedOnboarding(
         { status: 'completed', version: guidedOnboardingVersion - 1 },
+        true,
         true,
       ),
     ).toBe(true);
@@ -24,19 +25,22 @@ describe('guided onboarding', () => {
       shouldStartGuidedOnboarding(
         { status: 'completed', version: guidedOnboardingVersion },
         true,
+        true,
       ),
     ).toBe(false);
     expect(
-      shouldStartGuidedOnboarding(getGuidedOnboardingDismissal(), true),
+      shouldStartGuidedOnboarding(getGuidedOnboardingDismissal(), true, true),
     ).toBe(false);
   });
 
-  it('defers the full tour until a family exists', () => {
+  it('defers the tour until a family and baby exist', () => {
     const pending = getGuidedOnboardingCompletion(false);
 
     expect(pending.status).toBe('pending-family');
-    expect(shouldStartGuidedOnboarding(pending, false)).toBe(false);
-    expect(shouldStartGuidedOnboarding(pending, true)).toBe(true);
+    expect(shouldStartGuidedOnboarding(undefined, false, false)).toBe(false);
+    expect(shouldStartGuidedOnboarding(pending, false, true)).toBe(false);
+    expect(shouldStartGuidedOnboarding(pending, true, false)).toBe(false);
+    expect(shouldStartGuidedOnboarding(pending, true, true)).toBe(true);
   });
 
   it('uses one family step without a family', () => {

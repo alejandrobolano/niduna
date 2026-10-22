@@ -92,13 +92,18 @@ export function getGuidedOnboardingSteps({
 
 export function shouldStartGuidedOnboarding(
   state: GuidedOnboardingState | undefined,
+  hasActiveBaby: boolean,
   hasActiveFamily: boolean,
 ): boolean {
+  if (!hasActiveFamily || !hasActiveBaby) {
+    return false;
+  }
+
   if (!state || state.version !== guidedOnboardingVersion) {
     return true;
   }
 
-  return state.status === 'pending-family' && hasActiveFamily;
+  return state.status === 'pending-family';
 }
 
 export function getGuidedOnboardingCompletion(

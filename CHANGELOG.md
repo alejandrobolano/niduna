@@ -383,6 +383,8 @@ versión correspondiente.
 
 ### Fixed
 
+- El recorrido guiado espera a que existan una familia activa y un bebé antes
+  de mostrarse, evitando un onboarding sin contexto útil.
 - El widget Android vuelve a mostrar la hora exacta de cada cuidado para evitar
   tiempos relativos obsoletos cuando el sistema retrasa su actualización.
 - Corregido el cierre de la aplicación Android al abrir una acción del widget.
