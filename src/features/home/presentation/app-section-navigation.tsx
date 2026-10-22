@@ -1,13 +1,15 @@
 import { BabyIcon, ClipboardList, Heart, House, Moon } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
+import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
 import type { AppSection } from '@/features/home/domain/app-section';
+import { canAccessCare, canAccessHandoff } from '@/features/home/domain/app-section-access';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 export const bottomNavigationContentHeight = 58 + spacing.xs * 2;
 
 interface AppSectionNavigationProps {
-  careAvailable?: boolean;
+  babyLifeStage?: BabyLifeStage;
   onChange: (section: AppSection) => void;
   placement?: 'header' | 'bottom';
   value: AppSection;
@@ -25,7 +27,7 @@ const sections = [
 }[];
 
 export function AppSectionNavigation({
-  careAvailable = true,
+  babyLifeStage,
   onChange,
   placement = 'header',
   value,
@@ -39,8 +41,8 @@ export function AppSectionNavigation({
     >
       {sections.filter(
         (section) =>
-          careAvailable ||
-          (section.value !== 'handoff' && section.value !== 'history'),
+          (section.value !== 'handoff' || canAccessHandoff(babyLifeStage)) &&
+          (section.value !== 'history' || canAccessCare(babyLifeStage)),
       ).map((section) => {
         const selected =
           value === section.value ||

@@ -397,6 +397,8 @@ versión correspondiente.
 
 ### Added
 
+- Contador prenatal de contracciones con duración, intervalo, histórico familiar
+  persistente, advertencia de seguridad y llamadas rápidas a contactos importantes.
 - Cada instancia del widget Android puede configurarse para mostrar un bebé
   diferente y abre sus registros rápidos en el contexto correcto.
 - Widget nativo de Relevo para consultar la última alimentación, pañal y sueño

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
+import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
 import type {
   FamilyBabyGroup,
   FamilyBabySummary,
@@ -15,7 +16,7 @@ interface AppHeaderProps {
   accountContent: ReactNode;
   activeBaby?: FamilyBabySummary;
   activeFamily: FamilyBabyGroup;
-  careAvailable: boolean;
+  babyLifeStage?: BabyLifeStage;
   compact: boolean;
   families: FamilyBabyGroup[];
   isCreatingBaby: boolean;
@@ -30,7 +31,7 @@ export function AppHeader({
   accountContent,
   activeBaby,
   activeFamily,
-  careAvailable,
+  babyLifeStage,
   compact,
   families,
   isCreatingBaby,
@@ -46,7 +47,7 @@ export function AppHeader({
       {compact ? null : (
         <View style={styles.navigation}>
           <AppSectionNavigation
-            careAvailable={careAvailable}
+            babyLifeStage={babyLifeStage}
             onChange={onChangeSection}
             value={section}
           />

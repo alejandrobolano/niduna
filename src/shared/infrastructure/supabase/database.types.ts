@@ -560,6 +560,20 @@ export type Database = {
         Record<string, never>,
         Record<string, never>
       >;
+      baby_contractions: Table<
+        {
+          baby_id: string;
+          created_at: string;
+          ended_at: string | null;
+          family_id: string;
+          id: string;
+          recorded_by: string;
+          started_at: string;
+          updated_at: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       baby_expenses: Table<
         {
           amount_minor: number;
@@ -695,6 +709,10 @@ export type Database = {
       };
     };
     Functions: {
+      delete_baby_contraction: {
+        Args: { target_contraction_id: string };
+        Returns: undefined;
+      };
       save_baby_contact: {
         Args: {
           target_address: string | null;
@@ -1018,6 +1036,10 @@ export type Database = {
         };
         Returns: string;
       };
+      finish_baby_contraction: {
+        Args: { target_contraction_id: string };
+        Returns: undefined;
+      };
       set_baby_archived: {
         Args: {
           should_archive: boolean;
@@ -1062,6 +1084,10 @@ export type Database = {
           target_sex_at_birth: SexAtBirth | null;
           target_weight_grams: number | null;
         };
+        Returns: string;
+      };
+      start_baby_contraction: {
+        Args: { target_baby_id: string };
         Returns: string;
       };
     };

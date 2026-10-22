@@ -45,6 +45,7 @@ import { exportCareHistoryFile } from '@/features/care/infrastructure/care-histo
 import { exportCareReportFile } from '@/features/care/infrastructure/care-report-file';
 import { supabaseCareRepository } from '@/features/care/infrastructure/supabase-care-repository';
 import { CareHandoffScreen } from '@/features/care/presentation/care-handoff-screen';
+import { supabaseContractionRepository } from '@/features/contractions/infrastructure/supabase-contraction-repository';
 import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import {
   createCareWidgetActionRequest,
@@ -498,7 +499,7 @@ function AuthenticatedApp({
       accountContent={sessionBanner}
       activeBaby={context.activeBaby}
       activeFamily={activeFamily}
-      careAvailable={careAvailable}
+      babyLifeStage={activeBabyLifeStage}
       compact={compactNavigation}
       families={context.families}
       isCreatingBaby={isCreatingBaby}
@@ -554,7 +555,7 @@ function AuthenticatedApp({
           ]}
         >
           <AppSectionNavigation
-            careAvailable={careAvailable}
+            babyLifeStage={activeBabyLifeStage}
             onChange={changeSection}
             placement="bottom"
             value={activeSection}
@@ -572,11 +573,14 @@ function AuthenticatedApp({
           compactNavigation ? bottomNavigationContentHeight + insets.bottom : 0
         }
         canCreateBaby={canManageBabies}
+        contactRepository={supabaseBabyContactRepository}
+        contractionRepository={supabaseContractionRepository}
         initialAction={canRecordCare ? pendingCareAction?.action : undefined}
         key={`${context.activeBaby?.id ?? `${activeFamily.id}:empty`}:${pendingCareAction?.id ?? 'default'}`}
         onExternalActionHandled={clearPendingCareAction}
         onDashboardLoaded={handleWidgetDashboardLoaded}
         onOpenBabyProfile={() => changeSection('baby')}
+        onOpenContacts={() => changeSection('contacts')}
         onOpenExpenses={() => changeSection('expenses')}
         repository={supabaseCareRepository}
         summaryRepository={supabaseCareSummaryRepository}
