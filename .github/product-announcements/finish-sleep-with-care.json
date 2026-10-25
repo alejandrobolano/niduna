@@ -1,0 +1,12 @@
+{
+  "id": "finish-sleep-with-care",
+  "title": "Registra el cuidado y el despertar juntos",
+  "description": "Si una toma o un cambio de pañal despierta al bebé, ahora puedes terminar el sueño en el mismo registro. La opción siempre empieza desmarcada.",
+  "actionLabel": "Probar en Relevo",
+  "targetRoute": "handoff",
+  "platforms": ["web", "android", "ios"],
+  "minimumNativeVersion": "1.16.0",
+  "delivery": "in_app",
+  "status": "published",
+  "expiresAt": "2027-01-31T23:59:59.999Z"
+}

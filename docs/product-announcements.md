@@ -2,6 +2,8 @@
 
 Niduna stores important product announcements in Supabase and records when each user has seen them. Care notifications remain a separate channel.
 
+An announcement is visible only to users whose profile already existed when it was first published. New accounts start directly with the current product experience and do not receive earlier announcements.
+
 ## Adding an announcement
 
 Add a JSON manifest to `.github/product-announcements/`. Use a stable, unique `id` and include only changes that materially affect how the product is used.
