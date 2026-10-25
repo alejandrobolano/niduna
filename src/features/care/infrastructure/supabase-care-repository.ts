@@ -33,6 +33,17 @@ function mapErrorReason(
     return 'recovery_expired';
   }
 
+  if (message.includes('care_sleep_not_active')) {
+    return 'sleep_not_active';
+  }
+
+  if (
+    message.includes('care_record_invalid_occurrence') ||
+    message.includes('care_sleep_invalid_end')
+  ) {
+    return 'invalid_occurrence';
+  }
+
   if (code === '23505' || message.includes('one_open_sleep')) {
     return 'sleep_already_running';
   }
@@ -81,6 +92,31 @@ async function insertEvent(
   }
 
   void dispatchCareNotifications(data.id);
+}
+
+async function insertEventAndFinishSleep(
+  event: CareEventInsert & {
+    baby_id: string;
+    event_type: 'diaper' | 'feeding';
+    occurred_at: string;
+  },
+): Promise<void> {
+  const { data, error } = await supabase.rpc('record_care_and_finish_sleep', {
+    target_amount_milliliters: event.amount_milliliters ?? null,
+    target_baby_id: event.baby_id,
+    target_breast_side: event.breast_side ?? null,
+    target_diaper_condition: event.diaper_condition ?? null,
+    target_event_type: event.event_type,
+    target_feeding_method: event.feeding_method ?? null,
+    target_notes: event.notes ?? null,
+    target_occurred_at: event.occurred_at,
+  });
+
+  if (error) {
+    throwOperationError(error.code, error.message);
+  }
+
+  void dispatchCareNotifications(data);
 }
 
 async function dispatchCareNotifications(eventId: string): Promise<void> {
@@ -399,7 +435,7 @@ export const supabaseCareRepository: CareRepository = {
   },
 
   async recordFeeding(input) {
-    await insertEvent({
+    const event = {
       amount_milliliters: input.amountMilliliters ?? null,
       baby_id: input.babyId,
       breast_side: input.breastSide ?? null,
@@ -407,17 +443,25 @@ export const supabaseCareRepository: CareRepository = {
       feeding_method: input.method,
       notes: normalizeNotes(input.notes),
       occurred_at: validateCareEntryTime(input.occurredAt),
-    });
+    } satisfies CareEventInsert & { event_type: 'feeding' };
+
+    await (input.finishActiveSleep
+      ? insertEventAndFinishSleep(event)
+      : insertEvent(event));
   },
 
   async recordDiaper(input) {
-    await insertEvent({
+    const event = {
       baby_id: input.babyId,
       diaper_condition: input.condition,
       event_type: 'diaper',
       notes: normalizeNotes(input.notes),
       occurred_at: validateCareEntryTime(input.occurredAt),
-    });
+    } satisfies CareEventInsert & { event_type: 'diaper' };
+
+    await (input.finishActiveSleep
+      ? insertEventAndFinishSleep(event)
+      : insertEvent(event));
   },
 
   async recordNote(input) {

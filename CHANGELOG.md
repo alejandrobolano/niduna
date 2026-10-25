@@ -15,6 +15,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite finalizar opcionalmente el sueño en curso al registrar una alimentación o un cambio de pañal, sin asumir que el bebé se despertó
 * muestra una sola vez a cada usuario las novedades importantes de Niduna y permite abrir directamente la función anunciada
 * permite editar los cuidados recientes directamente desde Relevo y elegir la hora real al terminar un sueño
 * permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido

@@ -747,6 +747,19 @@ export type Database = {
       };
     };
     Functions: {
+      record_care_and_finish_sleep: {
+        Args: {
+          target_amount_milliliters?: number | null;
+          target_baby_id: string;
+          target_breast_side?: BreastSide | null;
+          target_diaper_condition?: DiaperCondition | null;
+          target_event_type: 'diaper' | 'feeding';
+          target_feeding_method?: FeedingMethod | null;
+          target_notes?: string | null;
+          target_occurred_at: string;
+        };
+        Returns: string;
+      };
       delete_baby_contraction: {
         Args: { target_contraction_id: string };
         Returns: undefined;

@@ -1,4 +1,4 @@
-import { MoonStar, X } from 'lucide-react-native';
+import { Check, MoonStar, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -103,6 +103,10 @@ function getOperationMessage(error: unknown): string {
     return 'Ya hay un sueño en curso. Actualiza el relevo antes de continuar.';
   }
 
+  if (error.reason === 'sleep_not_active') {
+    return 'Ese sueño ya había terminado. Actualiza el relevo y vuelve a intentarlo.';
+  }
+
   if (error.reason === 'invalid_occurrence') {
     return 'El momento elegido debe estar dentro de las últimas 2 horas.';
   }
@@ -132,6 +136,7 @@ export function CareActionSheet({
   const [headCircumference, setHeadCircumference] = useState('');
   const [measurementSource, setMeasurementSource] =
     useState<MeasurementSource>('home');
+  const [finishActiveSleep, setFinishActiveSleep] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [timeSelection, setTimeSelection] = useState<CareEntryTimeSelection>({
@@ -154,9 +159,12 @@ export function CareActionSheet({
     headCircumferenceMillimeters === undefined;
   const noteIsInvalid = action === 'note' && !notes.trim();
   const isFinishingSleep = action === 'sleep' && Boolean(openSleep);
+  const canFinishSleepWithCare =
+    Boolean(openSleep) && (action === 'feeding' || action === 'diaper');
+  const willFinishSleepWithCare = canFinishSleepWithCare && finishActiveSleep;
   const selectedTime = resolveCareEntryTime(timeSelection);
   const sleepEndIsInvalid = Boolean(
-    isFinishingSleep &&
+    (isFinishingSleep || willFinishSleepWithCare) &&
       openSleep &&
       !isSleepEndTimeAllowed(openSleep.occurredAt, selectedTime.toISOString()),
   );
@@ -212,6 +220,7 @@ export function CareActionSheet({
     setLength('');
     setHeadCircumference('');
     setMeasurementSource('home');
+    setFinishActiveSleep(false);
     setTimeSelection({ kind: 'now' });
     setErrorMessage(undefined);
   }
@@ -240,6 +249,7 @@ export function CareActionSheet({
           method: feedingMethod,
           notes,
           occurredAt,
+          finishActiveSleep: willFinishSleepWithCare,
         });
         saveFeedingMethodPreference(babyId, feedingMethod);
       } else if (action === 'diaper') {
@@ -248,6 +258,7 @@ export function CareActionSheet({
           condition: diaperCondition,
           notes,
           occurredAt,
+          finishActiveSleep: willFinishSleepWithCare,
         });
       } else if (action === 'note') {
         await repository.recordNote({ babyId, content: notes, occurredAt });
@@ -341,6 +352,38 @@ export function CareActionSheet({
               onChange={setTimeSelection}
               selection={timeSelection}
             />
+
+            {canFinishSleepWithCare ? (
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: finishActiveSleep }}
+                onPress={() => setFinishActiveSleep((current) => !current)}
+                style={({ pressed }) => [
+                  styles.sleepCompletionOption,
+                  finishActiveSleep && styles.sleepCompletionOptionSelected,
+                  pressed && styles.sleepCompletionOptionPressed,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    finishActiveSleep && styles.checkboxSelected,
+                  ]}
+                >
+                  {finishActiveSleep ? (
+                    <Check color={colors.onAccent} size={17} strokeWidth={3} />
+                  ) : null}
+                </View>
+                <View style={styles.sleepCompletionCopy}>
+                  <Text style={styles.sleepCompletionTitle}>
+                    El bebé se despertó con este cuidado
+                  </Text>
+                  <Text style={styles.sleepCompletionText}>
+                    Opcional. También terminaremos el sueño a la hora elegida.
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
 
             {action === 'feeding' ? (
               <>
@@ -573,6 +616,47 @@ const styles = createThemedStyleSheet((colors) => ({
   form: {
     gap: spacing.lg,
     padding: spacing.xl,
+  },
+  sleepCompletionOption: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: spacing.md,
+    minHeight: 64,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  sleepCompletionOptionPressed: { opacity: 0.78 },
+  sleepCompletionOptionSelected: {
+    backgroundColor: colors.lavenderSoft,
+    borderColor: colors.lavender,
+  },
+  checkbox: {
+    alignItems: 'center',
+    borderColor: colors.textMuted,
+    borderRadius: 6,
+    borderWidth: 2,
+    height: 24,
+    justifyContent: 'center',
+    width: 24,
+  },
+  checkboxSelected: {
+    backgroundColor: colors.primaryPressed,
+    borderColor: colors.primaryPressed,
+  },
+  sleepCompletionCopy: { flex: 1, gap: 3, minWidth: 0 },
+  sleepCompletionTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  sleepCompletionText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
   },
   sleepNotice: {
     alignItems: 'center',
