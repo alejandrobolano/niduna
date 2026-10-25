@@ -42,6 +42,23 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.15.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.14.2...niduna-v1.15.0) (2026-10-25)
+
+
+### Nuevas funciones
+
+* add prenatal contraction timer ([5312629](https://github.com/alejandrobolano/niduna/commit/5312629cc2bfc0303e27b2966ed9e0aaec69d800))
+* añadir contador prenatal de contracciones ([b71f2a1](https://github.com/alejandrobolano/niduna/commit/b71f2a1c8db0359800fea794730482d88feb14eb))
+* **care:** edit records from handoff ([c13df28](https://github.com/alejandrobolano/niduna/commit/c13df28af913e03eab62321cde32306d05a5624c))
+* enhance guided onboarding to require active family and baby ([f30fd84](https://github.com/alejandrobolano/niduna/commit/f30fd844c1da20da5344028566f3b3af7c72a133))
+* **product:** announce important updates ([c1c7cfa](https://github.com/alejandrobolano/niduna/commit/c1c7cfaf5bdaf91481ef2770153636434e932525))
+
+
+### Correcciones
+
+* **care:** refine handoff edit action ([27df2dd](https://github.com/alejandrobolano/niduna/commit/27df2dde6872b92362610a476886604d624f53fb))
+* defer prenatal tracker loading ([db75794](https://github.com/alejandrobolano/niduna/commit/db757940b0159458f6399c86af058a1e4faff930))
+
 ## [1.14.2](https://github.com/alejandrobolano/niduna/compare/niduna-v1.14.1...niduna-v1.14.2) (2026-10-09)
 
 
