@@ -332,14 +332,15 @@ function TimelineEvent({
               <Pressable
                 accessibilityLabel={`Editar ${presentation.title.toLocaleLowerCase('es')}`}
                 accessibilityRole="button"
-                hitSlop={6}
                 onPress={onEdit}
                 style={({ pressed }) => [
                   styles.timelineEditButton,
                   pressed && styles.timelineEditButtonPressed,
                 ]}
               >
-                <Pencil color={colors.primaryPressed} size={15} />
+                <View style={styles.timelineEditGlyph}>
+                  <Pencil color={colors.primaryPressed} size={14} />
+                </View>
               </Pressable>
             ) : null}
           </View>
@@ -1685,7 +1686,7 @@ const styles = createThemedStyleSheet((colors) => ({
   timelineGlyphText: { fontSize: 20, fontWeight: '900' },
   timelineCopy: { flex: 1, gap: spacing.xs },
   timelineTitleRow: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
     justifyContent: 'space-between',
@@ -1704,19 +1705,24 @@ const styles = createThemedStyleSheet((colors) => ({
   timelineMeta: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: spacing.xs,
   },
   timelineEditButton: {
     alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  timelineEditGlyph: {
+    alignItems: 'center',
     backgroundColor: colors.aquaSoft,
     borderRadius: radius.pill,
-    height: 36,
+    height: 28,
     justifyContent: 'center',
-    width: 36,
+    width: 28,
   },
   timelineEditButtonPressed: {
-    opacity: 0.72,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.68,
+    transform: [{ scale: 0.98 }],
   },
   timelineDescription: {
     color: colors.textMuted,
