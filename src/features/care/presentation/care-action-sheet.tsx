@@ -18,6 +18,8 @@ import {
   CareOperationError,
   type CareRepository,
 } from '@/features/care/application/care-repository';
+import { isSleepEndTimeAllowed } from '@/features/care/application/care-record-management';
+import { getDurationMinutes } from '@/features/care/application/care-snapshot';
 import {
   parseHeadCircumferenceMillimeters,
   parseLengthMillimeters,
@@ -34,6 +36,7 @@ import {
   type CareEntryTimeSelection,
   resolveCareEntryTime,
 } from '@/features/care/domain/care-entry-time';
+import { formatCareDuration } from '@/features/care/domain/care-time';
 import { formatFeedingVolumeInput, getFeedingVolumeInputHint, getFeedingVolumeUnitLabel, parseFeedingVolumeInput } from '@/features/care/domain/feeding-volume';
 import {
   loadFeedingMethodPreference,
@@ -150,9 +153,22 @@ export function CareActionSheet({
     lengthMillimeters === undefined &&
     headCircumferenceMillimeters === undefined;
   const noteIsInvalid = action === 'note' && !notes.trim();
+  const isFinishingSleep = action === 'sleep' && Boolean(openSleep);
+  const selectedTime = resolveCareEntryTime(timeSelection);
+  const sleepEndIsInvalid = Boolean(
+    isFinishingSleep &&
+      openSleep &&
+      !isSleepEndTimeAllowed(openSleep.occurredAt, selectedTime.toISOString()),
+  );
+  const sleepDuration = isFinishingSleep && openSleep && !sleepEndIsInvalid
+    ? formatCareDuration(
+        getDurationMinutes(openSleep.occurredAt, selectedTime.toISOString()),
+      )
+    : undefined;
   const formIsInvalid =
     amountIsInvalid ||
     noteIsInvalid ||
+    sleepEndIsInvalid ||
     (action === 'measurement' &&
       (measurementIsEmpty ||
         weightIsInvalid ||
@@ -246,7 +262,7 @@ export function CareActionSheet({
           weightGrams,
         });
       } else if (openSleep) {
-        await repository.finishSleep(openSleep.id);
+        await repository.finishSleep(openSleep.id, occurredAt);
       } else {
         await repository.startSleep({ babyId, notes, occurredAt });
       }
@@ -302,9 +318,7 @@ export function CareActionSheet({
           <View style={styles.heading}>
             <View>
               <Text style={styles.eyebrow}>
-                {openSleep && action === 'sleep'
-                  ? 'Se guardará con la hora actual'
-                  : 'Registra el momento real'}
+                Registra el momento real
               </Text>
               <Text style={styles.title}>{title}</Text>
             </View>
@@ -322,12 +336,11 @@ export function CareActionSheet({
             contentContainerStyle={styles.form}
             keyboardShouldPersistTaps="handled"
           >
-            {openSleep && action === 'sleep' ? null : (
-              <CareEntryTimeField
-                onChange={setTimeSelection}
-                selection={timeSelection}
-              />
-            )}
+            <CareEntryTimeField
+              label={isFinishingSleep ? 'Hora en que se despertó' : undefined}
+              onChange={setTimeSelection}
+              selection={timeSelection}
+            />
 
             {action === 'feeding' ? (
               <>
@@ -446,7 +459,9 @@ export function CareActionSheet({
                 <View style={styles.sleepNoticeCopy}>
                   <Text style={styles.sleepNoticeTitle}>Sueño en curso</Text>
                   <Text style={styles.sleepNoticeText}>
-                    Al confirmar quedará registrada la hora en que se despertó.
+                    {sleepDuration
+                      ? `Al confirmar, este sueño tendrá una duración de ${sleepDuration}.`
+                      : 'La hora de despertar debe ser posterior al inicio del sueño.'}
                   </Text>
                 </View>
               </View>
@@ -474,6 +489,12 @@ export function CareActionSheet({
             {errorMessage ? (
               <Text accessibilityRole="alert" style={styles.error}>
                 {errorMessage}
+              </Text>
+            ) : null}
+
+            {sleepEndIsInvalid ? (
+              <Text accessibilityRole="alert" style={styles.error}>
+                La hora de despertar debe ser posterior al inicio y estar dentro de las últimas 2 horas.
               </Text>
             ) : null}
 

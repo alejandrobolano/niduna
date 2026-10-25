@@ -505,10 +505,10 @@ export const supabaseCareRepository: CareRepository = {
     });
   },
 
-  async finishSleep(eventId) {
+  async finishSleep(eventId, endedAt) {
     const { data, error } = await supabase
       .from('care_events')
-      .update({ ended_at: new Date().toISOString() })
+      .update({ ended_at: validateCareEntryTime(endedAt) })
       .eq('id', eventId)
       .eq('event_type', 'sleep')
       .is('ended_at', null)

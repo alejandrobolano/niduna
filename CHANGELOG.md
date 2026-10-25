@@ -15,6 +15,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* permite editar los cuidados recientes directamente desde Relevo y elegir la hora real al terminar un sueño
 * permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido
 * permite pausar y reanudar los Momentos familiares sin perder el progreso de visualización
 * identifica en las notificaciones nativas y web si el nuevo cuidado es una toma, un cambio de pañal o una actualización del sueño

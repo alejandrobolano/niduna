@@ -1,5 +1,7 @@
 import type { CareEvent, SleepEvent } from '@/features/care/domain/care-event';
 
+import { isCareEntryTimeAllowed } from '../domain/care-entry-time';
+
 export function createCareRecordTimestamp(
   date: string,
   hour: string,
@@ -88,6 +90,17 @@ export function canEditCareRecord(
     canRecord &&
     (canManage || event.recordedById === userId) &&
     !(event.type === 'measurement' && event.source === 'birth')
+  );
+}
+
+export function isSleepEndTimeAllowed(
+  startedAt: string,
+  endedAt: string,
+  now = new Date(),
+): boolean {
+  return (
+    isCareEntryTimeAllowed(endedAt, now) &&
+    Date.parse(endedAt) > Date.parse(startedAt)
   );
 }
 

@@ -13,6 +13,7 @@ import { TimeWheelPicker } from '@/features/care/presentation/time-wheel-picker'
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface CareEntryTimeFieldProps {
+  label?: string;
   onChange: (selection: CareEntryTimeSelection) => void;
   selection: CareEntryTimeSelection;
 }
@@ -48,6 +49,7 @@ function findClosestMinute(minutes: number[], currentMinute: number): number {
 }
 
 export function CareEntryTimeField({
+  label = 'Momento del registro',
   onChange,
   selection,
 }: CareEntryTimeFieldProps) {
@@ -105,7 +107,7 @@ export function CareEntryTimeField({
           <Clock3 color={colors.primaryPressed} size={19} />
         </View>
         <View style={styles.copy}>
-          <Text style={styles.label}>Momento del registro</Text>
+          <Text style={styles.label}>{label}</Text>
           <Text accessibilityLiveRegion="polite" style={styles.value}>
             {formatSelection(selection, now)}
           </Text>
