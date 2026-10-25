@@ -100,6 +100,8 @@ import {
   saveGuidedOnboardingState,
 } from '@/features/onboarding/infrastructure/guided-onboarding-storage';
 import { GuidedOnboardingOverlay } from '@/features/onboarding/presentation/guided-onboarding-overlay';
+import { supabaseProductAnnouncementRepository } from '@/features/product-updates/infrastructure/supabase-product-announcement-repository';
+import { ProductAnnouncementModal } from '@/features/product-updates/presentation/product-announcement-modal';
 import {
   createThemedStyleSheet,
   getColors,
@@ -222,6 +224,9 @@ function AuthenticatedApp({
   >('scheduled');
   const [suppressScheduledNotifications, setSuppressScheduledNotifications] =
     useState(false);
+  const [productAnnouncementStatus, setProductAnnouncementStatus] = useState<
+    'loading' | 'resolved' | 'visible'
+  >('loading');
   const [replayRequested, setReplayRequested] = useState(() =>
     consumeGuidedOnboardingReplay(user.id),
   );
@@ -546,8 +551,20 @@ function AuthenticatedApp({
         suppressed={
           notificationPresentation === 'scheduled' &&
           (isOnboardingVisible ||
+            productAnnouncementStatus !== 'resolved' ||
             suppressScheduledNotifications ||
             onboardingShouldStart)
+        }
+        userId={user.id}
+      />
+      <ProductAnnouncementModal
+        onNavigate={(route) => navigateToSection(route)}
+        onStatusChange={setProductAnnouncementStatus}
+        repository={supabaseProductAnnouncementRepository}
+        suppressed={
+          isOnboardingVisible ||
+          onboardingShouldStart ||
+          notificationPresentation === 'onboarding'
         }
         userId={user.id}
       />

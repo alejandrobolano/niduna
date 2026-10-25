@@ -38,6 +38,7 @@ jobs:
             exit 1
           }
       - run: pnpm version:check
+      - run: pnpm announcements:validate
       - run: pnpm exec expo customize tsconfig.json
       - run: pnpm typecheck
       - run: pnpm lint
