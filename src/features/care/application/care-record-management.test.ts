@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { SleepEvent } from '@/features/care/domain/care-event';
 
-import { replaceSleepInterval } from './care-record-management';
+import {
+  canEditCareRecord,
+  isSleepEndTimeAllowed,
+  replaceSleepInterval,
+} from './care-record-management';
 
 const TestIcon: SleepEvent['icon'] = forwardRef(function TestIcon() {
   return null;
@@ -30,5 +34,42 @@ describe('care record management', () => {
 
     expect(new Date(updated.endedAt ?? '').getTime() - new Date(updated.occurredAt).getTime())
       .toBe(45 * 60_000);
+  });
+
+  it('allows a sleep to end within the recent entry window and after its start', () => {
+    const now = new Date('2026-10-01T15:00:00.000Z');
+
+    expect(
+      isSleepEndTimeAllowed(
+        '2026-10-01T13:00:00.000Z',
+        '2026-10-01T14:55:00.000Z',
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it('rejects a sleep end before its start or outside the recent entry window', () => {
+    const now = new Date('2026-10-01T15:00:00.000Z');
+
+    expect(
+      isSleepEndTimeAllowed(
+        '2026-10-01T14:30:00.000Z',
+        '2026-10-01T14:20:00.000Z',
+        now,
+      ),
+    ).toBe(false);
+    expect(
+      isSleepEndTimeAllowed(
+        '2026-10-01T10:00:00.000Z',
+        '2026-10-01T12:30:00.000Z',
+        now,
+      ),
+    ).toBe(false);
+  });
+
+  it('keeps care editing unavailable to read-only members', () => {
+    expect(canEditCareRecord(sleepEvent, 'user-id', false, false)).toBe(false);
+    expect(canEditCareRecord(sleepEvent, 'user-id', false, true)).toBe(true);
+    expect(canEditCareRecord(sleepEvent, 'manager-id', true, true)).toBe(true);
   });
 });

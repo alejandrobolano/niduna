@@ -61,6 +61,44 @@ type FamilyStoryReaction =
 export type Database = {
   public: {
     Tables: {
+      product_announcements: Table<
+        {
+          action_label: string | null;
+          created_at: string;
+          delivery: 'in_app' | 'push_and_in_app';
+          description: string;
+          expires_at: string | null;
+          id: string;
+          minimum_native_version: string | null;
+          platforms: string[];
+          published_at: string | null;
+          source_commit: string | null;
+          status: 'draft' | 'published' | 'archived';
+          target_route: string | null;
+          title: string;
+          updated_at: string;
+        },
+        {
+          action_label?: string | null;
+          delivery?: 'in_app' | 'push_and_in_app';
+          description: string;
+          expires_at?: string | null;
+          id: string;
+          minimum_native_version?: string | null;
+          platforms: string[];
+          published_at?: string | null;
+          source_commit?: string | null;
+          status?: 'draft' | 'published' | 'archived';
+          target_route?: string | null;
+          title: string;
+        },
+        Record<string, never>
+      >;
+      product_announcement_reads: Table<
+        { announcement_id: string; seen_at: string; user_id: string },
+        { announcement_id: string; seen_at?: string; user_id: string },
+        { seen_at?: string }
+      >;
       profiles: Table<
         {
           avatar_key: MemberAvatarKey | null;

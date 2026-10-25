@@ -68,6 +68,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "announcements:publish": "node scripts/publish-product-announcements.mjs",
+    "announcements:validate": "node scripts/validate-product-announcements.mjs",
     "version:check": "node scripts/check-version.mjs",
     "version:set": "node scripts/set-version.mjs"
   },

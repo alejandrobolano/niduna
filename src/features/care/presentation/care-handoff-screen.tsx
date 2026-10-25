@@ -5,6 +5,7 @@ import {
   Milk,
   Moon,
   NotebookPen,
+  Pencil,
   Plus,
   ReceiptText,
   RefreshCw,
@@ -33,6 +34,10 @@ import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import type { BabyContactRepository } from '@/features/baby-contacts/application/baby-contact-repository';
 import { getBabyWeightProgress } from '@/features/care/application/baby-weight-progress';
 import { subscribeToCareDataChanges } from '@/features/care/application/care-data-events';
+import {
+  canEditCareRecord,
+  getCareRecordKey,
+} from '@/features/care/application/care-record-management';
 import type { CareRepository } from '@/features/care/application/care-repository';
 import type { CareSummaryRepository } from '@/features/care-summary/application/care-summary-repository';
 import {
@@ -57,6 +62,7 @@ import {
   CareActionSheet,
   type CareAction,
 } from '@/features/care/presentation/care-action-sheet';
+import { CareEditSheet } from '@/features/care/presentation/care-edit-sheet';
 import { useFeedingVolumePreference } from '@/features/care/presentation/feeding-volume-preference-provider';
 import { FeedingRhythmInfo } from '@/features/care/presentation/feeding-rhythm-info';
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
@@ -292,11 +298,15 @@ function getEventPresentation(event: CareEvent, now: Date, volumeUnit: FeedingVo
 }
 
 function TimelineEvent({
+  canEdit,
   event,
   now,
+  onEdit,
 }: {
+  canEdit: boolean;
   event: CareEvent;
   now: Date;
+  onEdit: () => void;
 }) {
   const { unit } = useFeedingVolumePreference();
   const presentation = getEventPresentation(event, now, unit);
@@ -314,9 +324,26 @@ function TimelineEvent({
       <View style={styles.timelineCopy}>
         <View style={styles.timelineTitleRow}>
           <Text style={styles.timelineTitle}>{presentation.title}</Text>
-          <Text style={styles.timelineTime}>
-            {formatCareEventRecency(event.occurredAt, now)}
-          </Text>
+          <View style={styles.timelineMeta}>
+            <Text style={styles.timelineTime}>
+              {formatCareEventRecency(event.occurredAt, now)}
+            </Text>
+            {canEdit ? (
+              <Pressable
+                accessibilityLabel={`Editar ${presentation.title.toLocaleLowerCase('es')}`}
+                accessibilityRole="button"
+                onPress={onEdit}
+                style={({ pressed }) => [
+                  styles.timelineEditButton,
+                  pressed && styles.timelineEditButtonPressed,
+                ]}
+              >
+                <View style={styles.timelineEditGlyph}>
+                  <Pencil color={colors.primaryPressed} size={14} />
+                </View>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
         <Text style={styles.timelineDescription}>
           {presentation.description}
@@ -588,6 +615,7 @@ function DashboardContent({
   isRefreshing,
   now,
   onAction,
+  onEdit,
   onOpenBabyProfile,
   onOpenExpenses,
   onQuickActionsLayout,
@@ -601,6 +629,7 @@ function DashboardContent({
   isRefreshing: boolean;
   now: Date;
   onAction: (action: CareAction) => void;
+  onEdit: (event: CareEvent) => void;
   onOpenBabyProfile: () => void;
   onOpenExpenses: () => void;
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
@@ -876,9 +905,24 @@ function DashboardContent({
 
         <View style={styles.timeline}>
           {dashboard.events.length > 0 ? (
-            dashboard.events.slice(0, 20).map((event) => (
-              <TimelineEvent event={event} key={event.id} now={now} />
-            ))
+            dashboard.events.slice(0, 20).map((event) => {
+              const canEdit = canEditCareRecord(
+                event,
+                userId,
+                dashboard.canManage,
+                dashboard.canRecord,
+              );
+
+              return (
+                <TimelineEvent
+                  canEdit={canEdit}
+                  event={event}
+                  key={getCareRecordKey(event)}
+                  now={now}
+                  onEdit={() => onEdit(event)}
+                />
+              );
+            })
           ) : (
             <View style={styles.emptyTimeline}>
               <Star color={colors.butter} size={34} />
@@ -925,6 +969,7 @@ export function CareHandoffScreen({
   const [loadError, setLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [action, setAction] = useState<CareAction | undefined>(initialAction);
+  const [editingEvent, setEditingEvent] = useState<CareEvent>();
   const [isQuickActionPickerOpen, setIsQuickActionPickerOpen] = useState(false);
   const [showQuickActionAccess, setShowQuickActionAccess] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -1162,6 +1207,7 @@ export function CareHandoffScreen({
             isRefreshing={isRefreshing}
             now={now}
             onAction={setAction}
+            onEdit={setEditingEvent}
             onOpenBabyProfile={onOpenBabyProfile}
             onOpenExpenses={onOpenExpenses}
             onQuickActionsLayout={handleQuickActionsLayout}
@@ -1186,6 +1232,7 @@ export function CareHandoffScreen({
       dashboard.baby.lifeStage !== 'expected' &&
       showQuickActionAccess &&
       !action &&
+      !editingEvent &&
       !isQuickActionPickerOpen ? (
         <Pressable
           accessibilityHint="Abre las opciones para registrar un cuidado"
@@ -1220,6 +1267,15 @@ export function CareHandoffScreen({
         openSleep={snapshot?.openSleep}
         repository={repository}
       />
+      {editingEvent ? (
+        <CareEditSheet
+          event={editingEvent}
+          key={getCareRecordKey(editingEvent)}
+          onClose={() => setEditingEvent(undefined)}
+          onSaved={handleCareSaved}
+          repository={repository}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -1630,7 +1686,7 @@ const styles = createThemedStyleSheet((colors) => ({
   timelineGlyphText: { fontSize: 20, fontWeight: '900' },
   timelineCopy: { flex: 1, gap: spacing.xs },
   timelineTitleRow: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.md,
     justifyContent: 'space-between',
@@ -1645,6 +1701,28 @@ const styles = createThemedStyleSheet((colors) => ({
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: '800',
+  },
+  timelineMeta: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  timelineEditButton: {
+    alignItems: 'center',
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  timelineEditGlyph: {
+    alignItems: 'center',
+    backgroundColor: colors.aquaSoft,
+    borderRadius: radius.pill,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
+  timelineEditButtonPressed: {
+    opacity: 0.68,
+    transform: [{ scale: 0.98 }],
   },
   timelineDescription: {
     color: colors.textMuted,

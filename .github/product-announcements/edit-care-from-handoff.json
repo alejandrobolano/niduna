@@ -1,0 +1,12 @@
+{
+  "id": "edit-care-from-handoff",
+  "title": "Edita directamente desde Relevo",
+  "description": "Ahora puedes corregir un cuidado reciente desde Relevo, sin tener que buscarlo primero en Registro.",
+  "actionLabel": "Probar en Relevo",
+  "targetRoute": "handoff",
+  "platforms": ["web", "android", "ios"],
+  "minimumNativeVersion": "1.15.0",
+  "delivery": "in_app",
+  "status": "published",
+  "expiresAt": "2027-01-31T23:59:59.999Z"
+}
