@@ -9,12 +9,14 @@ versión correspondiente.
 
 ### Correcciones
 
+* evita mostrar como novedad a cuentas creadas después de la publicación del cambio
 * corrige el desbordamiento horizontal del directorio de contactos en pantallas móviles
 * evita que las tarjetas de documentos adopten una altura excesiva en pantallas móviles
 * retira la ruta interna de depuración de Expo Router y evita que `dev.niduna.com` sea indexado por buscadores
 
 ### Nuevas funciones
 
+* permite finalizar opcionalmente el sueño en curso al registrar una alimentación o un cambio de pañal, sin asumir que el bebé se despertó
 * muestra una sola vez a cada usuario las novedades importantes de Niduna y permite abrir directamente la función anunciada
 * permite editar los cuidados recientes directamente desde Relevo y elegir la hora real al terminar un sueño
 * permite compartir en Momentos vídeos privados de hasta 15 segundos y 50 MB, con reproducción, pausa y control de sonido

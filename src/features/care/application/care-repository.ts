@@ -20,11 +20,13 @@ interface CareEventInput {
 export interface FeedingInput extends CareEventInput {
   amountMilliliters?: number;
   breastSide?: BreastSide;
+  finishActiveSleep?: boolean;
   method: FeedingMethod;
 }
 
 export interface DiaperInput extends CareEventInput {
   condition: DiaperCondition;
+  finishActiveSleep?: boolean;
 }
 
 export type SleepInput = CareEventInput;
@@ -80,6 +82,7 @@ export type CareOperationErrorReason =
   | 'not_allowed'
   | 'invalid_occurrence'
   | 'recovery_expired'
+  | 'sleep_not_active'
   | 'sleep_already_running'
   | 'unknown';
 
