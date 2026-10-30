@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* muestra directamente el historial de administraciones y separa la gestión de productos del flujo principal de medicamentos
 * reserva un espacio consistente entre el contenido y la navegación inferior en pantallas compactas
 * oculta el seguimiento de medicamentos antes del nacimiento y corrige los fallos de la pantalla en web al registrar administraciones
 * evita mostrar como novedad a cuentas creadas después de la publicación del cambio

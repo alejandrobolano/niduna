@@ -98,9 +98,10 @@ export function MedicationScreen({
 }: MedicationScreenProps) {
   const { width } = useWindowDimensions();
   const compact = width < 720;
-  const [mode, setMode] = useState<ViewMode>('catalog');
+  const [mode, setMode] = useState<ViewMode>('administrations');
   const [medications, setMedications] = useState<BabyMedication[]>([]);
-  const [showRetired, setShowRetired] = useState(false);
+  const [showRetiredProducts, setShowRetiredProducts] = useState(false);
+  const [showRetiredAdministrations, setShowRetiredAdministrations] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<MedicationPageSize>(20);
   const [administrations, setAdministrations] = useState<MedicationAdministrationPage>();
@@ -140,25 +141,32 @@ export function MedicationScreen({
     `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`,
   );
 
-  const medicationOptions = useMemo(() => medications.filter((item) => !item.retiredAt).map((item) => ({
+  const medicationOptions = useMemo(() => medications.filter((item) => !item.retiredAt && item.status === 'active').map((item) => ({
     label: item.name,
     supportingText: `${item.presentation} · ${formatDose(item.indicatedDoseAmount, item.indicatedDoseUnit)}`,
     value: item.id,
   })), [medications]);
-  const filterOptions = [{ label: 'Todos los productos', value: 'all' }, ...medicationOptions];
+  const filterOptions = useMemo(() => [
+    { label: 'Todos los productos', value: 'all' },
+    ...medications.map((item) => ({
+      label: item.name,
+      supportingText: item.presentation,
+      value: item.id,
+    })),
+  ], [medications]);
   const administrationFilters = useMemo(() => ({
     ...medicationRangeToTimestamps(range),
     medicationId: medicationFilter === 'all' ? undefined : medicationFilter,
-    retired: showRetired,
-  }), [medicationFilter, range, showRetired]);
+    retired: showRetiredAdministrations,
+  }), [medicationFilter, range, showRetiredAdministrations]);
 
   useEffect(() => {
     let active = true;
-    void repository.loadMedications(babyId, showRetired).then((items) => active && setMedications(items))
+    void repository.loadMedications(babyId, showRetiredProducts).then((items) => active && setMedications(items))
       .catch((reason) => active && setError(messageFor(reason)))
       .finally(() => active && setLoading(false));
     return () => { active = false; };
-  }, [babyId, reload, repository, showRetired]);
+  }, [babyId, reload, repository, showRetiredProducts]);
 
   useEffect(() => {
     if (mode !== 'administrations') return;
@@ -178,13 +186,12 @@ export function MedicationScreen({
 
   function changeMode(nextMode: ViewMode) {
     if (nextMode === mode) return;
-    setLoading(true);
+    setLoading(nextMode === 'administrations');
     clearMedicationForm();
     setShowAdministrationForm(false);
     setEditingAdministration(undefined);
     setConfirmingAdministration(undefined);
     setError(undefined);
-    setShowRetired(false);
     setPage(1);
     setMode(nextMode);
   }
@@ -219,11 +226,11 @@ export function MedicationScreen({
     catch (reason) { setError(messageFor(reason)); } finally { setSaving(false); }
   }
 
-  function beginAdministration(item: BabyMedication) {
+  function beginAdministration(item?: BabyMedication) {
     const now = new Date();
-    setSelectedMedicationId(item.id);
-    setAdministeredDose(String(item.indicatedDoseAmount).replace('.', ','));
-    setAdministeredUnit(item.indicatedDoseUnit);
+    setSelectedMedicationId(item?.id ?? '');
+    setAdministeredDose(item ? String(item.indicatedDoseAmount).replace('.', ',') : '');
+    setAdministeredUnit(item?.indicatedDoseUnit ?? '');
     setAdministrationDate(dateToIso(now));
     setAdministrationTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
     setAdministrationNotes(''); setEditingAdministration(undefined); setShowAdministrationForm(true);
@@ -293,13 +300,24 @@ export function MedicationScreen({
         <ResourceScreenHero eyebrow="SALUD Y CUIDADOS" icon={<Pill color={colors.primaryPressed} size={28} />} onBack={onBack}
           subtitle={`Registro compartido de ${babyName}`} title="Medicamentos y vacunas" />
         <View style={styles.warning}><Text style={styles.warningTitle}>Registro informativo</Text><Text style={styles.warningText}>Niduna no calcula ni recomienda dosis. Sigue únicamente la indicación de un profesional sanitario y comprueba siempre producto, presentación y unidad.</Text></View>
-        <View style={styles.tabs}>
-          {(['catalog', 'administrations'] as const).map((value) => <Pressable accessibilityRole="tab" accessibilityState={{ selected: mode === value }} key={value} onPress={() => changeMode(value)} style={[styles.tab, mode === value && styles.tabActive]}><Text style={[styles.tabText, mode === value && styles.tabTextActive]}>{value === 'catalog' ? 'Productos' : 'Historial'}</Text></Pressable>)}
-        </View>
-        {mode === 'catalog' ? <View style={styles.toolbar}>
-          <Pressable onPress={() => setShowRetired((value) => !value)} style={styles.secondaryButton}><Archive color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>{showRetired ? 'Ver activos' : 'Ver retirados'}</Text></Pressable>
-          {mode === 'catalog' && canManageMedicationCatalog(familyRole) && !showRetired ? <Pressable onPress={() => { clearMedicationForm(); setShowMedicationForm(true); }} style={styles.primaryButton}><Plus color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Añadir producto</Text></Pressable> : null}
-        </View> : null}
+        {mode === 'administrations' ? <View style={styles.summaryCard}>
+          <View style={styles.summaryCopy}>
+            <Text style={styles.summaryLabel}>Administraciones del periodo</Text>
+            <Text style={styles.summaryValue}>{administrations?.total ?? 0}</Text>
+            <Text style={styles.summaryMeta}>{range.startDate} — {range.endDate}</Text>
+          </View>
+          <View style={styles.summaryActions}>
+            {canRecordMedicationAdministration(familyRole) && medicationOptions.length ? <Pressable onPress={() => beginAdministration()} style={styles.primaryButton}><Syringe color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Registrar administración</Text></Pressable> : null}
+            <Pressable onPress={() => changeMode('catalog')} style={styles.secondaryButton}><Pill color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>Gestionar productos</Text></Pressable>
+          </View>
+        </View> : <View style={styles.catalogHeading}>
+          <View style={styles.catalogCopy}><Text style={styles.sectionTitle}>Productos</Text><Text style={styles.catalogHint}>Configura los medicamentos, vacunas y suplementos antes de registrar cada administración.</Text></View>
+          <View style={styles.toolbar}>
+            <Pressable onPress={() => changeMode('administrations')} style={styles.secondaryButton}><RotateCcw color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>Volver al historial</Text></Pressable>
+            <Pressable onPress={() => { setLoading(true); setShowRetiredProducts((value) => !value); }} style={styles.secondaryButton}><Archive color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>{showRetiredProducts ? 'Ver activos' : 'Ver retirados'}</Text></Pressable>
+            {canManageMedicationCatalog(familyRole) && !showRetiredProducts ? <Pressable onPress={() => { clearMedicationForm(); setShowMedicationForm(true); }} style={styles.primaryButton}><Plus color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Añadir producto</Text></Pressable> : null}
+          </View>
+        </View>}
         {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text><Pressable accessibilityLabel="Cerrar error" onPress={() => setError(undefined)}><X color={colors.error} size={20} /></Pressable></View> : null}
 
         {showMedicationForm ? <ResourceFormCard><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingMedication ? 'Editar producto' : 'Nuevo producto'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={clearMedicationForm} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
@@ -327,10 +345,10 @@ export function MedicationScreen({
           </View>
           {rangePreset === 'custom' ? <View style={[styles.filterGrid, compact && styles.filterGridCompact]}><View style={[styles.filterField, compact && styles.filterFieldCompact]}><DatePickerField label="Desde" maximumDate={range.endDate} onChange={(startDate) => { setRange((current) => ({ ...current, startDate })); setPage(1); }} value={range.startDate} /></View><View style={[styles.filterField, compact && styles.filterFieldCompact]}><DatePickerField label="Hasta" maximumDate={dateToIso(new Date())} onChange={(endDate) => { setRange((current) => ({ endDate, startDate: current.startDate > endDate ? endDate : current.startDate })); setPage(1); }} value={range.endDate} /></View></View> : null}
           <View style={[styles.filterGrid, compact && styles.filterGridCompact]}><View style={[styles.filterField, compact && styles.filterFieldCompact]}><SelectField label="Producto" onChange={(value) => { setMedicationFilter(value); setPage(1); }} options={filterOptions} placeholder="Todos" title="Filtrar por producto" value={medicationFilter} /></View></View>
-          <View style={styles.filterActions}><Pressable onPress={() => { setShowRetired((value) => !value); setPage(1); }} style={styles.secondaryButton}>{showRetired ? <RotateCcw color={colors.primaryPressed} size={18} /> : <Archive color={colors.primaryPressed} size={18} />}<Text style={styles.secondaryButtonText}>{showRetired ? 'Ver activos' : 'Ver retirados'}</Text></Pressable><Pressable disabled={exporting || !administrations?.total} onPress={() => void exportAdministrations()} style={[styles.secondaryButton, (exporting || !administrations?.total) && styles.disabled]}><Download color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>{exporting ? 'Preparando…' : 'Exportar CSV'}</Text></Pressable></View>
+          <View style={styles.filterActions}><Pressable onPress={() => { setShowRetiredAdministrations((value) => !value); setPage(1); }} style={styles.secondaryButton}>{showRetiredAdministrations ? <RotateCcw color={colors.primaryPressed} size={18} /> : <Archive color={colors.primaryPressed} size={18} />}<Text style={styles.secondaryButtonText}>{showRetiredAdministrations ? 'Ver activos' : 'Ver retirados'}</Text></Pressable><Pressable disabled={exporting || !administrations?.total} onPress={() => void exportAdministrations()} style={[styles.secondaryButton, (exporting || !administrations?.total) && styles.disabled]}><Download color={colors.primaryPressed} size={18} /><Text style={styles.secondaryButtonText}>{exporting ? 'Preparando…' : 'Exportar CSV'}</Text></Pressable></View>
         </View> : null}
 
-        {loading ? <ActivityIndicator color={colors.primaryPressed} size="large" /> : mode === 'catalog' ? <View style={styles.list}>{medications.length ? medications.map((item) => <View key={item.id} style={styles.card}><View style={styles.cardHeading}><View style={styles.cardCopy}><Text style={styles.cardEyebrow}>{medicationCategoryLabels[item.category]} · {item.status === 'active' ? 'Activo' : 'Inactivo'}</Text><Text style={styles.cardTitle}>{item.name}</Text><Text style={styles.cardMeta}>{item.presentation}</Text></View><Pill color={colors.primaryPressed} size={24} /></View><View style={styles.doseBox}><Text style={styles.doseLabel}>DOSIS INDICADA</Text><Text style={styles.doseValue}>{formatDose(item.indicatedDoseAmount, item.indicatedDoseUnit)}</Text></View>{item.instructions ? <Text style={styles.cardText}>{item.instructions}</Text> : null}<View style={styles.actions}>{!item.retiredAt && canRecordMedicationAdministration(familyRole) && item.status === 'active' ? <Pressable onPress={() => beginAdministration(item)} style={styles.primaryButton}><Syringe color={colors.onAccent} size={17} /><Text style={styles.primaryButtonText}>Registrar administración</Text></Pressable> : null}{canManageMedicationCatalog(familyRole) ? <><Pressable onPress={() => item.retiredAt ? void toggleMedication(item) : editMedication(item)} style={styles.secondaryButton}>{item.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Pencil color={colors.primaryPressed} size={17} />}<Text style={styles.secondaryButtonText}>{item.retiredAt ? 'Restaurar' : 'Editar'}</Text></Pressable>{!item.retiredAt ? <Pressable onPress={() => setRetiringMedication(item)} style={styles.dangerButton}><Archive color={colors.error} size={17} /><Text style={styles.dangerText}>Retirar</Text></Pressable> : null}</> : null}</View></View>) : <Text style={styles.empty}>Todavía no hay productos registrados.</Text>}</View> : <View style={styles.list}><Text style={styles.sectionTitle}>{showRetired ? 'Administraciones retiradas' : 'Historial de administraciones'}</Text>{administrations?.administrations.map((item) => <View key={item.id} style={styles.card}><Text style={styles.cardEyebrow}>ADMINISTRADO · {formatDateTime(item.administeredAt)}</Text><Text style={styles.cardTitle}>{item.medicationName}</Text><Text style={styles.cardMeta}>{item.medicationPresentation}</Text><Text style={styles.doseValue}>{formatDose(item.doseAmount, item.doseUnit)}</Text><Text style={styles.cardText}>Registrado por {item.recorderName ?? 'un miembro de la familia'}</Text>{item.notes ? <Text style={styles.cardText}>{item.notes}</Text> : null}{canManageMedicationAdministration(item, familyRole, userId) ? <View style={styles.actions}><Pressable onPress={() => item.retiredAt ? void toggleAdministration(item) : editAdministration(item)} style={styles.secondaryButton}>{item.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Pencil color={colors.primaryPressed} size={17} />}<Text style={styles.secondaryButtonText}>{item.retiredAt ? 'Restaurar' : 'Editar'}</Text></Pressable>{!item.retiredAt ? <Pressable onPress={() => setRetiringAdministration(item)} style={styles.dangerButton}><Archive color={colors.error} size={17} /><Text style={styles.dangerText}>Retirar</Text></Pressable> : null}</View> : null}</View>)}{administrations ? <DataPagination onChangePage={setPage} onChangePageSize={(value) => { setPageSize(value); setPage(1); }} page={page} pageSize={pageSize} total={administrations.total} totalPages={administrations.totalPages} /> : null}</View>}
+        {loading ? <ActivityIndicator color={colors.primaryPressed} size="large" /> : mode === 'catalog' ? <View style={styles.list}>{medications.length ? medications.map((item) => <View key={item.id} style={styles.card}><View style={styles.cardHeading}><View style={styles.cardCopy}><Text style={styles.cardEyebrow}>{medicationCategoryLabels[item.category]} · {item.status === 'active' ? 'Activo' : 'Inactivo'}</Text><Text style={styles.cardTitle}>{item.name}</Text><Text style={styles.cardMeta}>{item.presentation}</Text></View><Pill color={colors.primaryPressed} size={24} /></View><View style={styles.doseBox}><Text style={styles.doseLabel}>DOSIS INDICADA</Text><Text style={styles.doseValue}>{formatDose(item.indicatedDoseAmount, item.indicatedDoseUnit)}</Text></View>{item.instructions ? <Text style={styles.cardText}>{item.instructions}</Text> : null}<View style={styles.actions}>{!item.retiredAt && canRecordMedicationAdministration(familyRole) && item.status === 'active' ? <Pressable onPress={() => beginAdministration(item)} style={styles.primaryButton}><Syringe color={colors.onAccent} size={17} /><Text style={styles.primaryButtonText}>Registrar administración</Text></Pressable> : null}{canManageMedicationCatalog(familyRole) ? <><Pressable onPress={() => item.retiredAt ? void toggleMedication(item) : editMedication(item)} style={styles.secondaryButton}>{item.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Pencil color={colors.primaryPressed} size={17} />}<Text style={styles.secondaryButtonText}>{item.retiredAt ? 'Restaurar' : 'Editar'}</Text></Pressable>{!item.retiredAt ? <Pressable onPress={() => setRetiringMedication(item)} style={styles.dangerButton}><Archive color={colors.error} size={17} /><Text style={styles.dangerText}>Retirar</Text></Pressable> : null}</> : null}</View></View>) : <Text style={styles.empty}>Todavía no hay productos registrados.</Text>}</View> : <View style={styles.list}><Text style={styles.sectionTitle}>{showRetiredAdministrations ? 'Administraciones retiradas' : 'Administraciones registradas'}</Text>{administrations?.administrations.map((item) => <View key={item.id} style={styles.card}><Text style={styles.cardEyebrow}>ADMINISTRADO · {formatDateTime(item.administeredAt)}</Text><Text style={styles.cardTitle}>{item.medicationName}</Text><Text style={styles.cardMeta}>{item.medicationPresentation}</Text><Text style={styles.doseValue}>{formatDose(item.doseAmount, item.doseUnit)}</Text><Text style={styles.cardText}>Registrado por {item.recorderName ?? 'un miembro de la familia'}</Text>{item.notes ? <Text style={styles.cardText}>{item.notes}</Text> : null}{canManageMedicationAdministration(item, familyRole, userId) ? <View style={styles.actions}><Pressable onPress={() => item.retiredAt ? void toggleAdministration(item) : editAdministration(item)} style={styles.secondaryButton}>{item.retiredAt ? <RotateCcw color={colors.primaryPressed} size={17} /> : <Pencil color={colors.primaryPressed} size={17} />}<Text style={styles.secondaryButtonText}>{item.retiredAt ? 'Restaurar' : 'Editar'}</Text></Pressable>{!item.retiredAt ? <Pressable onPress={() => setRetiringAdministration(item)} style={styles.dangerButton}><Archive color={colors.error} size={17} /><Text style={styles.dangerText}>Retirar</Text></Pressable> : null}</View> : null}</View>)}{administrations ? <DataPagination onChangePage={setPage} onChangePageSize={(value) => { setPageSize(value); setPage(1); }} page={page} pageSize={pageSize} total={administrations.total} totalPages={administrations.totalPages} /> : null}</View>}
       </KeyboardAwareScrollView>
       <ConfirmationModal confirmLabel="Sí, registrar" description="Comprueba que coinciden el producto, la presentación y la dosis realmente administrada." icon={<Syringe color={colors.primaryPressed} size={24} />} isPending={saving} onCancel={() => setConfirmingAdministration(undefined)} onConfirm={() => void confirmAdministration()} title={confirmationMedication ? `${confirmationMedication.name} · ${confirmationMedication.presentation} · ${formatDose(confirmingAdministration?.doseAmount ?? 0, confirmingAdministration?.doseUnit ?? '')}` : 'Confirmar administración'} visible={Boolean(confirmingAdministration)} />
       <ConfirmationModal confirmLabel="Retirar producto" description="Dejará de aparecer entre los productos activos. El histórico de administraciones se conservará." icon={<Archive color={colors.error} size={24} />} isPending={saving} onCancel={() => setRetiringMedication(undefined)} onConfirm={() => retiringMedication && void toggleMedication(retiringMedication)} title={`¿Retirar ${retiringMedication?.name ?? 'este producto'}?`} tone="danger" visible={Boolean(retiringMedication)} />
@@ -345,11 +363,15 @@ const styles = createThemedStyleSheet((theme) => ({
   warning: { backgroundColor: theme.butterSoft, borderRadius: radius.lg, gap: spacing.xs, padding: spacing.lg },
   warningTitle: { color: theme.text, fontSize: 15, fontWeight: '900' },
   warningText: { color: theme.textMuted, fontSize: 13, lineHeight: 19 },
-  tabs: { backgroundColor: theme.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', padding: 4 },
-  tab: { alignItems: 'center', borderRadius: radius.pill, flex: 1, minHeight: 48, justifyContent: 'center', paddingHorizontal: spacing.md },
-  tabActive: { backgroundColor: theme.primary },
-  tabText: { color: theme.textMuted, fontSize: 13, fontWeight: '800' },
-  tabTextActive: { color: theme.onAccent },
+  summaryCard: { alignItems: 'flex-start', backgroundColor: theme.aquaSoft, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
+  summaryCopy: { gap: spacing.xs, minWidth: 180 },
+  summaryLabel: { color: theme.primaryPressed, fontSize: 13, fontWeight: '900' },
+  summaryValue: { color: theme.text, fontSize: 34, fontWeight: '900' },
+  summaryMeta: { color: theme.textMuted, fontSize: 12 },
+  summaryActions: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  catalogHeading: { backgroundColor: theme.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl },
+  catalogCopy: { gap: spacing.xs },
+  catalogHint: { color: theme.textMuted, fontSize: 13, lineHeight: 19 },
   toolbar: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
   filtersCard: { backgroundColor: theme.surface, borderColor: theme.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.lg },
   presetRow: { backgroundColor: theme.surfaceMuted, borderRadius: radius.pill, flexDirection: 'row', padding: 4 },
