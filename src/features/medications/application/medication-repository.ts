@@ -12,11 +12,11 @@ export interface BabyMedicationDraft {
   category: BabyMedicationCategory;
   endDate?: string;
   indicatedBy?: string;
-  indicatedDoseAmount: number;
-  indicatedDoseUnit: string;
+  indicatedDoseAmount?: number;
+  indicatedDoseUnit?: string;
   instructions?: string;
   name: string;
-  presentation: string;
+  presentation?: string;
   startDate?: string;
   status: BabyMedicationStatus;
 }

@@ -35,11 +35,11 @@ type MedicationRow = {
   family_id: string;
   id: string;
   indicated_by: string | null;
-  indicated_dose_amount: number;
-  indicated_dose_unit: string;
+  indicated_dose_amount: number | null;
+  indicated_dose_unit: string | null;
   instructions: string | null;
   name: string;
-  presentation: string;
+  presentation: string | null;
   retired_at: string | null;
   start_date: string | null;
   status: BabyMedication['status'];
@@ -56,7 +56,7 @@ type AdministrationRow = {
   id: string;
   medication_id: string;
   medication_name: string;
-  medication_presentation: string;
+  medication_presentation: string | null;
   notes: string | null;
   recorded_by: string;
   retired_at: string | null;
@@ -75,11 +75,11 @@ function mapMedication(row: MedicationRow): BabyMedication {
     familyId: row.family_id,
     id: row.id,
     indicatedBy: row.indicated_by ?? undefined,
-    indicatedDoseAmount: Number(row.indicated_dose_amount),
-    indicatedDoseUnit: row.indicated_dose_unit,
+    indicatedDoseAmount: row.indicated_dose_amount === null ? undefined : Number(row.indicated_dose_amount),
+    indicatedDoseUnit: row.indicated_dose_unit ?? undefined,
     instructions: row.instructions ?? undefined,
     name: row.name,
-    presentation: row.presentation,
+    presentation: row.presentation ?? undefined,
     retiredAt: row.retired_at ?? undefined,
     startDate: row.start_date ?? undefined,
     status: row.status,
@@ -98,7 +98,7 @@ function mapAdministration(row: AdministrationRow, recorderName?: string): Medic
     id: row.id,
     medicationId: row.medication_id,
     medicationName: row.medication_name,
-    medicationPresentation: row.medication_presentation,
+    medicationPresentation: row.medication_presentation ?? undefined,
     notes: row.notes ?? undefined,
     recordedBy: row.recorded_by,
     recorderName,
@@ -199,12 +199,12 @@ export const supabaseMedicationRepository: MedicationRepository = {
       target_category: draft.category,
       target_end_date: draft.endDate || null,
       target_indicated_by: draft.indicatedBy?.trim() || null,
-      target_indicated_dose_amount: draft.indicatedDoseAmount,
-      target_indicated_dose_unit: draft.indicatedDoseUnit.trim(),
+      target_indicated_dose_amount: draft.indicatedDoseAmount ?? null,
+      target_indicated_dose_unit: draft.indicatedDoseUnit?.trim() || null,
       target_instructions: draft.instructions?.trim() || null,
       target_medication_id: medicationId ?? null,
       target_name: draft.name.trim(),
-      target_presentation: draft.presentation.trim(),
+      target_presentation: draft.presentation?.trim() || null,
       target_start_date: draft.startDate || null,
       target_status: draft.status,
     });

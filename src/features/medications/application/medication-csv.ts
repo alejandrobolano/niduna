@@ -20,7 +20,7 @@ export function createMedicationAdministrationCsv(
   const rows = administrations.map((administration) => [
     administration.administeredAt,
     administration.medicationName,
-    administration.medicationPresentation,
+    administration.medicationPresentation ?? '',
     administration.doseAmount,
     administration.doseUnit,
     administration.recorderName ?? 'Miembro de la familia',

@@ -17,11 +17,11 @@ export interface BabyMedication {
   familyId: string;
   id: string;
   indicatedBy?: string;
-  indicatedDoseAmount: number;
-  indicatedDoseUnit: string;
+  indicatedDoseAmount?: number;
+  indicatedDoseUnit?: string;
   instructions?: string;
   name: string;
-  presentation: string;
+  presentation?: string;
   retiredAt?: string;
   startDate?: string;
   status: BabyMedicationStatus;
@@ -38,7 +38,7 @@ export interface MedicationAdministration {
   id: string;
   medicationId: string;
   medicationName: string;
-  medicationPresentation: string;
+  medicationPresentation?: string;
   notes?: string;
   recordedBy: string;
   recorderName?: string;
