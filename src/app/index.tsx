@@ -539,7 +539,23 @@ function AuthenticatedApp({
         synchronizeDashboard={activeSection !== 'handoff'}
         userId={user.id}
       />
-      <View style={styles.appScreen}>{screen}</View>
+      <View
+        nativeID={
+          compactNavigation && Platform.OS === 'web'
+            ? 'niduna-compact-screen'
+            : undefined
+        }
+        style={[
+          styles.appScreen,
+          compactNavigation && {
+            marginBottom:
+              bottomNavigationContentHeight +
+              (Platform.OS === 'web' ? 0 : insets.bottom),
+          },
+        ]}
+      >
+        {screen}
+      </View>
       <NotificationOptInModal
         familyId={activeFamily.id}
         key={notificationPresentation}
