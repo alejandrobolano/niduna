@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createLocalAdministrationTimestamp, formatDose, parseDoseAmount } from './baby-medication';
+import {
+  createLocalAdministrationTimestamp,
+  createMedicationPresetRange,
+  formatDose,
+  medicationRangeToTimestamps,
+  parseDoseAmount,
+} from './baby-medication';
 
 describe('baby medication dose', () => {
   it('accepts positive amounts with up to three decimals', () => {
@@ -23,5 +29,17 @@ describe('baby medication dose', () => {
     expect([restored.getHours(), restored.getMinutes()]).toEqual([11, 45]);
     expect(createLocalAdministrationTimestamp('2026-10-30', '12:30', now)).toBeUndefined();
     expect(createLocalAdministrationTimestamp('2026-02-30', '10:00', now)).toBeUndefined();
+  });
+
+  it('creates local month and rolling ranges with complete-day timestamps', () => {
+    const now = new Date(2026, 9, 30, 12, 0);
+    expect(createMedicationPresetRange('month', now)).toEqual({
+      endDate: '2026-10-30',
+      startDate: '2026-10-01',
+    });
+    expect(createMedicationPresetRange('30d', now).startDate).toBe('2026-10-01');
+    const timestamps = medicationRangeToTimestamps({ endDate: '2026-10-30', startDate: '2026-10-01' });
+    expect(new Date(timestamps.startAt).getHours()).toBe(0);
+    expect(new Date(timestamps.endAt).getHours()).toBe(23);
   });
 });
