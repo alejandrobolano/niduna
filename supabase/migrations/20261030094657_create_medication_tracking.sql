@@ -1,7 +1,9 @@
 create type public.baby_medication_category as enum (
   'medication',
+  'vaccine',
   'vitamin',
-  'supplement'
+  'supplement',
+  'other'
 );
 
 create type public.baby_medication_status as enum (

@@ -885,7 +885,7 @@ export function BabyProfileScreen({
                 <Pill color={colors.primaryPressed} size={24} />
               </View>
               <View style={styles.photoCopy}>
-                <Text style={styles.photoTitle}>Medicación y vitaminas</Text>
+                <Text style={styles.photoTitle}>Medicamentos y vacunas</Text>
                 <Text style={styles.photoHint}>
                   Consulta indicaciones y registra de forma segura cada administración.
                 </Text>

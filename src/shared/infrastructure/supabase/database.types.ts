@@ -31,7 +31,7 @@ type BabyExpenseCategory =
   | 'equipment'
   | 'childcare'
   | 'other';
-type BabyMedicationCategory = 'medication' | 'vitamin' | 'supplement';
+type BabyMedicationCategory = 'medication' | 'vaccine' | 'supplement' | 'other' | 'vitamin';
 type BabyMedicationStatus = 'active' | 'inactive';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
 type BreastSide = 'left' | 'right' | 'both';

@@ -1,4 +1,4 @@
-export type BabyMedicationCategory = 'medication' | 'vitamin' | 'supplement';
+export type BabyMedicationCategory = 'medication' | 'vaccine' | 'supplement' | 'other' | 'vitamin';
 export type BabyMedicationStatus = 'active' | 'inactive';
 
 export interface BabyMedication {
@@ -45,6 +45,8 @@ export const medicationCategoryLabels: Record<BabyMedicationCategory, string> = 
   medication: 'Medicamento',
   supplement: 'Suplemento',
   vitamin: 'Vitamina',
+  vaccine: 'Vacuna',
+  other: 'Otro',
 };
 
 export function parseDoseAmount(value: string): number | undefined {

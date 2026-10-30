@@ -1,6 +1,6 @@
 {
   "id": "medication-tracking",
-  "title": "Medicamentos y vitaminas, en familia",
+  "title": "Medicamentos y vacunas, en familia",
   "description": "Ya puedes guardar las indicaciones de cada producto y confirmar cada administración con su dosis, unidad y presentación.",
   "actionLabel": "Abrir seguimiento",
   "targetRoute": "medications",

@@ -455,11 +455,14 @@ function QuickActionsSection({
           </Pressable>
         ) : null}
       </View>
-      <View
-        style={[
+      <ScrollView
+        contentContainerStyle={[
           styles.secondaryActions,
           compact && styles.secondaryActionsCompact,
         ]}
+        horizontal={compact}
+        showsHorizontalScrollIndicator={false}
+        style={compact ? styles.secondaryActionsScroller : undefined}
       >
         {compact ? (
           <Pressable
@@ -530,10 +533,10 @@ function QuickActionsSection({
         >
           <Pill color={colors.primaryPressed} size={17} />
           <Text style={styles.secondaryActionLabel}>
-            {compact ? 'Medicación' : 'Medicación y vitaminas'}
+            {compact ? 'Medicación' : 'Medicamentos y vacunas'}
           </Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -541,11 +544,15 @@ function QuickActionsSection({
 function QuickActionPicker({
   isSleeping,
   onClose,
+  onOpenExpenses,
+  onOpenMedications,
   onSelect,
   visible,
 }: {
   isSleeping: boolean;
   onClose: () => void;
+  onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   onSelect: (action: CareAction) => void;
   visible: boolean;
 }) {
@@ -620,6 +627,26 @@ function QuickActionPicker({
                 </Text>
               </Pressable>
             ))}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => { onClose(); onOpenExpenses(); }}
+              style={({ pressed }) => [styles.pickerOption, pressed && styles.actionPressed]}
+            >
+              <View style={[styles.pickerOptionIcon, { backgroundColor: `${colors.butter}22` }]}>
+                <ReceiptText color={colors.butter} size={20} />
+              </View>
+              <Text style={styles.pickerOptionLabel}>Gasto</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => { onClose(); onOpenMedications(); }}
+              style={({ pressed }) => [styles.pickerOption, pressed && styles.actionPressed]}
+            >
+              <View style={[styles.pickerOptionIcon, { backgroundColor: `${colors.aqua}22` }]}>
+                <Pill color={colors.aqua} size={20} />
+              </View>
+              <Text style={styles.pickerOptionLabel}>Medicamento o vacuna</Text>
+            </Pressable>
           </View>
         </SafeAreaView>
       </View>
@@ -1275,6 +1302,8 @@ export function CareHandoffScreen({
       <QuickActionPicker
         isSleeping={Boolean(snapshot?.openSleep)}
         onClose={() => setIsQuickActionPickerOpen(false)}
+        onOpenExpenses={onOpenExpenses}
+        onOpenMedications={onOpenMedications}
         onSelect={handleSelectQuickAction}
         visible={isQuickActionPickerOpen}
       />
@@ -1470,7 +1499,9 @@ const styles = createThemedStyleSheet((colors) => ({
   },
   secondaryActionsCompact: {
     flexWrap: 'nowrap',
+    paddingRight: spacing.lg,
   },
+  secondaryActionsScroller: { marginRight: -spacing.lg },
   secondaryAction: {
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -1486,10 +1517,10 @@ const styles = createThemedStyleSheet((colors) => ({
   secondaryActionCompact: {
     alignSelf: 'stretch',
     borderRadius: radius.md,
-    flex: 1,
+    flexGrow: 0,
     justifyContent: 'center',
     minHeight: 48,
-    minWidth: 0,
+    minWidth: 112,
     paddingHorizontal: spacing.sm,
   },
   secondaryActionLabel: {
