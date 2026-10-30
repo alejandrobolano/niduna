@@ -6,6 +6,7 @@ import {
   HeartHandshake,
   Lock,
   MapPinned,
+  Pill,
   WalletCards,
   MoveVertical,
   Plus,
@@ -214,6 +215,7 @@ interface BabyProfileScreenProps {
   onOpenDocuments?: () => void;
   onOpenContacts?: () => void;
   onOpenExpenses?: () => void;
+  onOpenMedications?: () => void;
   onSaved?: (babyId: string) => void;
   onUnfollow?: () => Promise<void>;
   repository: BabyProfileRepository;
@@ -231,6 +233,7 @@ export function BabyProfileScreen({
   onOpenDocuments,
   onOpenContacts,
   onOpenExpenses,
+  onOpenMedications,
   onSaved,
   onUnfollow,
   repository,
@@ -865,6 +868,26 @@ export function BabyProfileScreen({
                 <Text style={styles.photoTitle}>Gastos del bebé</Text>
                 <Text style={styles.photoHint}>
                   Registra compras y consulta cuánto habéis gastado por periodo.
+                </Text>
+              </View>
+              <Text style={styles.documentsLink}>Abrir</Text>
+            </Pressable>
+          ) : null}
+
+          {storedBabyId && onOpenMedications ? (
+            <Pressable
+              accessibilityHint="Abre el seguimiento de medicamentos y vitaminas"
+              accessibilityRole="button"
+              onPress={onOpenMedications}
+              style={({ pressed }) => [styles.documentsCard, pressed && styles.photoActionPressed]}
+            >
+              <View style={styles.documentsIcon}>
+                <Pill color={colors.primaryPressed} size={24} />
+              </View>
+              <View style={styles.photoCopy}>
+                <Text style={styles.photoTitle}>Medicación y vitaminas</Text>
+                <Text style={styles.photoHint}>
+                  Consulta indicaciones y registra de forma segura cada administración.
                 </Text>
               </View>
               <Text style={styles.documentsLink}>Abrir</Text>

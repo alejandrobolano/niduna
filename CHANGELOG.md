@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* incorpora un seguimiento familiar de medicamentos, vitaminas y suplementos con catálogo, dosis y unidades explícitas, confirmación reforzada, historial paginado y permisos por rol
 * permite finalizar opcionalmente el sueño en curso al registrar una alimentación o un cambio de pañal, sin asumir que el bebé se despertó
 * muestra una sola vez a cada usuario las novedades importantes de Niduna y permite abrir directamente la función anunciada
 * permite editar los cuidados recientes directamente desde Relevo y elegir la hora real al terminar un sueño

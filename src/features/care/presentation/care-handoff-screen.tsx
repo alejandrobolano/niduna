@@ -6,6 +6,7 @@ import {
   Moon,
   NotebookPen,
   Pencil,
+  Pill,
   Plus,
   ReceiptText,
   RefreshCw,
@@ -114,6 +115,7 @@ interface CareHandoffScreenProps {
   onOpenBabyProfile: () => void;
   onOpenContacts: () => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   repository: CareRepository;
   summaryRepository: CareSummaryRepository;
   storiesContent?: ReactNode;
@@ -370,11 +372,13 @@ function QuickActionsSection({
   isSleeping,
   onAction,
   onOpenExpenses,
+  onOpenMedications,
 }: {
   compact?: boolean;
   isSleeping: boolean;
   onAction: (action: CareAction) => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
 }) {
   return (
     <View style={styles.quickActionsSection}>
@@ -515,6 +519,20 @@ function QuickActionsSection({
             {compact ? 'Gasto' : 'Añadir gasto'}
           </Text>
         </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenMedications}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            compact && styles.secondaryActionCompact,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <Pill color={colors.primaryPressed} size={17} />
+          <Text style={styles.secondaryActionLabel}>
+            {compact ? 'Medicación' : 'Medicación y vitaminas'}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -618,6 +636,7 @@ function DashboardContent({
   onEdit,
   onOpenBabyProfile,
   onOpenExpenses,
+  onOpenMedications,
   onQuickActionsLayout,
   onRefresh,
   prenatalContent,
@@ -632,6 +651,7 @@ function DashboardContent({
   onEdit: (event: CareEvent) => void;
   onOpenBabyProfile: () => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
   prenatalContent?: ReactNode;
@@ -757,6 +777,7 @@ function DashboardContent({
             isSleeping={Boolean(openSleep)}
             onAction={onAction}
             onOpenExpenses={onOpenExpenses}
+            onOpenMedications={onOpenMedications}
           />
         </View>
       ) : null}
@@ -956,6 +977,7 @@ export function CareHandoffScreen({
   onOpenBabyProfile,
   onOpenContacts,
   onOpenExpenses,
+  onOpenMedications,
   repository,
   summaryRepository,
   storiesContent,
@@ -1210,6 +1232,7 @@ export function CareHandoffScreen({
             onEdit={setEditingEvent}
             onOpenBabyProfile={onOpenBabyProfile}
             onOpenExpenses={onOpenExpenses}
+            onOpenMedications={onOpenMedications}
             onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
             prenatalContent={

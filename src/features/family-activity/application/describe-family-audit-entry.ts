@@ -150,6 +150,24 @@ export function describeFamilyAuditAction(entry: FamilyAuditEntry): string {
             : entry.action === 'deleted'
               ? 'eliminó un gasto del bebé'
               : 'actualizó un gasto del bebé';
+  } else if (entry.entityType === 'baby_medication') {
+    action =
+      changeKind === 'retired'
+        ? 'retiró un producto del seguimiento de medicación'
+        : changeKind === 'restored'
+          ? 'restauró un producto del seguimiento de medicación'
+          : entry.action === 'created'
+            ? 'añadió un producto al seguimiento de medicación'
+            : 'actualizó un producto del seguimiento de medicación';
+  } else if (entry.entityType === 'medication_administration') {
+    action =
+      changeKind === 'retired'
+        ? 'retiró un registro de administración'
+        : changeKind === 'restored'
+          ? 'restauró un registro de administración'
+          : entry.action === 'created'
+            ? 'registró una administración'
+            : 'actualizó un registro de administración';
   } else if (entry.entityType === 'measurement') {
     action = describeMeasurement(details, entry.action);
   } else if (entry.entityType === 'family_member') {
