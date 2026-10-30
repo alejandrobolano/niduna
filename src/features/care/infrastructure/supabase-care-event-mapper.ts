@@ -1,6 +1,7 @@
 import type {
   CareEvent,
   MeasurementEvent,
+  MedicationAdministrationActivity,
   NoteEvent,
   SleepEvent,
 } from '@/features/care/domain/care-event';
@@ -11,6 +12,8 @@ import { BabyIcon, Milk, Moon, NotebookPen, Scale } from 'lucide-react-native';
 type CareEventRow = Database['public']['Tables']['care_events']['Row'];
 type BabyNoteRow = Database['public']['Tables']['baby_notes']['Row'];
 type MeasurementRow = Database['public']['Tables']['baby_measurements']['Row'];
+type MedicationAdministrationRow =
+  Database['public']['Tables']['baby_medication_administrations']['Row'];
 export type CareTimelineRow =
   Database['public']['Views']['care_timeline']['Row'];
 
@@ -24,6 +27,29 @@ export class InvalidCareEventError extends Error {
     super('invalid_care_event');
     this.name = 'InvalidCareEventError';
   }
+}
+
+export function mapMedicationAdministrationActivity(
+  row: MedicationAdministrationRow,
+  displayNames: ReadonlyMap<string, string>,
+  avatars: ReadonlyMap<string, CareEventAvatar> = new Map(),
+): MedicationAdministrationActivity {
+  const avatar = avatars.get(row.recorded_by);
+  return {
+    babyId: row.baby_id,
+    doseAmount: row.dose_amount,
+    doseUnit: row.dose_unit,
+    id: row.id,
+    medicationName: row.medication_name,
+    medicationPresentation: row.medication_presentation ?? undefined,
+    notes: row.notes ?? undefined,
+    occurredAt: row.administered_at,
+    recordedByAvatarKey: avatar?.avatarKey,
+    recordedByAvatarUrl: avatar?.avatarUrl,
+    recordedById: row.recorded_by,
+    recordedByName: displayNames.get(row.recorded_by),
+    type: 'medication_administration',
+  };
 }
 
 export function mapBabyNote(

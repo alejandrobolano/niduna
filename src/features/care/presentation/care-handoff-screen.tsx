@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Scale,
   Star,
+  Syringe,
   X,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -52,6 +53,7 @@ import {
 import type {
   CareDashboard,
   CareEvent,
+  CareTimelineItem,
   DiaperEvent,
   FeedingEvent,
   MeasurementEvent,
@@ -248,7 +250,18 @@ function getMeasurementDetail(event: MeasurementEvent): string {
   }`;
 }
 
-function getEventPresentation(event: CareEvent, now: Date, volumeUnit: FeedingVolumeUnit) {
+function getEventPresentation(event: CareTimelineItem, now: Date, volumeUnit: FeedingVolumeUnit) {
+  if (event.type === 'medication_administration') {
+    return {
+      accent: colors.aqua,
+      description: `${event.medicationName} · ${new Intl.NumberFormat('es-ES', {
+        maximumFractionDigits: 3,
+      }).format(event.doseAmount)} ${event.doseUnit}`,
+      icon: Syringe,
+      title: 'Administración registrada',
+    };
+  }
+
   if (event.type === 'feeding') {
     return {
       accent: colors.coral,
@@ -306,7 +319,7 @@ function TimelineEvent({
   onEdit,
 }: {
   canEdit: boolean;
-  event: CareEvent;
+  event: CareTimelineItem;
   now: Date;
   onEdit: () => void;
 }) {
@@ -952,22 +965,31 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {dashboard.events.length > 0 ? (
-            dashboard.events.slice(0, 20).map((event) => {
-              const canEdit = canEditCareRecord(
-                event,
-                userId,
-                dashboard.canManage,
-                dashboard.canRecord,
-              );
+          {dashboard.timeline.length > 0 ? (
+            dashboard.timeline.map((event) => {
+              const isMedicationAdministration =
+                event.type === 'medication_administration';
+              const canEdit = isMedicationAdministration
+                ? dashboard.canRecord &&
+                  (dashboard.canManage || event.recordedById === userId)
+                : canEditCareRecord(
+                    event,
+                    userId,
+                    dashboard.canManage,
+                    dashboard.canRecord,
+                  );
 
               return (
                 <TimelineEvent
                   canEdit={canEdit}
                   event={event}
-                  key={getCareRecordKey(event)}
+                  key={isMedicationAdministration
+                    ? `medication:${event.id}`
+                    : getCareRecordKey(event)}
                   now={now}
-                  onEdit={() => onEdit(event)}
+                  onEdit={() => isMedicationAdministration
+                    ? onOpenMedications()
+                    : onEdit(event)}
                 />
               );
             })
@@ -975,12 +997,12 @@ function DashboardContent({
             <View style={styles.emptyTimeline}>
               <Star color={colors.butter} size={34} />
               <Text style={styles.emptyTimelineTitle}>
-                {dashboard.events.length > 0
+                {dashboard.timeline.length > 0
                   ? 'No hay registros con este filtro'
                   : 'El relevo empieza aquí'}
               </Text>
               <Text style={styles.emptyTimelineText}>
-                {dashboard.events.length > 0
+                {dashboard.timeline.length > 0
                   ? 'Prueba otro tipo de cuidado, otro día o vuelve a mostrar todo.'
                   : 'El primer registro aparecerá en esta cronología para toda la familia.'}
               </Text>

@@ -38,6 +38,12 @@ import { exportMedicationFile } from '@/features/medications/infrastructure/medi
 import { DatePickerField } from '@/features/baby-profile/presentation/date-picker-field';
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
+import { TimePickerField } from '@/features/care/presentation/time-picker-field';
+import {
+  getMedicationUnitSelection,
+  resolveMedicationUnit,
+} from '@/features/medications/domain/medication-unit';
+import { MedicationUnitField } from '@/features/medications/presentation/medication-unit-field';
 import type { FamilyRole } from '@/features/family/domain/family';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
@@ -137,7 +143,8 @@ export function MedicationScreen({
   const [name, setName] = useState('');
   const [presentation, setPresentation] = useState('');
   const [dose, setDose] = useState('');
-  const [doseUnit, setDoseUnit] = useState('');
+  const [doseUnitPreset, setDoseUnitPreset] = useState('');
+  const [customDoseUnit, setCustomDoseUnit] = useState('');
   const [route, setRoute] = useState('');
   const [instructions, setInstructions] = useState('');
   const [indicatedBy, setIndicatedBy] = useState('');
@@ -145,12 +152,12 @@ export function MedicationScreen({
   const [endDate, setEndDate] = useState('');
   const [selectedMedicationId, setSelectedMedicationId] = useState('');
   const [administeredDose, setAdministeredDose] = useState('');
-  const [administeredUnit, setAdministeredUnit] = useState('');
+  const [administeredUnitPreset, setAdministeredUnitPreset] = useState('');
+  const [customAdministeredUnit, setCustomAdministeredUnit] = useState('');
   const [administrationNotes, setAdministrationNotes] = useState('');
   const [administrationDate, setAdministrationDate] = useState(dateToIso(new Date()));
-  const [administrationTime, setAdministrationTime] = useState(
-    `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`,
-  );
+  const [administrationHour, setAdministrationHour] = useState(String(new Date().getHours()).padStart(2, '0'));
+  const [administrationMinute, setAdministrationMinute] = useState(String(new Date().getMinutes()).padStart(2, '0'));
 
   const medicationOptions = useMemo(() => medications.filter((item) => !item.retiredAt && item.status === 'active').map((item) => ({
     label: item.name,
@@ -190,7 +197,8 @@ export function MedicationScreen({
   }, [administrationFilters, babyId, mode, page, pageSize, reload, repository]);
 
   function clearMedicationForm() {
-    setCategory('medication'); setStatus('active'); setName(''); setPresentation(''); setDose(''); setDoseUnit('');
+    setCategory('medication'); setStatus('active'); setName(''); setPresentation(''); setDose('');
+    setDoseUnitPreset(''); setCustomDoseUnit('');
     setRoute(''); setInstructions(''); setIndicatedBy(''); setStartDate(''); setEndDate('');
     setConfirmingIncompleteMedication(false); setEditingMedication(undefined); setShowMedicationForm(false);
   }
@@ -215,7 +223,9 @@ export function MedicationScreen({
 
   function editMedication(item: BabyMedication) {
     setCategory(item.category); setStatus(item.status); setName(item.name); setPresentation(item.presentation ?? '');
-    setDose(item.indicatedDoseAmount === undefined ? '' : String(item.indicatedDoseAmount).replace('.', ',')); setDoseUnit(item.indicatedDoseUnit ?? '');
+    setDose(item.indicatedDoseAmount === undefined ? '' : String(item.indicatedDoseAmount).replace('.', ','));
+    const unit = getMedicationUnitSelection(item.indicatedDoseUnit);
+    setDoseUnitPreset(unit.preset); setCustomDoseUnit(unit.customValue);
     setRoute(item.administrationRoute ?? ''); setInstructions(item.instructions ?? '');
     setIndicatedBy(item.indicatedBy ?? ''); setStartDate(item.startDate ?? ''); setEndDate(item.endDate ?? '');
     setEditingMedication(item); setShowMedicationForm(true);
@@ -223,6 +233,7 @@ export function MedicationScreen({
 
   async function saveMedication(allowIncomplete = false) {
     const amount = dose.trim() ? parseDoseAmount(dose) : undefined;
+    const doseUnit = resolveMedicationUnit(doseUnitPreset, customDoseUnit);
     if (!name.trim()) {
       setError('El nombre es obligatorio.'); return;
     }
@@ -247,24 +258,33 @@ export function MedicationScreen({
     const now = new Date();
     setSelectedMedicationId(item?.id ?? '');
     setAdministeredDose(item?.indicatedDoseAmount === undefined ? '' : String(item.indicatedDoseAmount).replace('.', ','));
-    setAdministeredUnit(item?.indicatedDoseUnit ?? '');
+    const unit = getMedicationUnitSelection(item?.indicatedDoseUnit);
+    setAdministeredUnitPreset(unit.preset); setCustomAdministeredUnit(unit.customValue);
     setAdministrationDate(dateToIso(now));
-    setAdministrationTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    setAdministrationHour(String(now.getHours()).padStart(2, '0'));
+    setAdministrationMinute(String(now.getMinutes()).padStart(2, '0'));
     setAdministrationNotes(''); setEditingAdministration(undefined); setShowAdministrationForm(true);
   }
 
   function editAdministration(item: MedicationAdministration) {
     const administeredAt = new Date(item.administeredAt);
     setSelectedMedicationId(item.medicationId); setAdministeredDose(String(item.doseAmount).replace('.', ','));
-    setAdministeredUnit(item.doseUnit); setAdministrationNotes(item.notes ?? '');
+    const unit = getMedicationUnitSelection(item.doseUnit);
+    setAdministeredUnitPreset(unit.preset); setCustomAdministeredUnit(unit.customValue);
+    setAdministrationNotes(item.notes ?? '');
     setAdministrationDate(dateToIso(administeredAt));
-    setAdministrationTime(`${String(administeredAt.getHours()).padStart(2, '0')}:${String(administeredAt.getMinutes()).padStart(2, '0')}`);
+    setAdministrationHour(String(administeredAt.getHours()).padStart(2, '0'));
+    setAdministrationMinute(String(administeredAt.getMinutes()).padStart(2, '0'));
     setEditingAdministration(item); setShowAdministrationForm(true);
   }
 
   function prepareAdministration() {
     const amount = parseDoseAmount(administeredDose);
-    const administeredAt = createLocalAdministrationTimestamp(administrationDate, administrationTime);
+    const administeredUnit = resolveMedicationUnit(administeredUnitPreset, customAdministeredUnit);
+    const administeredAt = createLocalAdministrationTimestamp(
+      administrationDate,
+      `${administrationHour}:${administrationMinute}`,
+    );
     if (!selectedMedicationId || !amount || !administeredUnit.trim() || !administeredAt) {
       setError('Selecciona el medicamento o vacuna y revisa la dosis, la unidad, la fecha y la hora.'); return;
     }
@@ -340,7 +360,7 @@ export function MedicationScreen({
         {showMedicationForm ? <ResourceFormCard><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingMedication ? 'Editar medicamento o vacuna' : 'Nuevo medicamento o vacuna'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={clearMedicationForm} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
           <ResponsiveFieldRow compact={compact} gap="medium"><View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Tipo" onChange={setCategory} options={categoryOptions} placeholder="Elige un tipo" title="Tipo de registro" value={category} /></View>{editingMedication ? <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Estado" onChange={setStatus} options={statusOptions} placeholder="Elige un estado" title="Estado" value={status} /></View> : null}</ResponsiveFieldRow>
           <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField label="Nombre" maxLength={120} onChangeText={setName} value={name} /><ProfileField label="Presentación o concentración (opcional)" maxLength={160} onChangeText={setPresentation} placeholder="Ej. 100 mg/ml" value={presentation} /></ResponsiveFieldRow>
-          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis indicada (opcional)" onChangeText={setDose} value={dose} /><ProfileField label="Unidad (opcional)" maxLength={30} onChangeText={setDoseUnit} placeholder="ml, gotas, mg…" value={doseUnit} /></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis indicada (opcional)" onChangeText={setDose} value={dose} /><View style={[styles.formField, compact && styles.formFieldCompact]}><MedicationUnitField customValue={customDoseUnit} label="Unidad (opcional)" onCustomValueChange={setCustomDoseUnit} onPresetChange={setDoseUnitPreset} preset={doseUnitPreset} /></View></ResponsiveFieldRow>
           <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField label="Vía (opcional)" onChangeText={setRoute} placeholder="Oral, tópica…" value={route} /><ProfileField label="Indicado por (opcional)" onChangeText={setIndicatedBy} value={indicatedBy} /></ResponsiveFieldRow>
           <ResponsiveFieldRow compact={compact} gap="medium"><DatePickerField label="Fecha de inicio (opcional)" onChange={setStartDate} value={startDate} /><DatePickerField label="Fecha de fin (opcional)" onChange={setEndDate} value={endDate} /></ResponsiveFieldRow>
           <ProfileField label="Indicaciones (opcional)" maxLength={1000} multiline onChangeText={setInstructions} value={instructions} />
@@ -348,9 +368,9 @@ export function MedicationScreen({
         </ResourceFormCard> : null}
 
         {showAdministrationForm ? <ResourceFormCard><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingAdministration ? 'Editar administración' : 'Registrar administración'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={() => { setShowAdministrationForm(false); setEditingAdministration(undefined); }} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
-          <SelectField disabled={Boolean(editingAdministration)} label="Medicamento o vacuna" onChange={(value) => { setSelectedMedicationId(value); const item = medications.find((entry) => entry.id === value); if (item) { setAdministeredDose(item.indicatedDoseAmount === undefined ? '' : String(item.indicatedDoseAmount).replace('.', ',')); setAdministeredUnit(item.indicatedDoseUnit ?? ''); } }} options={medicationOptions} placeholder="Selecciona una opción" title="Medicamento o vacuna administrado" value={selectedMedicationId} />
-          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis realmente administrada" onChangeText={setAdministeredDose} value={administeredDose} /><ProfileField label="Unidad" maxLength={30} onChangeText={setAdministeredUnit} value={administeredUnit} /></ResponsiveFieldRow>
-          <ResponsiveFieldRow compact={compact} gap="medium"><DatePickerField label="Fecha de administración" maximumDate={dateToIso(new Date())} onChange={setAdministrationDate} value={administrationDate} /><ProfileField autoCapitalize="none" label="Hora (HH:mm)" maxLength={5} onChangeText={setAdministrationTime} placeholder="14:30" value={administrationTime} /></ResponsiveFieldRow>
+          <SelectField disabled={Boolean(editingAdministration)} label="Medicamento o vacuna" onChange={(value) => { setSelectedMedicationId(value); const item = medications.find((entry) => entry.id === value); if (item) { setAdministeredDose(item.indicatedDoseAmount === undefined ? '' : String(item.indicatedDoseAmount).replace('.', ',')); const unit = getMedicationUnitSelection(item.indicatedDoseUnit); setAdministeredUnitPreset(unit.preset); setCustomAdministeredUnit(unit.customValue); } }} options={medicationOptions} placeholder="Selecciona una opción" title="Medicamento o vacuna administrado" value={selectedMedicationId} />
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis realmente administrada" onChangeText={setAdministeredDose} value={administeredDose} /><View style={[styles.formField, compact && styles.formFieldCompact]}><MedicationUnitField customValue={customAdministeredUnit} label="Unidad" onCustomValueChange={setCustomAdministeredUnit} onPresetChange={setAdministeredUnitPreset} preset={administeredUnitPreset} required /></View></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><DatePickerField label="Fecha de administración" maximumDate={dateToIso(new Date())} onChange={setAdministrationDate} value={administrationDate} /><View style={[styles.formField, compact && styles.formFieldCompact]}><TimePickerField hour={administrationHour} label="Hora de administración" minute={administrationMinute} onHourChange={setAdministrationHour} onMinuteChange={setAdministrationMinute} title="Hora de administración" /></View></ResponsiveFieldRow>
           <ProfileField label="Nota (opcional)" maxLength={500} multiline onChangeText={setAdministrationNotes} value={administrationNotes} />
           <Text style={styles.formHint}>La hora se interpreta según la zona horaria de este dispositivo.</Text>
           <Pressable onPress={prepareAdministration} style={styles.saveAction}><Syringe color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Revisar y registrar</Text></Pressable>

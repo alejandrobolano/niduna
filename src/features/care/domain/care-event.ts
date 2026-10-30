@@ -73,6 +73,24 @@ export type CareEvent =
   | NoteEvent
   | MeasurementEvent;
 
+export interface MedicationAdministrationActivity {
+  babyId: string;
+  doseAmount: number;
+  doseUnit: string;
+  id: string;
+  medicationName: string;
+  medicationPresentation?: string;
+  notes?: string;
+  occurredAt: string;
+  recordedByAvatarKey?: MemberAvatarVariant;
+  recordedByAvatarUrl?: string;
+  recordedById: string;
+  recordedByName?: string;
+  type: 'medication_administration';
+}
+
+export type CareTimelineItem = CareEvent | MedicationAdministrationActivity;
+
 export interface CareBaby {
   birthDate?: string;
   id: string;
@@ -85,6 +103,7 @@ export interface CareDashboard {
   canManage: boolean;
   canRecord: boolean;
   events: CareEvent[];
+  timeline: CareTimelineItem[];
   weightMeasurements: WeightMeasurement[];
 }
 

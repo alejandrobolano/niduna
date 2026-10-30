@@ -7,6 +7,8 @@ versión correspondiente.
 
 ## Unreleased
 
+- Integrate medication administrations into the Relevo activity timeline and reuse controlled dose-unit and time selectors.
+
 ### Correcciones
 
 * adapta el seguimiento de medicamentos a móvil y permite guardar registros incompletos con una advertencia preventiva
