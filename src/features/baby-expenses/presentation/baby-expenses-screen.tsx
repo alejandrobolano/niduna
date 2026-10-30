@@ -51,7 +51,7 @@ import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
-import { ResourceFormCard } from '@/shared/presentation/resource-form';
+import { ResourceFormCard, ResourceFormModal } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -293,6 +293,18 @@ export function BabyExpensesScreen({
     }
   }
 
+  const expenseFormFields = <>
+    <View style={[styles.formGrid, compact && styles.formGridCompact]}>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.amount} keyboardType="decimal-pad" label={`Importe (${currency})`} onChangeText={setAmount} value={amount} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Categoría" onChange={setDraftCategory} options={categoryOptions} placeholder="Categoría" title="Categoría del gasto" value={draftCategory} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField error={validation.payer} label="Pagado por" onChange={setDraftPayerId} options={payerOptions} placeholder="Persona" title="¿Quién pagó?" value={draftPayerId} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><DatePickerField error={validation.date} label="Fecha" maximumDate={dateToIso(new Date())} onChange={setExpenseDate} value={expenseDate} /></View>
+      <View style={[styles.formField, styles.formFieldWide, compact && styles.formFieldCompact]}><ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} /></View>
+    </View>
+    <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>{isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>{editing ? 'Guardar cambios' : 'Guardar gasto'}</Text>}</Pressable>
+  </>;
+
   return (
     <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
@@ -327,64 +339,15 @@ export function BabyExpensesScreen({
           ) : null}
           </View>
 
-          {showForm ? (
+          {showForm && !editing ? (
           <ResourceFormCard tone="outlined">
             <View style={styles.formHeading}>
-              <Text style={styles.sectionTitle}>{editing ? 'Editar gasto' : 'Nuevo gasto'}</Text>
+              <Text style={styles.sectionTitle}>Nuevo gasto</Text>
               <Pressable accessibilityLabel="Cerrar formulario" onPress={resetForm} style={styles.iconButton}>
                 <X color={colors.text} size={20} />
               </Pressable>
             </View>
-            <View style={[styles.formGrid, compact && styles.formGridCompact]}>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <ProfileField
-                  error={validation.amount}
-                  keyboardType="decimal-pad"
-                  label={`Importe (${currency})`}
-                  onChangeText={setAmount}
-                  value={amount}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <SelectField
-                  label="Categoría"
-                  onChange={setDraftCategory}
-                  options={categoryOptions}
-                  placeholder="Categoría"
-                  title="Categoría del gasto"
-                  value={draftCategory}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <SelectField
-                  error={validation.payer}
-                  label="Pagado por"
-                  onChange={setDraftPayerId}
-                  options={payerOptions}
-                  placeholder="Persona"
-                  title="¿Quién pagó?"
-                  value={draftPayerId}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <DatePickerField
-                  error={validation.date}
-                  label="Fecha"
-                  maximumDate={dateToIso(new Date())}
-                  onChange={setExpenseDate}
-                  value={expenseDate}
-                />
-              </View>
-              <View style={[styles.formField, styles.formFieldWide, compact && styles.formFieldCompact]}>
-                <ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} />
-              </View>
-            </View>
-            <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>
-              {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>Guardar gasto</Text>}
-            </Pressable>
+            {expenseFormFields}
           </ResourceFormCard>
           ) : null}
 
@@ -500,6 +463,7 @@ export function BabyExpensesScreen({
           </View>
         </View>
       </KeyboardAwareScrollView>
+      <ResourceFormModal icon={<ReceiptText color={colors.primaryPressed} size={22} />} onClose={resetForm} title="Editar gasto" visible={Boolean(editing)}>{expenseFormFields}</ResourceFormModal>
 
       <ConfirmationModal
         confirmLabel={confirming?.retiredAt ? 'Restaurar' : 'Retirar'}

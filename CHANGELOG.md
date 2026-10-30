@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Unifica la edición de medicamentos, gastos y documentos en formularios modales y evita acciones simultáneas incompatibles.
 - Integrate medication administrations into the Relevo activity timeline and reuse controlled dose-unit and time selectors.
 
 ### Correcciones
