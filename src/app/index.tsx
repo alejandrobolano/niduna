@@ -718,7 +718,10 @@ function AuthenticatedApp({
     );
   }
 
-  if (activeSection === 'medications' && context.activeBaby) {
+  if (
+    activeSection === 'medications' &&
+    context.activeBaby?.lifeStage === 'born'
+  ) {
     return renderAppScreen(
       <MedicationScreen
         babyId={context.activeBaby.id}
@@ -774,7 +777,11 @@ function AuthenticatedApp({
         onOpenDocuments={activeBabyId ? () => changeSection('documents') : undefined}
         onOpenContacts={activeBabyId ? () => changeSection('contacts') : undefined}
         onOpenExpenses={activeBabyId ? () => changeSection('expenses') : undefined}
-        onOpenMedications={activeBabyId ? () => changeSection('medications') : undefined}
+        onOpenMedications={
+          activeBabyId && activeBabyLifeStage === 'born'
+            ? () => changeSection('medications')
+            : undefined
+        }
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}

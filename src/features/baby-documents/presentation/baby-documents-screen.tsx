@@ -15,6 +15,7 @@ import type { FamilyRole } from '@/features/family/domain/family';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
+import { ResourceFormCard, ResponsiveFieldRow } from '@/shared/presentation/resource-form';
 
 const categoryOptions = [
   { label: 'Informe', value: 'report' },
@@ -159,23 +160,23 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
             title={`Documentos de ${babyName}`}
           />
 
-          <View style={styles.formCard}>
+          <ResourceFormCard>
             <View style={styles.sectionHeading}>
               <View><Text style={styles.sectionTitle}>{editing ? 'Editar documento' : 'Añadir documento'}</Text><Text style={styles.sectionHint}>PDF, JPG o PNG · máximo 10 MB</Text></View>
               {editing ? <Pressable onPress={resetForm}><Text style={styles.cancelText}>Cancelar</Text></Pressable> : null}
             </View>
             <Pressable accessibilityRole="button" onPress={() => void chooseFile()} style={styles.fileButton}><Plus color={colors.primaryPressed} size={20} /><Text style={styles.fileButtonText}>{selectedFile?.name ?? (editing ? 'Sustituir archivo (opcional)' : 'Seleccionar archivo')}</Text></Pressable>
-            <View style={[styles.formRow, compact && styles.formRowCompact]}>
+            <ResponsiveFieldRow compact={compact}>
               <ProfileField label="Nombre visible" maxLength={160} onChangeText={setDisplayName} placeholder="Ej. Informe de pediatría" value={displayName} />
               <SelectField label="Categoría" onChange={setCategory} options={categoryOptions} placeholder="Seleccionar" title="Categoría del documento" value={category} />
-            </View>
-            <View style={[styles.formRow, compact && styles.formRowCompact]}>
+            </ResponsiveFieldRow>
+            <ResponsiveFieldRow compact={compact}>
               <DatePickerField label="Fecha del documento" maximumDate={new Date().toISOString().slice(0, 10)} onChange={setDocumentDate} value={documentDate} />
               <ProfileField label="Descripción opcional" maxLength={500} onChangeText={setDescription} placeholder="Contexto útil para la familia" value={description} />
-            </View>
+            </ResponsiveFieldRow>
             {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
             <Pressable accessibilityRole="button" disabled={isSaving} onPress={() => void submit()} style={[styles.primaryButton, isSaving && styles.disabled]}>{isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryButtonText}>{editing ? 'Guardar cambios' : 'Guardar documento'}</Text>}</Pressable>
-          </View>
+          </ResourceFormCard>
 
           <View style={[styles.listCard, compact && styles.listCardCompact]}>
             <View style={styles.listHeading}>
@@ -214,6 +215,6 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 }, page: { paddingBottom: 112 }, content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, minWidth: 0, padding: spacing.lg, width: '100%' },
-  formCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 13, marginTop: 3 }, cancelText: { color: colors.error, fontWeight: '800' }, fileButton: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 54, paddingHorizontal: spacing.lg }, fileButtonText: { color: colors.primaryPressed, flex: 1, fontWeight: '800' }, formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, error: { color: colors.error, fontSize: 13, lineHeight: 19 }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.55 },
+  sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 13, marginTop: 3 }, cancelText: { color: colors.error, fontWeight: '800' }, fileButton: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 54, paddingHorizontal: spacing.lg }, fileButtonText: { color: colors.primaryPressed, flex: 1, fontWeight: '800' }, error: { color: colors.error, fontSize: 13, lineHeight: 19 }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.55 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, minWidth: 0, padding: spacing.xl }, listCardCompact: { padding: spacing.lg }, listHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' }, listHeadingCopy: { flex: 1, minWidth: 0 }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 44, justifyContent: 'center', width: 44 }, filterScroller: { minWidth: 0, width: '100%' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent }, loader: { marginVertical: spacing.xl }, empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl }, emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900' }, emptyText: { color: colors.textMuted, textAlign: 'center' }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, minWidth: 0 }, gridCompact: { flexDirection: 'column' }, documentCard: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, flexBasis: 360, flexGrow: 1, gap: spacing.md, minWidth: 280, padding: spacing.lg }, documentCardCompact: { flexBasis: 'auto', minWidth: 0, width: '100%' }, documentHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.md }, documentIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 46, justifyContent: 'center', width: 46 }, documentCopy: { flex: 1, minWidth: 0 }, documentTitle: { color: colors.text, fontSize: 16, fontWeight: '900' }, documentMeta: { color: colors.textMuted, fontSize: 12, lineHeight: 17 }, documentDescription: { color: colors.text, fontSize: 13, lineHeight: 19 }, documentActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, secondaryAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, minHeight: 40, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, secondaryActionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '800' }, dangerActionText: { color: colors.error, fontSize: 12, fontWeight: '800' }, retiredLink: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800', textAlign: 'center' },
 }));

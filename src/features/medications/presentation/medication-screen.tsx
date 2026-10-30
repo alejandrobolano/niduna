@@ -44,6 +44,7 @@ import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
+import { ResourceFormCard, ResponsiveFieldRow } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -78,9 +79,11 @@ function messageFor(error: unknown): string {
 
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat('es-ES', {
-    dateStyle: 'medium',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    month: 'short',
+    year: 'numeric',
   }).format(new Date(value));
 }
 
@@ -151,7 +154,6 @@ export function MedicationScreen({
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     void repository.loadMedications(babyId, showRetired).then((items) => active && setMedications(items))
       .catch((reason) => active && setError(messageFor(reason)))
       .finally(() => active && setLoading(false));
@@ -161,7 +163,6 @@ export function MedicationScreen({
   useEffect(() => {
     if (mode !== 'administrations') return;
     let active = true;
-    setLoading(true);
     void repository.loadAdministrationPage(babyId, page, pageSize, administrationFilters)
       .then((result) => active && setAdministrations(result))
       .catch((reason) => active && setError(messageFor(reason)))
@@ -177,6 +178,7 @@ export function MedicationScreen({
 
   function changeMode(nextMode: ViewMode) {
     if (nextMode === mode) return;
+    setLoading(true);
     clearMedicationForm();
     setShowAdministrationForm(false);
     setEditingAdministration(undefined);
@@ -300,24 +302,24 @@ export function MedicationScreen({
         </View> : null}
         {error ? <View style={styles.error}><Text style={styles.errorText}>{error}</Text><Pressable accessibilityLabel="Cerrar error" onPress={() => setError(undefined)}><X color={colors.error} size={20} /></Pressable></View> : null}
 
-        {showMedicationForm ? <View style={styles.formCard}><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingMedication ? 'Editar producto' : 'Nuevo producto'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={clearMedicationForm} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Tipo de producto" onChange={setCategory} options={categoryOptions} placeholder="Elige un tipo" title="Tipo de producto" value={category} /></View>{editingMedication ? <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Estado" onChange={setStatus} options={statusOptions} placeholder="Elige un estado" title="Estado del producto" value={status} /></View> : null}</View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><ProfileField label="Nombre" maxLength={120} onChangeText={setName} value={name} /><ProfileField label="Presentación o concentración" maxLength={160} onChangeText={setPresentation} placeholder="Ej. 100 mg/ml" value={presentation} /></View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><ProfileField keyboardType="decimal-pad" label="Dosis indicada" onChangeText={setDose} value={dose} /><ProfileField label="Unidad" maxLength={30} onChangeText={setDoseUnit} placeholder="ml, gotas, mg…" value={doseUnit} /></View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><ProfileField label="Vía (opcional)" onChangeText={setRoute} placeholder="Oral, tópica…" value={route} /><ProfileField label="Indicado por (opcional)" onChangeText={setIndicatedBy} value={indicatedBy} /></View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><DatePickerField label="Fecha de inicio (opcional)" onChange={setStartDate} value={startDate} /><DatePickerField label="Fecha de fin (opcional)" onChange={setEndDate} value={endDate} /></View>
+        {showMedicationForm ? <ResourceFormCard><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingMedication ? 'Editar producto' : 'Nuevo producto'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={clearMedicationForm} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
+          <ResponsiveFieldRow compact={compact} gap="medium"><View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Tipo de producto" onChange={setCategory} options={categoryOptions} placeholder="Elige un tipo" title="Tipo de producto" value={category} /></View>{editingMedication ? <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Estado" onChange={setStatus} options={statusOptions} placeholder="Elige un estado" title="Estado del producto" value={status} /></View> : null}</ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField label="Nombre" maxLength={120} onChangeText={setName} value={name} /><ProfileField label="Presentación o concentración" maxLength={160} onChangeText={setPresentation} placeholder="Ej. 100 mg/ml" value={presentation} /></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis indicada" onChangeText={setDose} value={dose} /><ProfileField label="Unidad" maxLength={30} onChangeText={setDoseUnit} placeholder="ml, gotas, mg…" value={doseUnit} /></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField label="Vía (opcional)" onChangeText={setRoute} placeholder="Oral, tópica…" value={route} /><ProfileField label="Indicado por (opcional)" onChangeText={setIndicatedBy} value={indicatedBy} /></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><DatePickerField label="Fecha de inicio (opcional)" onChange={setStartDate} value={startDate} /><DatePickerField label="Fecha de fin (opcional)" onChange={setEndDate} value={endDate} /></ResponsiveFieldRow>
           <ProfileField label="Indicaciones (opcional)" maxLength={1000} multiline onChangeText={setInstructions} value={instructions} />
           <Pressable disabled={saving} onPress={() => void saveMedication()} style={[styles.saveAction, saving && styles.disabled]}>{saving ? <ActivityIndicator color={colors.onAccent} /> : <><Check color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Guardar producto</Text></>}</Pressable>
-        </View> : null}
+        </ResourceFormCard> : null}
 
-        {showAdministrationForm ? <View style={styles.formCard}><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingAdministration ? 'Editar administración' : 'Registrar administración'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={() => { setShowAdministrationForm(false); setEditingAdministration(undefined); }} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
+        {showAdministrationForm ? <ResourceFormCard><View style={styles.formHeading}><Text style={styles.sectionTitle}>{editingAdministration ? 'Editar administración' : 'Registrar administración'}</Text><Pressable accessibilityLabel="Cerrar formulario" onPress={() => { setShowAdministrationForm(false); setEditingAdministration(undefined); }} style={styles.iconButton}><X color={colors.text} size={20} /></Pressable></View>
           <SelectField disabled={Boolean(editingAdministration)} label="Producto" onChange={(value) => { setSelectedMedicationId(value); const item = medications.find((entry) => entry.id === value); if (item) { setAdministeredDose(String(item.indicatedDoseAmount).replace('.', ',')); setAdministeredUnit(item.indicatedDoseUnit); } }} options={medicationOptions} placeholder="Selecciona el producto" title="Producto administrado" value={selectedMedicationId} />
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><ProfileField keyboardType="decimal-pad" label="Dosis realmente administrada" onChangeText={setAdministeredDose} value={administeredDose} /><ProfileField label="Unidad" maxLength={30} onChangeText={setAdministeredUnit} value={administeredUnit} /></View>
-          <View style={[styles.formRow, compact && styles.formRowCompact]}><DatePickerField label="Fecha de administración" maximumDate={dateToIso(new Date())} onChange={setAdministrationDate} value={administrationDate} /><ProfileField autoCapitalize="none" label="Hora (HH:mm)" maxLength={5} onChangeText={setAdministrationTime} placeholder="14:30" value={administrationTime} /></View>
+          <ResponsiveFieldRow compact={compact} gap="medium"><ProfileField keyboardType="decimal-pad" label="Dosis realmente administrada" onChangeText={setAdministeredDose} value={administeredDose} /><ProfileField label="Unidad" maxLength={30} onChangeText={setAdministeredUnit} value={administeredUnit} /></ResponsiveFieldRow>
+          <ResponsiveFieldRow compact={compact} gap="medium"><DatePickerField label="Fecha de administración" maximumDate={dateToIso(new Date())} onChange={setAdministrationDate} value={administrationDate} /><ProfileField autoCapitalize="none" label="Hora (HH:mm)" maxLength={5} onChangeText={setAdministrationTime} placeholder="14:30" value={administrationTime} /></ResponsiveFieldRow>
           <ProfileField label="Nota (opcional)" maxLength={500} multiline onChangeText={setAdministrationNotes} value={administrationNotes} />
           <Text style={styles.formHint}>La hora se interpreta según la zona horaria de este dispositivo.</Text>
           <Pressable onPress={prepareAdministration} style={styles.saveAction}><Syringe color={colors.onAccent} size={18} /><Text style={styles.primaryButtonText}>Revisar y registrar</Text></Pressable>
-        </View> : null}
+        </ResourceFormCard> : null}
 
         {mode === 'administrations' ? <View style={styles.filtersCard}>
           <View style={[styles.presetRow, compact && styles.presetRowCompact]}>
@@ -371,14 +373,11 @@ const styles = createThemedStyleSheet((theme) => ({
   dangerText: { color: theme.error, fontSize: 13, fontWeight: '900' },
   error: { alignItems: 'center', backgroundColor: theme.errorSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between', padding: spacing.lg },
   errorText: { color: theme.error, flex: 1, fontSize: 13, fontWeight: '700' },
-  formCard: { backgroundColor: theme.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl },
   formHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' },
   iconButton: { alignItems: 'center', backgroundColor: theme.surfaceMuted, borderRadius: radius.pill, height: 48, justifyContent: 'center', width: 48 },
   saveAction: { alignItems: 'center', backgroundColor: theme.primary, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: 54 },
   disabled: { opacity: 0.55 },
   sectionTitle: { color: theme.text, fontSize: 22, fontWeight: '900' },
-  formRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  formRowCompact: { flexDirection: 'column' },
   formField: { flex: 1, minWidth: 0 },
   formFieldCompact: { alignSelf: 'stretch', flexBasis: 'auto', width: '100%' },
   formHint: { color: theme.textMuted, fontSize: 12, lineHeight: 18 },

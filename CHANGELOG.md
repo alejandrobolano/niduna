@@ -9,6 +9,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* oculta el seguimiento de medicamentos antes del nacimiento y corrige los fallos de la pantalla en web al registrar administraciones
 * evita mostrar como novedad a cuentas creadas después de la publicación del cambio
 * corrige el desbordamiento horizontal del directorio de contactos en pantallas móviles
 * evita que las tarjetas de documentos adopten una altura excesiva en pantallas móviles

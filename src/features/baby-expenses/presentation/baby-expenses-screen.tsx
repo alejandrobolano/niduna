@@ -51,6 +51,7 @@ import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
+import { ResourceFormCard } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -327,7 +328,7 @@ export function BabyExpensesScreen({
           </View>
 
           {showForm ? (
-          <View style={styles.formCard}>
+          <ResourceFormCard tone="outlined">
             <View style={styles.formHeading}>
               <Text style={styles.sectionTitle}>{editing ? 'Editar gasto' : 'Nuevo gasto'}</Text>
               <Pressable accessibilityLabel="Cerrar formulario" onPress={resetForm} style={styles.iconButton}>
@@ -384,7 +385,7 @@ export function BabyExpensesScreen({
             <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>
               {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>Guardar gasto</Text>}
             </Pressable>
-          </View>
+          </ResourceFormCard>
           ) : null}
 
           <View style={styles.filtersCard}>
@@ -529,7 +530,6 @@ const styles = createThemedStyleSheet((colors) => ({
   summaryMeta: { color: colors.textMuted, fontSize: 12 },
   primaryAction: { alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.xl },
   primaryActionText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' },
-  formCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.xl },
   formHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' },
   formGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
