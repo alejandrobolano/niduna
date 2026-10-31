@@ -1,11 +1,13 @@
-import { ScrollViewStyleReset } from 'expo-router/html';
+import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html';
 import type { PropsWithChildren } from 'react';
 
 import { webViewportContent } from '@/shared/presentation/web-viewport';
 
 export default function Root({ children }: PropsWithChildren) {
+  const { bodyAttributes, bodyNodes, headNodes, htmlAttributes } = useServerDocumentContext();
+
   return (
-    <html lang="es">
+    <html {...htmlAttributes} lang="es">
       <head>
         <meta charSet="utf-8" />
         <meta content="IE=edge" httpEquiv="X-UA-Compatible" />
@@ -21,8 +23,12 @@ export default function Root({ children }: PropsWithChildren) {
         <link href="/manifest.webmanifest" rel="manifest" />
         <link href="/pwa/icon-192.png" rel="apple-touch-icon" />
         <ScrollViewStyleReset />
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }
