@@ -44,4 +44,4 @@ jobs:
           fi
           printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > google-services.json
       - name: Trigger Android preview build
-        run: pnpm build:android:preview -- --non-interactive --no-wait
+        run: pnpm run build:android:preview --non-interactive --no-wait
