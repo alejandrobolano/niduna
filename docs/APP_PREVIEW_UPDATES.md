@@ -15,12 +15,20 @@ Android devices without modifying the care notification function.
 Repeated webhook deliveries are idempotent. A build can create at most one
 delivery per registered device.
 
-## Automatic build after merge
+## Release and internal builds
 
 `.github/workflows/build-android-preview.yml` starts an Android `preview` build
-after a pull request targeting `master` is merged. It can also be started
-manually with `workflow_dispatch`. GitHub only submits the build; EAS completes
-it asynchronously and the existing webhook processes the result.
+when a version change reaches `master`. This happens when the release pull
+request is merged. The `preview` profile is the current distributable APK: its
+successful EAS webhook updates the public download and notifies Android users.
+
+Manual runs use the `preview-internal` profile by default. EAS still produces an
+installable APK, but the webhook ignores it, so it neither replaces the public
+download nor notifies users. A manual run only becomes public when the
+`publish` input is explicitly enabled.
+
+GitHub only submits the build; EAS completes it asynchronously and the existing
+webhook processes the result.
 
 The repository requires these GitHub Actions secrets:
 
@@ -40,6 +48,12 @@ The equivalent local command is available as:
 
 ```text
 pnpm build:android:preview
+```
+
+Use the non-publishing profile for technical validation:
+
+```text
+pnpm exec eas build --platform android --profile preview-internal
 ```
 
 ## Required Supabase secrets

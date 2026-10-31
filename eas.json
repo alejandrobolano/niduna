@@ -23,6 +23,17 @@
         "buildType": "apk"
       }
     },
+    "preview-internal": {
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_USE_RN_FETCH": "1"
+      },
+      "autoIncrement": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "production": {
       "environment": "production",
       "env": {
