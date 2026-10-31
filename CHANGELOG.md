@@ -63,6 +63,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.17.2](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.1...niduna-v1.17.2) (2026-10-31)
+
+
+### Correcciones
+
+* provide Firebase config through EAS ([eab39d2](https://github.com/alejandrobolano/niduna/commit/eab39d26a72ae9e581d0f90f757bf5359dcae150))
+* provide Firebase config through EAS ([c257b16](https://github.com/alejandrobolano/niduna/commit/c257b16ed26bc021b67d2881255c0913fe259705))
+
 ## [1.17.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.0...niduna-v1.17.1) (2026-10-31)
 
 
