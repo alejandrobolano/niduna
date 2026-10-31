@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* permite que la build Android preview utilice los secretos protegidos del entorno de desarrollo
 * evita que pnpm bloquee la instalación temporal de EAS CLI en la build automática de Android
 * restaura la carga de estilos y JavaScript de la web tras la actualización a Expo SDK 58
 * adapta el seguimiento de medicamentos a móvil y permite guardar registros incompletos con una advertencia preventiva
