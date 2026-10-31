@@ -37,15 +37,6 @@ jobs:
           packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
       - run: pnpm install --frozen-lockfile
-      - name: Prepare Firebase configuration
-        env:
-          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
-        run: |
-          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
-            echo "Missing GOOGLE_SERVICES_JSON_BASE64 secret."
-            exit 1
-          fi
-          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > google-services.json
       - name: Build published Android preview
         if: github.event_name == 'push' || inputs.publish == true
         run: pnpm run build:android:preview --non-interactive --no-wait

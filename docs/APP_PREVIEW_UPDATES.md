@@ -33,15 +33,17 @@ webhook processes the result.
 The repository requires these GitHub Actions secrets:
 
 - `EXPO_TOKEN`: Expo access token with permission to build Niduna.
-- `GOOGLE_SERVICES_JSON_BASE64`: base64-encoded contents of
-  `google-services.json`.
 
-Generate the Firebase value locally without printing it to the terminal:
+Firebase configuration is stored in EAS as a secret file environment variable
+named `GOOGLE_SERVICES_JSON`. `app.config.ts` uses the path injected by EAS and
+falls back to the local `google-services.json` file during development. The file
+must exist in every EAS environment used by an Android build and must not be
+committed to Git.
 
-```powershell
-[Convert]::ToBase64String(
-  [IO.File]::ReadAllBytes((Resolve-Path .\google-services.json))
-) | Set-Clipboard
+Create or replace the EAS file variable without printing its contents:
+
+```text
+eas env:create --name GOOGLE_SERVICES_JSON --value ./google-services.json --type file --visibility secret --environment preview --force --non-interactive
 ```
 
 The equivalent local command is available as:
