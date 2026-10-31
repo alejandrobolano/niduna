@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* corrige el paso de argumentos no interactivos al comando EAS de la build Android preview
 * permite que la build Android preview utilice los secretos protegidos del entorno de desarrollo
 * evita que pnpm bloquee la instalación temporal de EAS CLI en la build automática de Android
 * restaura la carga de estilos y JavaScript de la web tras la actualización a Expo SDK 58
