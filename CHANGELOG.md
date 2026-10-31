@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* evita que pnpm bloquee la instalación temporal de EAS CLI en la build automática de Android
 * restaura la carga de estilos y JavaScript de la web tras la actualización a Expo SDK 58
 * adapta el seguimiento de medicamentos a móvil y permite guardar registros incompletos con una advertencia preventiva
 * permite publicar y abrir correctamente la novedad del seguimiento de medicamentos
