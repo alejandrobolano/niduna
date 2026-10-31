@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* limita la publicación y notificación de nuevas APK a los cambios de versión y mantiene las builds manuales como pruebas internas por defecto
 * corrige el paso de argumentos no interactivos al comando EAS de la build Android preview
 * permite que la build Android preview utilice los secretos protegidos del entorno de desarrollo
 * evita que pnpm bloquee la instalación temporal de EAS CLI en la build automática de Android
