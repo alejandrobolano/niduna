@@ -6,7 +6,6 @@ import {
   ReceiptText,
   RefreshCw,
   RotateCcw,
-  X,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -51,7 +50,8 @@ import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
-import { ResourceFormCard, ResourceFormModal } from '@/shared/presentation/resource-form';
+import { resourceScreenContentStyle } from '@/shared/presentation/resource-screen-layout';
+import { ResourceFormModal } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -339,18 +339,6 @@ export function BabyExpensesScreen({
           ) : null}
           </View>
 
-          {showForm && !editing ? (
-          <ResourceFormCard tone="outlined">
-            <View style={styles.formHeading}>
-              <Text style={styles.sectionTitle}>Nuevo gasto</Text>
-              <Pressable accessibilityLabel="Cerrar formulario" onPress={resetForm} style={styles.iconButton}>
-                <X color={colors.text} size={20} />
-              </Pressable>
-            </View>
-            {expenseFormFields}
-          </ResourceFormCard>
-          ) : null}
-
           <View style={styles.filtersCard}>
           <View style={[styles.presetRow, compact && styles.presetRowCompact]}>
             {([['month', 'Este mes'], ['30d', 'Últimos 30 días'], ['custom', 'Personalizado']] as const).map(([value, label]) => (
@@ -463,7 +451,7 @@ export function BabyExpensesScreen({
           </View>
         </View>
       </KeyboardAwareScrollView>
-      <ResourceFormModal icon={<ReceiptText color={colors.primaryPressed} size={22} />} onClose={resetForm} title="Editar gasto" visible={Boolean(editing)}>{expenseFormFields}</ResourceFormModal>
+      <ResourceFormModal icon={<ReceiptText color={colors.primaryPressed} size={22} />} onClose={resetForm} title={editing ? 'Editar gasto' : 'Añadir gasto'} visible={showForm}>{expenseFormFields}</ResourceFormModal>
 
       <ConfirmationModal
         confirmLabel={confirming?.retiredAt ? 'Restaurar' : 'Retirar'}
@@ -485,7 +473,7 @@ export function BabyExpensesScreen({
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { paddingBottom: 120 },
-  content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
+  content: resourceScreenContentStyle,
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
