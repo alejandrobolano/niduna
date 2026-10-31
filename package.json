@@ -65,7 +65,7 @@
     "build:android:preview": "eas build --platform android --profile preview",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "web:export": "expo export --platform web && node scripts/write-web-push-worker.mjs && node scripts/write-web-indexing.mjs",
+    "web:export": "expo export --platform web && node scripts/write-web-push-worker.mjs && node scripts/write-web-indexing.mjs && node scripts/validate-web-export.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
