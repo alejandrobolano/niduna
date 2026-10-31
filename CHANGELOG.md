@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Automatiza la creación de una preview Android en EAS después de integrar una pull request en `master`.
 - Limita el filtro de administraciones a medicamentos y vacunas con registros en el periodo seleccionado y corrige su terminología.
 - Homogeneiza el ancho de Contactos, Documentos, Gastos y Medicamentos, y aplica el mismo flujo modal al añadir, editar o registrar información.
 - Unifica la edición de medicamentos, gastos y documentos en formularios modales y evita acciones simultáneas incompatibles.
