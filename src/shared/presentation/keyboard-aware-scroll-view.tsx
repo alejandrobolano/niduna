@@ -7,14 +7,16 @@ import {
   useRef,
 } from 'react';
 import {
+  type HostInstance,
   Platform,
   ScrollView,
+  type ScrollViewInstance,
   type ScrollViewProps,
 } from 'react-native';
 
 import { spacing } from '@/shared/presentation/theme';
 
-type FocusTarget = number | object;
+type FocusTarget = number | HostInstance;
 
 const KeyboardAwareContext = createContext<
   ((target: FocusTarget) => void) | undefined
@@ -33,7 +35,7 @@ export function KeyboardAwareScrollView({
   children,
   ...props
 }: PropsWithChildren<ScrollViewProps>) {
-  const scrollView = useRef<ScrollView>(null);
+  const scrollView = useRef<ScrollViewInstance>(null);
   const revealTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(

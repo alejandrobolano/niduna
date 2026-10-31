@@ -47,7 +47,7 @@ export function AppSectionNavigation({
         const selected =
           value === section.value ||
           (value === 'summary' && section.value === 'history') ||
-          ((value === 'documents' || value === 'contacts') &&
+          ((value === 'documents' || value === 'contacts' || value === 'expenses' || value === 'medications') &&
             section.value === 'baby') ||
           (value === 'activity' && section.value === 'family');
 

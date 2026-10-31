@@ -6,7 +6,6 @@ import {
   ReceiptText,
   RefreshCw,
   RotateCcw,
-  X,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
@@ -51,6 +50,8 @@ import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
+import { resourceScreenContentStyle } from '@/shared/presentation/resource-screen-layout';
+import { ResourceFormModal } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const categoryOptions = [
@@ -292,6 +293,18 @@ export function BabyExpensesScreen({
     }
   }
 
+  const expenseFormFields = <>
+    <View style={[styles.formGrid, compact && styles.formGridCompact]}>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.amount} keyboardType="decimal-pad" label={`Importe (${currency})`} onChangeText={setAmount} value={amount} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Categoría" onChange={setDraftCategory} options={categoryOptions} placeholder="Categoría" title="Categoría del gasto" value={draftCategory} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField error={validation.payer} label="Pagado por" onChange={setDraftPayerId} options={payerOptions} placeholder="Persona" title="¿Quién pagó?" value={draftPayerId} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}><DatePickerField error={validation.date} label="Fecha" maximumDate={dateToIso(new Date())} onChange={setExpenseDate} value={expenseDate} /></View>
+      <View style={[styles.formField, styles.formFieldWide, compact && styles.formFieldCompact]}><ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} /></View>
+    </View>
+    <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>{isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>{editing ? 'Guardar cambios' : 'Guardar gasto'}</Text>}</Pressable>
+  </>;
+
   return (
     <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
@@ -325,67 +338,6 @@ export function BabyExpensesScreen({
             </Pressable>
           ) : null}
           </View>
-
-          {showForm ? (
-          <View style={styles.formCard}>
-            <View style={styles.formHeading}>
-              <Text style={styles.sectionTitle}>{editing ? 'Editar gasto' : 'Nuevo gasto'}</Text>
-              <Pressable accessibilityLabel="Cerrar formulario" onPress={resetForm} style={styles.iconButton}>
-                <X color={colors.text} size={20} />
-              </Pressable>
-            </View>
-            <View style={[styles.formGrid, compact && styles.formGridCompact]}>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <ProfileField
-                  error={validation.amount}
-                  keyboardType="decimal-pad"
-                  label={`Importe (${currency})`}
-                  onChangeText={setAmount}
-                  value={amount}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <SelectField
-                  label="Categoría"
-                  onChange={setDraftCategory}
-                  options={categoryOptions}
-                  placeholder="Categoría"
-                  title="Categoría del gasto"
-                  value={draftCategory}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <SelectField
-                  error={validation.payer}
-                  label="Pagado por"
-                  onChange={setDraftPayerId}
-                  options={payerOptions}
-                  placeholder="Persona"
-                  title="¿Quién pagó?"
-                  value={draftPayerId}
-                />
-              </View>
-              <View style={[styles.formField, compact && styles.formFieldCompact]}>
-                <DatePickerField
-                  error={validation.date}
-                  label="Fecha"
-                  maximumDate={dateToIso(new Date())}
-                  onChange={setExpenseDate}
-                  value={expenseDate}
-                />
-              </View>
-              <View style={[styles.formField, styles.formFieldWide, compact && styles.formFieldCompact]}>
-                <ProfileField label="Nota opcional" maxLength={500} multiline onChangeText={setNotes} value={notes} />
-              </View>
-            </View>
-            <Pressable disabled={isSaving} onPress={() => void save()} style={styles.saveAction}>
-              {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.saveActionText}>Guardar gasto</Text>}
-            </Pressable>
-          </View>
-          ) : null}
 
           <View style={styles.filtersCard}>
           <View style={[styles.presetRow, compact && styles.presetRowCompact]}>
@@ -499,6 +451,7 @@ export function BabyExpensesScreen({
           </View>
         </View>
       </KeyboardAwareScrollView>
+      <ResourceFormModal icon={<ReceiptText color={colors.primaryPressed} size={22} />} onClose={resetForm} title={editing ? 'Editar gasto' : 'Añadir gasto'} visible={showForm}>{expenseFormFields}</ResourceFormModal>
 
       <ConfirmationModal
         confirmLabel={confirming?.retiredAt ? 'Restaurar' : 'Retirar'}
@@ -520,7 +473,7 @@ export function BabyExpensesScreen({
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
   page: { paddingBottom: 120 },
-  content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, padding: spacing.lg, width: '100%' },
+  content: resourceScreenContentStyle,
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },
   summaryCard: { alignItems: 'center', backgroundColor: colors.sky, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl },
@@ -529,7 +482,6 @@ const styles = createThemedStyleSheet((colors) => ({
   summaryMeta: { color: colors.textMuted, fontSize: 12 },
   primaryAction: { alignItems: 'center', backgroundColor: colors.coral, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.xl },
   primaryActionText: { color: colors.onAccent, fontSize: 14, fontWeight: '900' },
-  formCard: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, gap: spacing.lg, padding: spacing.xl },
   formHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' },
   formGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },

@@ -6,13 +6,14 @@ import {
     type CareRepository,
 } from '@/features/care/application/care-repository';
 import { selectRecentFeedingAmounts } from '@/features/care/application/recent-feeding-amounts';
-import type { CareEvent } from '@/features/care/domain/care-event';
+import type { CareEvent, CareTimelineItem } from '@/features/care/domain/care-event';
 import { isCareEntryTimeAllowed } from '@/features/care/domain/care-entry-time';
 import {
     mapBabyNote,
     mapCareEvent,
     mapCareTimelineRow,
     mapMeasurement,
+    mapMedicationAdministrationActivity,
     type CareEventAvatar,
     type CareTimelineRow,
 } from '@/features/care/infrastructure/supabase-care-event-mapper';
@@ -302,6 +303,7 @@ export const supabaseCareRepository: CareRepository = {
       eventsResult,
       notesResult,
       measurementsResult,
+      medicationAdministrationsResult,
       birthWeightResult,
       latestWeightResult,
     ] = await Promise.all([
@@ -335,6 +337,14 @@ export const supabaseCareRepository: CareRepository = {
         .order('measured_at', { ascending: false })
         .limit(25),
       supabase
+        .from('baby_medication_administrations')
+        .select('*')
+        .eq('baby_id', baby.id)
+        .is('retired_at', null)
+        .lte('administered_at', dashboardLoadedAt)
+        .order('administered_at', { ascending: false })
+        .limit(25),
+      supabase
         .from('baby_measurements')
         .select('id, measured_at, source, weight_grams')
         .eq('baby_id', baby.id)
@@ -358,6 +368,7 @@ export const supabaseCareRepository: CareRepository = {
       eventsResult.error ??
       notesResult.error ??
       measurementsResult.error ??
+      medicationAdministrationsResult.error ??
       birthWeightResult.error ??
       latestWeightResult.error;
 
@@ -389,8 +400,21 @@ export const supabaseCareRepository: CareRepository = {
         Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
     );
     const selectedEvents = loadedEvents.slice(0, 20);
+    const loadedTimeline = [
+      ...loadedEvents,
+      ...(medicationAdministrationsResult.data ?? []).map((row) => ({
+        kind: 'medication' as const,
+        occurredAt: row.administered_at,
+        recordedBy: row.recorded_by,
+        row,
+      })),
+    ].sort(
+      (left, right) =>
+        Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
+    );
+    const selectedTimeline = loadedTimeline.slice(0, 20);
     const userIds = [
-      ...new Set(selectedEvents.map((event) => event.recordedBy)),
+      ...new Set(selectedTimeline.map((event) => event.recordedBy)),
     ];
     const { avatars, displayNames } = await loadAuthorProfiles(userIds);
     const weightMeasurements = new Map(
@@ -429,6 +453,25 @@ export const supabaseCareRepository: CareRepository = {
         }
 
         return mapMeasurement(event.row, displayNames, avatars);
+      }),
+      timeline: selectedTimeline.map((event): CareTimelineItem => {
+        if (event.kind === 'care') {
+          return mapCareEvent(event.row, displayNames, avatars);
+        }
+
+        if (event.kind === 'note') {
+          return mapBabyNote(event.row, displayNames, avatars);
+        }
+
+        if (event.kind === 'measurement') {
+          return mapMeasurement(event.row, displayNames, avatars);
+        }
+
+        return mapMedicationAdministrationActivity(
+          event.row,
+          displayNames,
+          avatars,
+        );
       }),
       weightMeasurements: [...weightMeasurements.values()],
     };
@@ -598,6 +641,16 @@ export const supabaseCareRepository: CareRepository = {
           filter: `baby_id=eq.${babyId}`,
           schema: 'public',
           table: 'baby_measurements',
+        },
+        onChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          filter: `baby_id=eq.${babyId}`,
+          schema: 'public',
+          table: 'baby_medication_administrations',
         },
         onChange,
       )

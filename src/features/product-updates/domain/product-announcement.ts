@@ -1,4 +1,9 @@
-export type ProductAnnouncementRoute = 'handoff' | 'history' | 'baby' | 'family';
+export type ProductAnnouncementRoute =
+  | 'handoff'
+  | 'history'
+  | 'baby'
+  | 'family'
+  | 'medications';
 
 export interface ProductAnnouncement {
   actionLabel?: string;

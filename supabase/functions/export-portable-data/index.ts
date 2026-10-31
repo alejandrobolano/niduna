@@ -81,6 +81,8 @@ async function loadPersonalData(
     stories,
     documents,
     contacts,
+    medications,
+    medicationAdministrations,
   ] = await Promise.all([
       selectRows(
         client
@@ -137,6 +139,10 @@ async function loadPersonalData(
           )
           .eq('author_user_id', userId),
       ),
+      selectRows(client.from('baby_medications').select('*').eq('created_by', userId)),
+      selectRows(
+        client.from('baby_medication_administrations').select('*').eq('recorded_by', userId),
+      ),
     ]);
 
   return {
@@ -144,6 +150,8 @@ async function loadPersonalData(
       account: [{ email: email ?? null, user_id: userId }],
       baby_contacts: contacts,
       baby_documents: documents,
+      baby_medication_administrations: medicationAdministrations,
+      baby_medications: medications,
       care_events: careEvents,
       families,
       family_memberships: memberships,
@@ -221,6 +229,8 @@ async function loadFamilyData(
     stories,
     documents,
     contacts,
+    medications,
+    medicationAdministrations,
   ] = await Promise.all([
     memberIds.length === 0
       ? Promise.resolve([])
@@ -269,6 +279,14 @@ async function loadFamilyData(
         )
         .eq('family_id', familyId),
     ),
+    babyIds.length === 0
+      ? Promise.resolve([])
+      : selectRows(client.from('baby_medications').select('*').in('baby_id', babyIds)),
+    babyIds.length === 0
+      ? Promise.resolve([])
+      : selectRows(
+          client.from('baby_medication_administrations').select('*').in('baby_id', babyIds),
+        ),
   ]);
 
   return {
@@ -279,6 +297,8 @@ async function loadFamilyData(
       babies,
       baby_contacts: contacts,
       baby_documents: documents,
+      baby_medication_administrations: medicationAdministrations,
+      baby_medications: medications,
       care_events: careEvents,
       families,
       family_members: memberships,

@@ -7,8 +7,20 @@ versión correspondiente.
 
 ## Unreleased
 
+- Actualiza la aplicación a Expo SDK 58 y alinea sus dependencias nativas con React Native 0.88.
+- Automatiza la creación de una preview Android en EAS después de integrar una pull request en `master`.
+- Limita el filtro de administraciones a medicamentos y vacunas con registros en el periodo seleccionado y corrige su terminología.
+- Homogeneiza el ancho de Contactos, Documentos, Gastos y Medicamentos, y aplica el mismo flujo modal al añadir, editar o registrar información.
+- Unifica la edición de medicamentos, gastos y documentos en formularios modales y evita acciones simultáneas incompatibles.
+- Integrate medication administrations into the Relevo activity timeline and reuse controlled dose-unit and time selectors.
+
 ### Correcciones
 
+* adapta el seguimiento de medicamentos a móvil y permite guardar registros incompletos con una advertencia preventiva
+* permite publicar y abrir correctamente la novedad del seguimiento de medicamentos
+* muestra directamente el historial de administraciones y separa la gestión de productos del flujo principal de medicamentos
+* reserva un espacio consistente entre el contenido y la navegación inferior en pantallas compactas
+* oculta el seguimiento de medicamentos antes del nacimiento y corrige los fallos de la pantalla en web al registrar administraciones
 * evita mostrar como novedad a cuentas creadas después de la publicación del cambio
 * corrige el desbordamiento horizontal del directorio de contactos en pantallas móviles
 * evita que las tarjetas de documentos adopten una altura excesiva en pantallas móviles
@@ -16,6 +28,7 @@ versión correspondiente.
 
 ### Nuevas funciones
 
+* incorpora un seguimiento familiar de medicamentos, vacunas y suplementos con catálogo, dosis y unidades explícitas, confirmación reforzada, historial paginado y permisos por rol
 * permite finalizar opcionalmente el sueño en curso al registrar una alimentación o un cambio de pañal, sin asumir que el bebé se despertó
 * muestra una sola vez a cada usuario las novedades importantes de Niduna y permite abrir directamente la función anunciada
 * permite editar los cuidados recientes directamente desde Relevo y elegir la hora real al terminar un sueño

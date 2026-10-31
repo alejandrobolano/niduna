@@ -131,7 +131,13 @@
       ],
       "./plugins/with-android-widget-container-background",
       "./plugins/with-android-work-manager-resolution",
-      "expo-video"
+      "expo-video",
+      "expo-font",
+      "expo-image",
+      "expo-sharing",
+      "expo-sqlite",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

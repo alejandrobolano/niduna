@@ -60,6 +60,7 @@ const dashboard: CareDashboard = {
       type: 'sleep',
     },
   ],
+  timeline: [],
   weightMeasurements: [],
 };
 

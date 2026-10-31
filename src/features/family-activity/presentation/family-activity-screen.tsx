@@ -33,10 +33,12 @@ const entityLabels = {
   baby_contact: 'Contacto',
   baby_document: 'Documento',
   baby_expense: 'Gasto',
+  baby_medication: 'Medicación',
   baby_note: 'Nota',
   care_event: 'Cuidado',
   family_member: 'Familia',
   measurement: 'Medidas',
+  medication_administration: 'Administración',
 } as const;
 
 export function FamilyActivityScreen({

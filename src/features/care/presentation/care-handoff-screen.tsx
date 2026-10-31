@@ -6,11 +6,13 @@ import {
   Moon,
   NotebookPen,
   Pencil,
+  Pill,
   Plus,
   ReceiptText,
   RefreshCw,
   Scale,
   Star,
+  Syringe,
   X,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -51,6 +53,7 @@ import {
 import type {
   CareDashboard,
   CareEvent,
+  CareTimelineItem,
   DiaperEvent,
   FeedingEvent,
   MeasurementEvent,
@@ -114,6 +117,7 @@ interface CareHandoffScreenProps {
   onOpenBabyProfile: () => void;
   onOpenContacts: () => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   repository: CareRepository;
   summaryRepository: CareSummaryRepository;
   storiesContent?: ReactNode;
@@ -246,7 +250,18 @@ function getMeasurementDetail(event: MeasurementEvent): string {
   }`;
 }
 
-function getEventPresentation(event: CareEvent, now: Date, volumeUnit: FeedingVolumeUnit) {
+function getEventPresentation(event: CareTimelineItem, now: Date, volumeUnit: FeedingVolumeUnit) {
+  if (event.type === 'medication_administration') {
+    return {
+      accent: colors.aqua,
+      description: `${event.medicationName} · ${new Intl.NumberFormat('es-ES', {
+        maximumFractionDigits: 3,
+      }).format(event.doseAmount)} ${event.doseUnit}`,
+      icon: Syringe,
+      title: 'Administración registrada',
+    };
+  }
+
   if (event.type === 'feeding') {
     return {
       accent: colors.coral,
@@ -304,7 +319,7 @@ function TimelineEvent({
   onEdit,
 }: {
   canEdit: boolean;
-  event: CareEvent;
+  event: CareTimelineItem;
   now: Date;
   onEdit: () => void;
 }) {
@@ -370,11 +385,13 @@ function QuickActionsSection({
   isSleeping,
   onAction,
   onOpenExpenses,
+  onOpenMedications,
 }: {
   compact?: boolean;
   isSleeping: boolean;
   onAction: (action: CareAction) => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
 }) {
   return (
     <View style={styles.quickActionsSection}>
@@ -451,11 +468,14 @@ function QuickActionsSection({
           </Pressable>
         ) : null}
       </View>
-      <View
-        style={[
+      <ScrollView
+        contentContainerStyle={[
           styles.secondaryActions,
           compact && styles.secondaryActionsCompact,
         ]}
+        horizontal={compact}
+        showsHorizontalScrollIndicator={false}
+        style={compact ? styles.secondaryActionsScroller : undefined}
       >
         {compact ? (
           <Pressable
@@ -515,7 +535,21 @@ function QuickActionsSection({
             {compact ? 'Gasto' : 'Añadir gasto'}
           </Text>
         </Pressable>
-      </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onOpenMedications}
+          style={({ pressed }) => [
+            styles.secondaryAction,
+            compact && styles.secondaryActionCompact,
+            pressed && styles.actionPressed,
+          ]}
+        >
+          <Pill color={colors.primaryPressed} size={17} />
+          <Text style={styles.secondaryActionLabel}>
+            {compact ? 'Medicación' : 'Medicamentos y vacunas'}
+          </Text>
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
@@ -523,11 +557,15 @@ function QuickActionsSection({
 function QuickActionPicker({
   isSleeping,
   onClose,
+  onOpenExpenses,
+  onOpenMedications,
   onSelect,
   visible,
 }: {
   isSleeping: boolean;
   onClose: () => void;
+  onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   onSelect: (action: CareAction) => void;
   visible: boolean;
 }) {
@@ -602,6 +640,26 @@ function QuickActionPicker({
                 </Text>
               </Pressable>
             ))}
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => { onClose(); onOpenExpenses(); }}
+              style={({ pressed }) => [styles.pickerOption, pressed && styles.actionPressed]}
+            >
+              <View style={[styles.pickerOptionIcon, { backgroundColor: `${colors.butter}22` }]}>
+                <ReceiptText color={colors.butter} size={20} />
+              </View>
+              <Text style={styles.pickerOptionLabel}>Gasto</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => { onClose(); onOpenMedications(); }}
+              style={({ pressed }) => [styles.pickerOption, pressed && styles.actionPressed]}
+            >
+              <View style={[styles.pickerOptionIcon, { backgroundColor: `${colors.aqua}22` }]}>
+                <Pill color={colors.aqua} size={20} />
+              </View>
+              <Text style={styles.pickerOptionLabel}>Medicamento o vacuna</Text>
+            </Pressable>
           </View>
         </SafeAreaView>
       </View>
@@ -618,6 +676,7 @@ function DashboardContent({
   onEdit,
   onOpenBabyProfile,
   onOpenExpenses,
+  onOpenMedications,
   onQuickActionsLayout,
   onRefresh,
   prenatalContent,
@@ -632,6 +691,7 @@ function DashboardContent({
   onEdit: (event: CareEvent) => void;
   onOpenBabyProfile: () => void;
   onOpenExpenses: () => void;
+  onOpenMedications: () => void;
   onQuickActionsLayout?: (layout: LayoutRectangle) => void;
   onRefresh: () => void;
   prenatalContent?: ReactNode;
@@ -757,6 +817,7 @@ function DashboardContent({
             isSleeping={Boolean(openSleep)}
             onAction={onAction}
             onOpenExpenses={onOpenExpenses}
+            onOpenMedications={onOpenMedications}
           />
         </View>
       ) : null}
@@ -904,22 +965,31 @@ function DashboardContent({
         </View>
 
         <View style={styles.timeline}>
-          {dashboard.events.length > 0 ? (
-            dashboard.events.slice(0, 20).map((event) => {
-              const canEdit = canEditCareRecord(
-                event,
-                userId,
-                dashboard.canManage,
-                dashboard.canRecord,
-              );
+          {dashboard.timeline.length > 0 ? (
+            dashboard.timeline.map((event) => {
+              const isMedicationAdministration =
+                event.type === 'medication_administration';
+              const canEdit = isMedicationAdministration
+                ? dashboard.canRecord &&
+                  (dashboard.canManage || event.recordedById === userId)
+                : canEditCareRecord(
+                    event,
+                    userId,
+                    dashboard.canManage,
+                    dashboard.canRecord,
+                  );
 
               return (
                 <TimelineEvent
                   canEdit={canEdit}
                   event={event}
-                  key={getCareRecordKey(event)}
+                  key={isMedicationAdministration
+                    ? `medication:${event.id}`
+                    : getCareRecordKey(event)}
                   now={now}
-                  onEdit={() => onEdit(event)}
+                  onEdit={() => isMedicationAdministration
+                    ? onOpenMedications()
+                    : onEdit(event)}
                 />
               );
             })
@@ -927,12 +997,12 @@ function DashboardContent({
             <View style={styles.emptyTimeline}>
               <Star color={colors.butter} size={34} />
               <Text style={styles.emptyTimelineTitle}>
-                {dashboard.events.length > 0
+                {dashboard.timeline.length > 0
                   ? 'No hay registros con este filtro'
                   : 'El relevo empieza aquí'}
               </Text>
               <Text style={styles.emptyTimelineText}>
-                {dashboard.events.length > 0
+                {dashboard.timeline.length > 0
                   ? 'Prueba otro tipo de cuidado, otro día o vuelve a mostrar todo.'
                   : 'El primer registro aparecerá en esta cronología para toda la familia.'}
               </Text>
@@ -956,6 +1026,7 @@ export function CareHandoffScreen({
   onOpenBabyProfile,
   onOpenContacts,
   onOpenExpenses,
+  onOpenMedications,
   repository,
   summaryRepository,
   storiesContent,
@@ -1210,6 +1281,7 @@ export function CareHandoffScreen({
             onEdit={setEditingEvent}
             onOpenBabyProfile={onOpenBabyProfile}
             onOpenExpenses={onOpenExpenses}
+            onOpenMedications={onOpenMedications}
             onQuickActionsLayout={handleQuickActionsLayout}
             onRefresh={handleRefresh}
             prenatalContent={
@@ -1252,6 +1324,8 @@ export function CareHandoffScreen({
       <QuickActionPicker
         isSleeping={Boolean(snapshot?.openSleep)}
         onClose={() => setIsQuickActionPickerOpen(false)}
+        onOpenExpenses={onOpenExpenses}
+        onOpenMedications={onOpenMedications}
         onSelect={handleSelectQuickAction}
         visible={isQuickActionPickerOpen}
       />
@@ -1447,7 +1521,9 @@ const styles = createThemedStyleSheet((colors) => ({
   },
   secondaryActionsCompact: {
     flexWrap: 'nowrap',
+    paddingRight: spacing.lg,
   },
+  secondaryActionsScroller: { marginRight: -spacing.lg },
   secondaryAction: {
     alignItems: 'center',
     alignSelf: 'flex-start',
@@ -1463,10 +1539,10 @@ const styles = createThemedStyleSheet((colors) => ({
   secondaryActionCompact: {
     alignSelf: 'stretch',
     borderRadius: radius.md,
-    flex: 1,
+    flexGrow: 0,
     justifyContent: 'center',
     minHeight: 48,
-    minWidth: 0,
+    minWidth: 112,
     paddingHorizontal: spacing.sm,
   },
   secondaryActionLabel: {

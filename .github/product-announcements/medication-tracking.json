@@ -1,0 +1,12 @@
+{
+  "id": "medication-tracking",
+  "title": "Medicamentos y vacunas, en familia",
+  "description": "Ya puedes guardar las indicaciones de cada producto y confirmar cada administración con su dosis, unidad y presentación.",
+  "actionLabel": "Abrir seguimiento",
+  "targetRoute": "medications",
+  "platforms": ["web", "android", "ios"],
+  "minimumNativeVersion": "1.17.0",
+  "delivery": "in_app",
+  "status": "published",
+  "expiresAt": "2027-04-30T23:59:59.999Z"
+}

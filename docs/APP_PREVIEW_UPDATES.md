@@ -15,6 +15,33 @@ Android devices without modifying the care notification function.
 Repeated webhook deliveries are idempotent. A build can create at most one
 delivery per registered device.
 
+## Automatic build after merge
+
+`.github/workflows/build-android-preview.yml` starts an Android `preview` build
+after a pull request targeting `master` is merged. It can also be started
+manually with `workflow_dispatch`. GitHub only submits the build; EAS completes
+it asynchronously and the existing webhook processes the result.
+
+The repository requires these GitHub Actions secrets:
+
+- `EXPO_TOKEN`: Expo access token with permission to build Niduna.
+- `GOOGLE_SERVICES_JSON_BASE64`: base64-encoded contents of
+  `google-services.json`.
+
+Generate the Firebase value locally without printing it to the terminal:
+
+```powershell
+[Convert]::ToBase64String(
+  [IO.File]::ReadAllBytes((Resolve-Path .\google-services.json))
+) | Set-Clipboard
+```
+
+The equivalent local command is available as:
+
+```text
+pnpm build:android:preview
+```
+
 ## Required Supabase secrets
 
 - `EAS_WEBHOOK_SECRET`: random value with at least 16 characters.

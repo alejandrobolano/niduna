@@ -57,6 +57,8 @@ import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
+import { ResourceFormModal } from '@/shared/presentation/resource-form';
+import { resourceScreenContentStyle } from '@/shared/presentation/resource-screen-layout';
 
 const categoryOptions = [
   { label: 'Salud', value: 'health' },
@@ -257,6 +259,26 @@ export function BabyContactsScreen({
     }
   }
 
+  const contactFormFields = <>
+    <Text style={styles.sectionHint}>Nombre y al menos un dato útil son obligatorios.</Text>
+    <View style={[styles.formRow, compact && styles.formRowCompact]}>
+      <View style={styles.formField}><ProfileField autoCapitalize="words" error={validation.name} label="Nombre" maxLength={120} onChangeText={(value) => updateDraft('name', value)} placeholder="Ej. Pediatra, hospital o farmacia" value={draft.name} /></View>
+      <View style={styles.formField}><SelectField label="Categoría" onChange={(value) => updateDraft('category', value)} options={categoryOptions} placeholder="Seleccionar" title="Categoría del contacto" value={draft.category} /></View>
+    </View>
+    <View style={[styles.formRow, compact && styles.formRowCompact]}>
+      <View style={styles.formField}><ProfileField autoCapitalize="words" label="Persona de contacto" maxLength={120} onChangeText={(value) => updateDraft('contactPerson', value)} placeholder="Opcional" value={draft.contactPerson ?? ''} /></View>
+      <View style={styles.formField}><ProfileField error={validation.phone} keyboardType="phone-pad" label="Teléfono" maxLength={40} onChangeText={(value) => updateDraft('phone', value)} placeholder="Opcional" value={draft.phone ?? ''} /></View>
+    </View>
+    <View style={[styles.formRow, compact && styles.formRowCompact]}>
+      <View style={styles.formField}><ProfileField error={validation.address} label="Dirección" maxLength={300} onChangeText={(value) => updateDraft('address', value)} placeholder="Opcional" value={draft.address ?? ''} /></View>
+      <View style={styles.formField}><ProfileField autoCapitalize="none" autoCorrect={false} error={validation.websiteUrl} keyboardType="url" label="Sitio web" maxLength={500} onChangeText={(value) => updateDraft('websiteUrl', value)} placeholder="ejemplo.com" value={draft.websiteUrl ?? ''} /></View>
+    </View>
+    <ProfileField error={validation.notes} label="Notas breves" maxLength={500} multiline onChangeText={(value) => updateDraft('notes', value)} placeholder="Horario, indicaciones u otra información útil" style={styles.notesInput} value={draft.notes ?? ''} />
+    <View style={styles.featuredRow}><View><Text style={styles.featuredTitle}>Contacto destacado</Text><Text style={styles.sectionHint}>Aparecerá antes que el resto.</Text></View><Switch onValueChange={(value) => updateDraft('isFeatured', value)} trackColor={{ false: colors.border, true: colors.aqua }} value={draft.isFeatured} /></View>
+    {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
+    <Pressable disabled={isSaving} onPress={() => void save()} style={[styles.primaryButton, isSaving && styles.disabled]}>{isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryButtonText}>{editing ? 'Guardar cambios' : 'Guardar contacto'}</Text>}</Pressable>
+  </>;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
@@ -279,38 +301,6 @@ export function BabyContactsScreen({
               <Pressable onPress={() => { setEditing(undefined); setDraft(emptyDraft); setShowForm(true); }} style={styles.addButton}>
                 <Plus color={colors.onAccent} size={18} />
                 <Text style={styles.addButtonText}>Añadir contacto</Text>
-              </Pressable>
-            </View>
-          ) : null}
-
-          {showForm && !retired ? (
-            <View style={styles.formCard}>
-              <View style={styles.sectionHeading}>
-                <View>
-                  <Text style={styles.sectionTitle}>{editing ? 'Editar contacto' : 'Nuevo contacto'}</Text>
-                  <Text style={styles.sectionHint}>Nombre y al menos un dato útil son obligatorios.</Text>
-                </View>
-                <Pressable onPress={resetForm}><Text style={styles.cancelText}>Cancelar</Text></Pressable>
-              </View>
-              <View style={[styles.formRow, compact && styles.formRowCompact]}>
-                <ProfileField autoCapitalize="words" error={validation.name} label="Nombre" maxLength={120} onChangeText={(value) => updateDraft('name', value)} placeholder="Ej. Pediatra, hospital o farmacia" value={draft.name} />
-                <SelectField label="Categoría" onChange={(value) => updateDraft('category', value)} options={categoryOptions} placeholder="Seleccionar" title="Categoría del contacto" value={draft.category} />
-              </View>
-              <View style={[styles.formRow, compact && styles.formRowCompact]}>
-                <ProfileField autoCapitalize="words" label="Persona de contacto" maxLength={120} onChangeText={(value) => updateDraft('contactPerson', value)} placeholder="Opcional" value={draft.contactPerson ?? ''} />
-                <ProfileField error={validation.phone} keyboardType="phone-pad" label="Teléfono" maxLength={40} onChangeText={(value) => updateDraft('phone', value)} placeholder="Opcional" value={draft.phone ?? ''} />
-              </View>
-              <View style={[styles.formRow, compact && styles.formRowCompact]}>
-                <ProfileField error={validation.address} label="Dirección" maxLength={300} onChangeText={(value) => updateDraft('address', value)} placeholder="Opcional" value={draft.address ?? ''} />
-                <ProfileField autoCapitalize="none" autoCorrect={false} error={validation.websiteUrl} keyboardType="url" label="Sitio web" maxLength={500} onChangeText={(value) => updateDraft('websiteUrl', value)} placeholder="ejemplo.com" value={draft.websiteUrl ?? ''} />
-              </View>
-              <ProfileField error={validation.notes} label="Notas breves" maxLength={500} multiline onChangeText={(value) => updateDraft('notes', value)} placeholder="Horario, indicaciones u otra información útil" style={styles.notesInput} value={draft.notes ?? ''} />
-              <View style={styles.featuredRow}>
-                <View><Text style={styles.featuredTitle}>Contacto destacado</Text><Text style={styles.sectionHint}>Aparecerá antes que el resto.</Text></View>
-                <Switch onValueChange={(value) => updateDraft('isFeatured', value)} trackColor={{ false: colors.border, true: colors.aqua }} value={draft.isFeatured} />
-              </View>
-              <Pressable disabled={isSaving} onPress={() => void save()} style={[styles.primaryButton, isSaving && styles.disabled]}>
-                {isSaving ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryButtonText}>{editing ? 'Guardar cambios' : 'Guardar contacto'}</Text>}
               </Pressable>
             </View>
           ) : null}
@@ -357,6 +347,8 @@ export function BabyContactsScreen({
           </View>
         </View>
       </ScrollView>
+
+      <ResourceFormModal icon={<UsersRound color={colors.primaryPressed} size={22} />} onClose={resetForm} title={editing ? 'Editar contacto' : 'Añadir contacto'} visible={showForm && !retired}>{contactFormFields}</ResourceFormModal>
 
       <ConfirmationModal
         confirmLabel={confirming?.retiredAt ? 'Restaurar' : 'Retirar durante 30 días'}
@@ -441,9 +433,9 @@ function ContactValue({ icon, label, onCopy, onOpen }: { icon: ReactNode; label:
 }
 
 const styles = createThemedStyleSheet((colors) => ({
-  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { flexGrow: 1, paddingBottom: 120 }, content: { alignSelf: 'center', gap: spacing.xl, maxWidth: 1180, minWidth: 0, padding: spacing.lg, width: '100%' },
+  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { flexGrow: 1, paddingBottom: 120 }, content: resourceScreenContentStyle,
   createArea: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 3 }, addButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.lg }, addButtonText: { color: colors.onAccent, fontWeight: '900' },
-  formCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.xl }, sectionHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' }, cancelText: { color: colors.error, fontWeight: '800' }, formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, notesInput: { minHeight: 78, textAlignVertical: 'top' }, featuredRow: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', padding: spacing.lg }, featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '900' }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.45 },
+  formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, formField: { flex: 1, minWidth: 0 }, notesInput: { minHeight: 78, textAlignVertical: 'top' }, featuredRow: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', padding: spacing.lg }, featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '900' }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.45 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, minWidth: 0, padding: spacing.xl }, listCardCompact: { padding: spacing.lg }, listHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' }, listHeadingCopy: { flex: 1, minWidth: 0 }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 }, searchRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.md }, searchRowCompact: { alignItems: 'stretch', flexDirection: 'column' }, searchButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52, paddingHorizontal: spacing.xl }, searchButtonText: { color: colors.onAccent, fontWeight: '900' }, filterScroller: { minWidth: 0, width: '100%' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, minHeight: 44, paddingHorizontal: spacing.lg, justifyContent: 'center' }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent },
   error: { color: colors.error, fontSize: 13, lineHeight: 19 }, success: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800' }, loader: { marginVertical: spacing.xxl }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, minWidth: 0 }, gridCompact: { flexDirection: 'column' }, contactCard: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, flexBasis: 420, flexGrow: 1, gap: spacing.md, minWidth: 300, padding: spacing.lg }, contactCardCompact: { flexBasis: 'auto', minWidth: 0, width: '100%' }, contactCardFeatured: { borderColor: colors.butter, borderTopWidth: 5 }, contactHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.md }, contactIcon: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, height: 44, justifyContent: 'center', width: 44 }, contactCopy: { flex: 1, minWidth: 0 }, contactName: { color: colors.text, fontSize: 17, fontWeight: '900' }, contactMeta: { color: colors.textMuted, fontSize: 12, marginTop: 2 }, valueRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, minWidth: 0 }, valueText: { color: colors.text, flex: 1, fontSize: 13, lineHeight: 18, minWidth: 0 }, miniAction: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 34, justifyContent: 'center', width: 34 }, contactNotes: { color: colors.textMuted, fontSize: 13, lineHeight: 19 }, contactActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, action: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, minHeight: 40, paddingHorizontal: spacing.md }, actionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '800' }, dangerText: { color: colors.error, fontSize: 12, fontWeight: '800' },
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl }, emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900' }, emptyText: { color: colors.textMuted, textAlign: 'center' }, retiredLink: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800', textAlign: 'center' },

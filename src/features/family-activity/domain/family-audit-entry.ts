@@ -8,10 +8,12 @@ export type FamilyAuditEntityType =
   | 'baby_contact'
   | 'baby_document'
   | 'baby_expense'
+  | 'baby_medication'
   | 'baby_note'
   | 'care_event'
   | 'family_member'
-  | 'measurement';
+  | 'measurement'
+  | 'medication_administration';
 
 export interface FamilyAuditEntry {
   actorAvatarKey?: MemberAvatarVariant;
