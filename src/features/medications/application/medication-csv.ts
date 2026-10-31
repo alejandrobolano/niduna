@@ -10,7 +10,7 @@ export function createMedicationAdministrationCsv(
 ): string {
   const header = [
     'Fecha y hora',
-    'Producto',
+    'Medicamento o vacuna',
     'Presentación o concentración',
     'Dosis administrada',
     'Unidad',

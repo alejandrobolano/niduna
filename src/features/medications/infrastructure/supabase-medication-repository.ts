@@ -1,5 +1,6 @@
 import {
   MedicationError,
+  type MedicationAdministrationFilterOption,
   type MedicationAdministrationFilters,
   type MedicationRepository,
 } from '@/features/medications/application/medication-repository';
@@ -62,6 +63,12 @@ type AdministrationRow = {
   retired_at: string | null;
   updated_at: string;
   updated_by: string;
+};
+
+type AdministrationFilterOptionRow = {
+  medication_id: string;
+  medication_name: string;
+  medication_presentation: string | null;
 };
 
 function mapMedication(row: MedicationRow): BabyMedication {
@@ -168,6 +175,21 @@ export const supabaseMedicationRepository: MedicationRepository = {
       total,
       totalPages: Math.max(1, Math.ceil(total / pageSize)),
     };
+  },
+
+  async loadAdministrationFilterOptions(babyId, filters) {
+    const { data, error } = await supabase.rpc('list_medication_administration_filter_options', {
+      target_baby_id: babyId,
+      target_end_at: filters.endAt ?? null,
+      target_retired: filters.retired,
+      target_start_at: filters.startAt ?? null,
+    });
+    if (error) throw mapError(error);
+    return ((data ?? []) as AdministrationFilterOptionRow[]).map((row): MedicationAdministrationFilterOption => ({
+      medicationId: row.medication_id,
+      name: row.medication_name,
+      presentation: row.medication_presentation ?? undefined,
+    }));
   },
 
   async loadMedications(babyId, retired = false) {

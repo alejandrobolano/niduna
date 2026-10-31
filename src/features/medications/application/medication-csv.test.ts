@@ -22,6 +22,7 @@ describe('medication administration csv', () => {
       },
     ]);
 
+    expect(csv).toContain('Fecha y hora;Medicamento o vacuna;Presentación o concentración');
     expect(csv).toContain('Producto;100 mg/5 ml;2.5;ml;Alejandro');
   });
 

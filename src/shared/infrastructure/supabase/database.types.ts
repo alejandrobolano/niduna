@@ -1053,6 +1053,19 @@ export type Database = {
         };
         Returns: string;
       };
+      list_medication_administration_filter_options: {
+        Args: {
+          target_baby_id: string;
+          target_end_at?: string | null;
+          target_retired?: boolean;
+          target_start_at?: string | null;
+        };
+        Returns: {
+          medication_id: string;
+          medication_name: string;
+          medication_presentation: string | null;
+        }[];
+      };
       save_medication_administration: {
         Args: {
           target_administered_at: string;

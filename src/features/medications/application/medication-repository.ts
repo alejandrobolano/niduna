@@ -44,6 +44,12 @@ export interface MedicationAdministrationPage {
   totalPages: number;
 }
 
+export interface MedicationAdministrationFilterOption {
+  medicationId: string;
+  name: string;
+  presentation?: string;
+}
+
 export type MedicationErrorReason =
   | 'invalid'
   | 'not_allowed'
@@ -67,6 +73,10 @@ export interface MedicationRepository {
     pageSize: MedicationPageSize,
     filters: MedicationAdministrationFilters,
   ): Promise<MedicationAdministrationPage>;
+  loadAdministrationFilterOptions(
+    babyId: string,
+    filters: MedicationAdministrationFilters,
+  ): Promise<MedicationAdministrationFilterOption[]>;
   loadMedications(babyId: string, retired?: boolean): Promise<BabyMedication[]>;
   saveAdministration(
     draft: MedicationAdministrationDraft,

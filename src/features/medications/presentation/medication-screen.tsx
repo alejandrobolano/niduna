@@ -11,6 +11,7 @@ import {
 import {
   MedicationError,
   type BabyMedicationDraft,
+  type MedicationAdministrationFilterOption,
   type MedicationAdministrationDraft,
   type MedicationAdministrationPage,
   type MedicationPageSize,
@@ -122,6 +123,7 @@ export function MedicationScreen({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<MedicationPageSize>(20);
   const [administrations, setAdministrations] = useState<MedicationAdministrationPage>();
+  const [administrationFilterOptions, setAdministrationFilterOptions] = useState<MedicationAdministrationFilterOption[]>([]);
   const [medicationFilter, setMedicationFilter] = useState('all');
   const [rangePreset, setRangePreset] = useState<MedicationRangePreset>('month');
   const [range, setRange] = useState<MedicationDateRange>(() => createMedicationPresetRange('month'));
@@ -166,18 +168,21 @@ export function MedicationScreen({
     value: item.id,
   })), [medications]);
   const filterOptions = useMemo(() => [
-    { label: 'Todos los productos', value: 'all' },
-    ...medications.map((item) => ({
+    { label: 'Todos los medicamentos y vacunas', value: 'all' },
+    ...administrationFilterOptions.map((item) => ({
       label: item.name,
-      supportingText: getMedicationDetails(item),
-      value: item.id,
+      supportingText: item.presentation,
+      value: item.medicationId,
     })),
-  ], [medications]);
-  const administrationFilters = useMemo(() => ({
+  ], [administrationFilterOptions]);
+  const administrationScopeFilters = useMemo(() => ({
     ...medicationRangeToTimestamps(range),
-    medicationId: medicationFilter === 'all' ? undefined : medicationFilter,
     retired: showRetiredAdministrations,
-  }), [medicationFilter, range, showRetiredAdministrations]);
+  }), [range, showRetiredAdministrations]);
+  const administrationFilters = useMemo(() => ({
+    ...administrationScopeFilters,
+    medicationId: medicationFilter === 'all' ? undefined : medicationFilter,
+  }), [administrationScopeFilters, medicationFilter]);
 
   useEffect(() => {
     let active = true;
@@ -196,6 +201,19 @@ export function MedicationScreen({
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, [administrationFilters, babyId, mode, page, pageSize, reload, repository]);
+
+  useEffect(() => {
+    if (mode !== 'administrations') return;
+    let active = true;
+    void repository.loadAdministrationFilterOptions(babyId, administrationScopeFilters)
+      .then((options) => {
+        if (!active) return;
+        setAdministrationFilterOptions(options);
+        setMedicationFilter((current) => current === 'all' || options.some((option) => option.medicationId === current) ? current : 'all');
+      })
+      .catch((reason) => active && setError(messageFor(reason)));
+    return () => { active = false; };
+  }, [administrationScopeFilters, babyId, mode, reload, repository]);
 
   function clearMedicationForm() {
     setCategory('medication'); setStatus('active'); setName(''); setPresentation(''); setDose('');
