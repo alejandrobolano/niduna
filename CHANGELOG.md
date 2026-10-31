@@ -62,6 +62,14 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.17.1](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.0...niduna-v1.17.1) (2026-10-31)
+
+
+### Correcciones
+
+* publish Android previews only on releases ([ad0309c](https://github.com/alejandrobolano/niduna/commit/ad0309c8961472db9bcc7c30d11cec38adeca4d9))
+* publish Android previews only on releases ([5fa9835](https://github.com/alejandrobolano/niduna/commit/5fa983594c795224ec97d02bb2c183579cca624d))
+
 ## [1.17.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.16.0...niduna-v1.17.0) (2026-10-31)
 
 
