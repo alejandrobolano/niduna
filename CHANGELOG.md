@@ -61,6 +61,43 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.17.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.16.0...niduna-v1.17.0) (2026-10-31)
+
+
+### Nuevas funciones
+
+* add medication tracking ([d0713ea](https://github.com/alejandrobolano/niduna/commit/d0713ea12b098eee60459154c12183929702dca1))
+* add medication tracking ([e692d0b](https://github.com/alejandrobolano/niduna/commit/e692d0bab6474372c60bd611da07d3aac62b3032))
+* simplify medication setup ([bacd349](https://github.com/alejandrobolano/niduna/commit/bacd34909cf2d40225f067ed6b629a097d006f86))
+* surface medication activity in handoff ([9fbdc81](https://github.com/alejandrobolano/niduna/commit/9fbdc817f7647e67fc140665f8d3ba0f15091266))
+* update screens ([abbfd4d](https://github.com/alejandrobolano/niduna/commit/abbfd4d851a9ec20ee61b31ae930a4f7b8cfd24c))
+
+
+### Correcciones
+
+* align medication history filters ([ba2532e](https://github.com/alejandrobolano/niduna/commit/ba2532e594a9ebb41aac04af743b1e4ac51b8416))
+* align medication history filters ([039f5a8](https://github.com/alejandrobolano/niduna/commit/039f5a8dfaf498a43617fe5111393ef58127c2fe))
+* align medication resource workflow ([9bb6b5f](https://github.com/alejandrobolano/niduna/commit/9bb6b5fa763a967afb61dafb19264923cd331934))
+* allow medication announcement route ([31f486f](https://github.com/alejandrobolano/niduna/commit/31f486fd28e882cdc5691d20efa5928955105970))
+* clarify medication announcement copy ([c2f3643](https://github.com/alejandrobolano/niduna/commit/c2f3643a9474f51c09046f3ed5e78efa173a8c81))
+* expose development secrets to Android build ([f480ac7](https://github.com/alejandrobolano/niduna/commit/f480ac793f47eb68992418c11bb65765ba9cb012))
+* expose development secrets to Android preview build ([c630a4c](https://github.com/alejandrobolano/niduna/commit/c630a4c8daec2f7bf3d690f8b920f6bad59c1074))
+* forward Android preview flags to EAS ([c28c574](https://github.com/alejandrobolano/niduna/commit/c28c574a3a9df0a66da88d20b0e7d3ecc2d2f170))
+* forward EAS build flags correctly ([75c96ca](https://github.com/alejandrobolano/niduna/commit/75c96ca7daa918e01b44f4080813fa96b27dc3f6))
+* harden medication tracking experience ([207c62d](https://github.com/alejandrobolano/niduna/commit/207c62df211812723b01c8c88d76f09d22beb206))
+* install EAS CLI with npm in Android build ([ea36783](https://github.com/alejandrobolano/niduna/commit/ea3678322d95ac3d2b313d5e1d3d9b902d29ae0f))
+* install EAS CLI with npm in CI ([fc5e26c](https://github.com/alejandrobolano/niduna/commit/fc5e26cf35ac7e1b3b1d2b4e3ba6a87587bd97af))
+* refine medication responsive flow ([b1c02d8](https://github.com/alejandrobolano/niduna/commit/b1c02d88fe5f2368d814147a10c3197099dacfae))
+* reserve compact navigation spacing ([152353d](https://github.com/alejandrobolano/niduna/commit/152353d5aa774cffa88745ef9ac31362bec8ff6f))
+* restore Expo 58 web hydration ([9fc9f22](https://github.com/alejandrobolano/niduna/commit/9fc9f22724be717d8fbd175b585abe676539c257))
+* restore Expo 58 web hydration ([8a93197](https://github.com/alejandrobolano/niduna/commit/8a93197688c77266176dd070252197302d1472fa))
+
+
+### Mantenimiento
+
+* prioritize medication history ([8e1809e](https://github.com/alejandrobolano/niduna/commit/8e1809efc9e1304805c000f8573f75a79569838c))
+* unify resource screen workflows ([a9e7e47](https://github.com/alejandrobolano/niduna/commit/a9e7e47f07f01f17efdf1143ea96c9973b820276))
+
 ## [1.16.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.15.0...niduna-v1.16.0) (2026-10-25)
 
 
