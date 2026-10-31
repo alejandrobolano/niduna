@@ -24,6 +24,8 @@ import { supabaseBabyContactRepository } from '@/features/baby-contacts/infrastr
 import { BabyContactsScreen } from '@/features/baby-contacts/presentation/baby-contacts-screen';
 import { supabaseBabyExpenseRepository } from '@/features/baby-expenses/infrastructure/supabase-baby-expense-repository';
 import { BabyExpensesScreen } from '@/features/baby-expenses/presentation/baby-expenses-screen';
+import { supabaseMedicationRepository } from '@/features/medications/infrastructure/supabase-medication-repository';
+import { MedicationScreen } from '@/features/medications/presentation/medication-screen';
 import { supabaseCareSummaryRepository } from '@/features/care-summary/infrastructure/supabase-care-summary-repository';
 import { DailyCareSummaryScreen } from '@/features/care-summary/presentation/daily-care-summary-screen';
 import {
@@ -537,7 +539,23 @@ function AuthenticatedApp({
         synchronizeDashboard={activeSection !== 'handoff'}
         userId={user.id}
       />
-      <View style={styles.appScreen}>{screen}</View>
+      <View
+        nativeID={
+          compactNavigation && Platform.OS === 'web'
+            ? 'niduna-compact-screen'
+            : undefined
+        }
+        style={[
+          styles.appScreen,
+          compactNavigation && {
+            marginBottom:
+              bottomNavigationContentHeight +
+              (Platform.OS === 'web' ? 0 : insets.bottom),
+          },
+        ]}
+      >
+        {screen}
+      </View>
       <NotificationOptInModal
         familyId={activeFamily.id}
         key={notificationPresentation}
@@ -606,6 +624,7 @@ function AuthenticatedApp({
         onOpenBabyProfile={() => changeSection('baby')}
         onOpenContacts={() => changeSection('contacts')}
         onOpenExpenses={() => changeSection('expenses')}
+        onOpenMedications={() => changeSection('medications')}
         repository={supabaseCareRepository}
         summaryRepository={supabaseCareSummaryRepository}
         storiesContent={
@@ -715,6 +734,23 @@ function AuthenticatedApp({
     );
   }
 
+  if (
+    activeSection === 'medications' &&
+    context.activeBaby?.lifeStage === 'born'
+  ) {
+    return renderAppScreen(
+      <MedicationScreen
+        babyId={context.activeBaby.id}
+        babyName={context.activeBaby.name}
+        familyRole={activeFamily.role}
+        onBack={() => changeSection('baby')}
+        repository={supabaseMedicationRepository}
+        topContent={topContent}
+        userId={user.id}
+      />,
+    );
+  }
+
   if (activeSection === 'baby' && !context.activeBaby && !canManageBabies) {
     return renderAppScreen(
       <FamilyScreen
@@ -757,6 +793,11 @@ function AuthenticatedApp({
         onOpenDocuments={activeBabyId ? () => changeSection('documents') : undefined}
         onOpenContacts={activeBabyId ? () => changeSection('contacts') : undefined}
         onOpenExpenses={activeBabyId ? () => changeSection('expenses') : undefined}
+        onOpenMedications={
+          activeBabyId && activeBabyLifeStage === 'born'
+            ? () => changeSection('medications')
+            : undefined
+        }
         onUnfollow={activeBabyId ? () => context.unfollowBaby(activeBabyId) : undefined}
         repository={supabaseBabyProfileRepository}
         topContent={topContent}
@@ -785,6 +826,7 @@ function resolveInitialSection(value: string | undefined): AppSection {
     value === 'documents' ||
     value === 'contacts' ||
     value === 'expenses' ||
+    value === 'medications' ||
     value === 'family' ||
     value === 'activity'
     ? value

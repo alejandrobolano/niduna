@@ -26,6 +26,10 @@ body,
   right: 0;
 }
 
+#niduna-compact-screen {
+  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --app-background: #0f1428;

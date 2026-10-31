@@ -31,6 +31,8 @@ type BabyExpenseCategory =
   | 'equipment'
   | 'childcare'
   | 'other';
+type BabyMedicationCategory = 'medication' | 'vaccine' | 'supplement' | 'other' | 'vitamin';
+type BabyMedicationStatus = 'active' | 'inactive';
 type BloodGroup = 'A' | 'B' | 'AB' | 'O';
 type BreastSide = 'left' | 'right' | 'both';
 type CareEventType = 'feeding' | 'diaper' | 'sleep';
@@ -634,6 +636,54 @@ export type Database = {
         Record<string, never>,
         Record<string, never>
       >;
+      baby_medications: Table<
+        {
+          administration_route: string | null;
+          baby_id: string;
+          category: BabyMedicationCategory;
+          created_at: string;
+          created_by: string;
+          end_date: string | null;
+          family_id: string;
+          id: string;
+          indicated_by: string | null;
+          indicated_dose_amount: number | null;
+          indicated_dose_unit: string | null;
+          instructions: string | null;
+          name: string;
+          presentation: string | null;
+          retired_at: string | null;
+          retired_by: string | null;
+          start_date: string | null;
+          status: BabyMedicationStatus;
+          updated_at: string;
+          updated_by: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
+      baby_medication_administrations: Table<
+        {
+          administered_at: string;
+          baby_id: string;
+          created_at: string;
+          dose_amount: number;
+          dose_unit: string;
+          family_id: string;
+          id: string;
+          medication_id: string;
+          medication_name: string;
+          medication_presentation: string | null;
+          notes: string | null;
+          recorded_by: string;
+          retired_at: string | null;
+          retired_by: string | null;
+          updated_at: string;
+          updated_by: string;
+        },
+        Record<string, never>,
+        Record<string, never>
+      >;
       family_audit_logs: Table<
         {
           action: 'created' | 'updated' | 'deleted';
@@ -647,10 +697,12 @@ export type Database = {
             | 'baby_contact'
             | 'baby_document'
             | 'baby_expense'
+            | 'baby_medication'
             | 'baby_note'
             | 'care_event'
             | 'family_member'
-            | 'measurement';
+            | 'measurement'
+            | 'medication_administration';
           family_id: string;
           id: number;
         },
@@ -983,6 +1035,56 @@ export type Database = {
         };
         Returns: string;
       };
+      save_baby_medication: {
+        Args: {
+          target_administration_route: string | null;
+          target_baby_id: string;
+          target_category: BabyMedicationCategory;
+          target_end_date: string | null;
+          target_indicated_by: string | null;
+          target_indicated_dose_amount: number | null;
+          target_indicated_dose_unit: string | null;
+          target_instructions: string | null;
+          target_medication_id: string | null;
+          target_name: string;
+          target_presentation: string | null;
+          target_start_date: string | null;
+          target_status: BabyMedicationStatus;
+        };
+        Returns: string;
+      };
+      list_medication_administration_filter_options: {
+        Args: {
+          target_baby_id: string;
+          target_end_at?: string | null;
+          target_retired?: boolean;
+          target_start_at?: string | null;
+        };
+        Returns: {
+          medication_id: string;
+          medication_name: string;
+          medication_presentation: string | null;
+        }[];
+      };
+      save_medication_administration: {
+        Args: {
+          target_administered_at: string;
+          target_administration_id: string | null;
+          target_dose_amount: number;
+          target_dose_unit: string;
+          target_medication_id: string;
+          target_notes: string | null;
+        };
+        Returns: string;
+      };
+      set_baby_medication_retired: {
+        Args: { should_retire: boolean; target_medication_id: string };
+        Returns: undefined;
+      };
+      set_medication_administration_retired: {
+        Args: { should_retire: boolean; target_administration_id: string };
+        Returns: undefined;
+      };
       set_baby_expense_retired: {
         Args: {
           should_retire: boolean;
@@ -1146,6 +1248,8 @@ export type Database = {
       baby_contact_category: BabyContactCategory;
       baby_document_category: BabyDocumentCategory;
       baby_expense_category: BabyExpenseCategory;
+      baby_medication_category: BabyMedicationCategory;
+      baby_medication_status: BabyMedicationStatus;
       baby_life_stage: BabyLifeStage;
       blood_group: BloodGroup;
       breast_side: BreastSide;

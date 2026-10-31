@@ -4,6 +4,7 @@ import {
   type NativeSyntheticEvent,
   Pressable,
   ScrollView,
+  type ScrollViewInstance,
   Text,
   View,
 } from 'react-native';
@@ -29,7 +30,7 @@ function WheelColumn({
   value,
   visibleItems,
 }: WheelColumnProps) {
-  const listRef = useRef<ScrollView>(null);
+  const listRef = useRef<ScrollViewInstance>(null);
   const selectedIndex = Math.max(0, options.indexOf(value));
   const wheelHeight = itemHeight * visibleItems;
   const wheelPadding = (wheelHeight - itemHeight) / 2;

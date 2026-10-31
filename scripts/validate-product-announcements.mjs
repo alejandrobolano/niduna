@@ -5,7 +5,7 @@ const directory = resolve('.github/product-announcements');
 const files = (await readdir(directory)).filter((file) => file.endsWith('.json'));
 const ids = new Set();
 const platforms = new Set(['web', 'android', 'ios']);
-const routes = new Set(['handoff', 'history', 'baby', 'family', 'settings']);
+const routes = new Set(['handoff', 'history', 'baby', 'family', 'medications', 'settings']);
 const versionPattern = /^\d+\.\d+\.\d+$/;
 
 for (const file of files) {

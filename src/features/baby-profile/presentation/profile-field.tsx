@@ -33,7 +33,9 @@ export function ProfileField({
           editable={!disabled}
           onFocus={(event) => {
             onFocus?.(event);
-            revealInput(event.target);
+            if (event.target !== undefined) {
+              revealInput(event.target);
+            }
           }}
           placeholderTextColor={colors.textMuted}
           style={[styles.input, style, disabled && styles.inputDisabled]}

@@ -1,7 +1,11 @@
 import type { BabyLifeStage } from '@/features/baby-profile/domain/baby-profile';
 import type { AppSection } from '@/features/home/domain/app-section';
 
-const postnatalCareSections = new Set<AppSection>(['history', 'summary']);
+const postnatalCareSections = new Set<AppSection>([
+  'history',
+  'medications',
+  'summary',
+]);
 
 export function canAccessHandoff(
   lifeStage: BabyLifeStage | undefined,
