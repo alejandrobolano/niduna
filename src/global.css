@@ -1,6 +1,7 @@
 :root {
   color-scheme: light dark;
   --app-background: #fff8e8;
+  --bottom-navigation-content-height: 66px;
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
@@ -21,13 +22,15 @@ body,
 #niduna-bottom-navigation {
   bottom: 0;
   left: 0;
-  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   position: fixed;
   right: 0;
 }
 
 #niduna-compact-screen {
-  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  margin-bottom: calc(
+    var(--bottom-navigation-content-height) + env(safe-area-inset-bottom, 0px)
+  ) !important;
 }
 
 @media (prefers-color-scheme: dark) {

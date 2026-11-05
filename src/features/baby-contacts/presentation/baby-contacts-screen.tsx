@@ -28,7 +28,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { canManageBabyContact } from '@/features/baby-contacts/application/baby-contact-permissions';
+import { canCreateBabyContact, canManageBabyContact } from '@/features/baby-contacts/application/baby-contact-permissions';
 import {
   BabyContactError,
   type BabyContactDraft,
@@ -131,6 +131,7 @@ export function BabyContactsScreen({
   const [copied, setCopied] = useState<string>();
   const [mapAddress, setMapAddress] = useState<string>();
   const [qrContact, setQrContact] = useState<BabyContact>();
+  const canCreate = canCreateBabyContact(familyRole);
 
   useEffect(() => {
     let active = true;
@@ -185,6 +186,10 @@ export function BabyContactsScreen({
   }
 
   async function save() {
+    if ((!editing && !canCreate) || (editing && !canManageBabyContact(editing.authorUserId, userId, familyRole))) {
+      setError('No tienes permiso para realizar este cambio.');
+      return;
+    }
     const errors = validateBabyContact(draft);
     if (errors.length) {
       setValidation(Object.fromEntries(errors.map((item) => [item.field, item.message])));
@@ -292,7 +297,7 @@ export function BabyContactsScreen({
             title={`Directorio de ${babyName}`}
           />
 
-          {!retired ? (
+          {!retired && canCreate ? (
             <View style={styles.createArea}>
               <View>
                 <Text style={styles.sectionTitle}>Información compartida</Text>
@@ -339,7 +344,7 @@ export function BabyContactsScreen({
                 ))}
               </View>
             ) : (
-              <View style={styles.empty}><UsersRound color={colors.aqua} size={38} /><Text style={styles.emptyTitle}>No hay contactos aquí</Text><Text style={styles.emptyText}>Prueba otra búsqueda o añade el primer contacto de {babyName}.</Text></View>
+              <View style={styles.empty}><UsersRound color={colors.aqua} size={38} /><Text style={styles.emptyTitle}>No hay contactos aquí</Text><Text style={styles.emptyText}>{canCreate ? `Prueba otra búsqueda o añade el primer contacto de ${babyName}.` : 'Cuando la familia añada uno, aparecerá aquí.'}</Text></View>
             )}
 
             <DataPagination onChangePage={setPage} onChangePageSize={(value) => { setPageSize(value); setPage(1); }} page={page} pageSize={pageSize} total={result?.totalCount ?? 0} totalPages={result?.totalPages ?? 1} />

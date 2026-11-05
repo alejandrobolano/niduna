@@ -252,6 +252,9 @@ export function MedicationScreen({
   }
 
   async function saveMedication(allowIncomplete = false) {
+    if (!canManageMedicationCatalog(familyRole)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     const amount = dose.trim() ? parseDoseAmount(dose) : undefined;
     const doseUnit = resolveMedicationUnit(doseUnitPreset, customDoseUnit);
     if (!name.trim()) {
@@ -301,6 +304,12 @@ export function MedicationScreen({
   }
 
   function prepareAdministration() {
+    if (
+      (!editingAdministration && !canRecordMedicationAdministration(familyRole)) ||
+      (editingAdministration && !canManageMedicationAdministration(editingAdministration, familyRole, userId))
+    ) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     const amount = parseDoseAmount(administeredDose);
     const administeredUnit = resolveMedicationUnit(administeredUnitPreset, customAdministeredUnit);
     const administeredAt = createLocalAdministrationTimestamp(
@@ -330,11 +339,17 @@ export function MedicationScreen({
   }
 
   async function toggleMedication(item: BabyMedication) {
+    if (!canManageMedicationCatalog(familyRole)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     setSaving(true); try { await repository.setMedicationRetired(item.id, !item.retiredAt); setRetiringMedication(undefined); setReload((v) => v + 1); }
     catch (reason) { setError(messageFor(reason)); } finally { setSaving(false); }
   }
 
   async function toggleAdministration(item: MedicationAdministration) {
+    if (!canManageMedicationAdministration(item, familyRole, userId)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     setSaving(true); try { await repository.setAdministrationRetired(item.id, !item.retiredAt); setRetiringAdministration(undefined); setReload((v) => v + 1); }
     catch (reason) { setError(messageFor(reason)); } finally { setSaving(false); }
   }
@@ -370,7 +385,7 @@ export function MedicationScreen({
   </>;
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.root}>
+    <SafeAreaView edges={['top', 'bottom']} style={styles.root}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content}>
         {topContent}
         <ResourceScreenHero eyebrow="SALUD Y CUIDADOS" icon={<Pill color={colors.primaryPressed} size={28} />} onBack={onBack}

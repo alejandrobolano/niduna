@@ -1,8 +1,8 @@
 import type { BabyExpense } from '@/features/baby-expenses/domain/baby-expense';
-import type { FamilyRole } from '@/features/family/domain/family';
+import { canWriteFamilyResources, type FamilyRole } from '../../family/domain/family';
 
 export function canCreateBabyExpense(role: FamilyRole): boolean {
-  return role !== 'viewer';
+  return canWriteFamilyResources(role);
 }
 
 export function canManageBabyExpense(
@@ -10,6 +10,8 @@ export function canManageBabyExpense(
   role: FamilyRole,
   userId: string,
 ): boolean {
-  return expense.createdBy === userId || role === 'owner' || role === 'admin';
+  return canWriteFamilyResources(role) && (
+    expense.createdBy === userId || role === 'owner' || role === 'admin'
+  );
 }
 

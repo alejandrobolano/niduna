@@ -220,6 +220,10 @@ export function BabyExpensesScreen({
   }
 
   async function save() {
+    if ((!editing && !canCreateBabyExpense(familyRole)) || (editing && !canManageBabyExpense(editing, familyRole, userId))) {
+      setError('No tienes permiso para realizar este cambio.');
+      return;
+    }
     const amountMinor = parseExpenseAmount(amount);
     const nextValidation: Record<string, string> = {};
     if (!concept.trim()) nextValidation.concept = 'Escribe un concepto.';
@@ -253,6 +257,10 @@ export function BabyExpensesScreen({
 
   async function changeRetirement() {
     if (!confirming) return;
+    if (!canManageBabyExpense(confirming, familyRole, userId)) {
+      setError('No tienes permiso para realizar este cambio.');
+      return;
+    }
     const expense = confirming;
     const previousResult = result;
     const nextResult = previousResult
@@ -306,7 +314,7 @@ export function BabyExpensesScreen({
   </>;
 
   return (
-    <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}

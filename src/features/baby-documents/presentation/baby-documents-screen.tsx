@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { canManageBabyDocument } from '@/features/baby-documents/application/baby-document-permissions';
+import { canCreateBabyDocument, canManageBabyDocument } from '@/features/baby-documents/application/baby-document-permissions';
 import { BabyDocumentError, type BabyDocumentMetadata, type BabyDocumentRepository, type PreparedBabyDocumentFile } from '@/features/baby-documents/application/baby-document-repository';
 import type { BabyDocument, BabyDocumentCategory } from '@/features/baby-documents/domain/baby-document';
 import { openBabyDocument, saveBabyDocument } from '@/features/baby-documents/infrastructure/baby-document-file';
@@ -73,6 +73,7 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<BabyDocumentCategory>('report');
   const [documentDate, setDocumentDate] = useState('');
+  const canCreate = canCreateBabyDocument(familyRole);
 
   useEffect(() => {
     let active = true;
@@ -113,6 +114,10 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
   }
 
   async function submit() {
+    if ((!editing && !canCreate) || (editing && !canManageBabyDocument(familyRole, userId, editing))) {
+      setError('No tienes permiso para realizar este cambio.');
+      return;
+    }
     if (!displayName.trim() || (!editing && !selectedFile)) {
       setError('Indica un nombre y selecciona un archivo.');
       return;
@@ -179,10 +184,10 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
             title={`Documentos de ${babyName}`}
           />
 
-          <View style={styles.createArea}>
+          {canCreate ? <View style={styles.createArea}>
             <View style={styles.createCopy}><Text style={styles.sectionTitle}>Documentación compartida</Text><Text style={styles.sectionHint}>PDF, JPG o PNG · máximo 10 MB</Text></View>
             <Pressable accessibilityRole="button" onPress={() => { resetForm(); setShowForm(true); }} style={styles.addButton}><Plus color={colors.onAccent} size={18} /><Text style={styles.addButtonText}>Añadir documento</Text></Pressable>
-          </View>
+          </View> : null}
 
           <View style={[styles.listCard, compact && styles.listCardCompact]}>
             <View style={styles.listHeading}>
