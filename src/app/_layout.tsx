@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '@/global.css';
 
 import { AppUpdateNotificationObserver } from '@/features/app-updates/presentation/app-update-notification-observer';
+import { WebAppUpdateObserver } from '@/features/app-updates/presentation/web-app-update-observer';
 import { AuthProvider, useAuth } from '@/features/auth/presentation/auth-provider';
 import { supabaseAuthService } from '@/features/auth/infrastructure/supabase-auth-service';
 import { supabaseExpenseCurrencyPreferenceRepository } from '@/features/baby-expenses/infrastructure/supabase-expense-currency-preference-repository';
@@ -49,6 +50,7 @@ function AuthenticatedApp({ palette, scheme }: { palette: ReturnType<typeof getC
         userId={session?.user.id}
       >
         <AppUpdateNotificationObserver />
+        <WebAppUpdateObserver />
         <NativeNotificationObserver />
         <Stack screenOptions={{ contentStyle: { backgroundColor: palette.background }, headerShown: false }} />
         <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />

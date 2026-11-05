@@ -1315,7 +1315,7 @@ export function CareHandoffScreen({
             styles.floatingQuickAction,
             {
               bottom: bottomNavigationInset + (
-                bottomNavigationInset > 0 ? spacing.sm : spacing.xl
+                bottomNavigationInset > 0 ? spacing.xs : spacing.xl
               ),
             },
             pressed && styles.floatingQuickActionPressed,
