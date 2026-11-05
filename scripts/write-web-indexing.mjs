@@ -8,6 +8,9 @@ const robots = isDevelopment
   : 'User-agent: *\nAllow: /\n';
 const headers = `https://dev.niduna.com/*
   X-Robots-Tag: noindex, nofollow, noarchive
+
+/app-version.json
+  Cache-Control: no-store, no-cache, must-revalidate
 `;
 
 await mkdir(outputDirectory, { recursive: true });
