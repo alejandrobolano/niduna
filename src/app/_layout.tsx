@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import '@/global.css';
 
@@ -16,9 +17,11 @@ import { getColors } from '@/shared/presentation/theme';
 
 export default function RootLayout() {
   return (
-    <ThemePreferenceProvider>
-      <ThemedApp />
-    </ThemePreferenceProvider>
+    <SafeAreaProvider>
+      <ThemePreferenceProvider>
+        <ThemedApp />
+      </ThemePreferenceProvider>
+    </SafeAreaProvider>
   );
 }
 

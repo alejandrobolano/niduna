@@ -15,5 +15,9 @@ describe('baby expense permissions', () => {
     expect(canManageBabyExpense(expense, 'admin', 'other')).toBe(true);
     expect(canManageBabyExpense(expense, 'owner', 'other')).toBe(true);
   });
+
+  it('keeps viewers from changing expenses they previously created', () => {
+    expect(canManageBabyExpense({ createdBy: 'author' }, 'viewer', 'author')).toBe(false);
+  });
 });
 

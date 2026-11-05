@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { canManageBabyContact } from './baby-contact-permissions';
+import { canCreateBabyContact, canManageBabyContact } from './baby-contact-permissions';
 
 describe('canManageBabyContact', () => {
-  it('allows the author, owner and administrator', () => {
-    expect(canManageBabyContact('user-1', 'user-1', 'viewer')).toBe(true);
+  it('allows the author, owner and administrator when they can write', () => {
+    expect(canManageBabyContact('user-1', 'user-1', 'caregiver')).toBe(true);
     expect(canManageBabyContact('user-2', 'user-1', 'owner')).toBe(true);
     expect(canManageBabyContact('user-2', 'user-1', 'admin')).toBe(true);
+  });
+
+  it('keeps viewers from creating or changing contacts', () => {
+    expect(canCreateBabyContact('viewer')).toBe(false);
+    expect(canCreateBabyContact('caregiver')).toBe(true);
+    expect(canManageBabyContact('user-1', 'user-1', 'viewer')).toBe(false);
   });
 
   it('keeps other family members read only', () => {

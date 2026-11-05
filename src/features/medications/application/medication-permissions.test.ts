@@ -25,4 +25,8 @@ describe('medication permissions', () => {
     expect(canManageMedicationAdministration(administration, 'caregiver', 'other')).toBe(false);
     expect(canManageMedicationAdministration(administration, 'admin', 'other')).toBe(true);
   });
+
+  it('keeps viewers from changing administrations they previously recorded', () => {
+    expect(canManageMedicationAdministration({ recordedBy: 'author' }, 'viewer', 'author')).toBe(false);
+  });
 });

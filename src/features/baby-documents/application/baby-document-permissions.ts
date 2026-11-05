@@ -1,10 +1,16 @@
 import type { BabyDocument } from '@/features/baby-documents/domain/baby-document';
-import type { FamilyRole } from '@/features/family/domain/family';
+import { canWriteFamilyResources, type FamilyRole } from '../../family/domain/family';
+
+export function canCreateBabyDocument(role: FamilyRole): boolean {
+  return canWriteFamilyResources(role);
+}
 
 export function canManageBabyDocument(
   role: FamilyRole,
   userId: string,
   document: Pick<BabyDocument, 'authorUserId'>,
 ): boolean {
-  return role === 'owner' || role === 'admin' || document.authorUserId === userId;
+  return canWriteFamilyResources(role) && (
+    role === 'owner' || role === 'admin' || document.authorUserId === userId
+  );
 }
