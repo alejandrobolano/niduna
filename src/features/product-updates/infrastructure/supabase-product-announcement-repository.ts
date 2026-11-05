@@ -16,9 +16,9 @@ const pwaUpdatePreviewStorageKey = 'niduna.preview.pwa-auto-updates.seen';
 
 const pwaUpdatePreview: ProductAnnouncement = {
   description:
-    'Cierra Niduna completamente desde el selector de aplicaciones y vuelve a abrirla una vez. No necesitas cerrar sesión. A partir de entonces, Niduna podrá avisarte y actualizarse desde la propia app.',
+    'Elimina Niduna de la pantalla de inicio y vuelve a instalarla desde el navegador, igual que la primera vez. Tu cuenta y tus datos seguirán guardados; no necesitas cerrar sesión. En este entorno de pruebas, el aviso puede reaparecer si eliminas completamente la PWA.',
   id: pwaUpdatePreviewId,
-  title: 'Un último paso para actualizar Niduna',
+  title: 'Reinstala Niduna una sola vez',
 };
 
 function isStandaloneWebApp(): boolean {
@@ -43,7 +43,7 @@ function loadDevelopmentPreview(): ProductAnnouncement[] {
     !isStandaloneWebApp() ||
     typeof window === 'undefined' ||
     window.location.hostname !== 'dev.niduna.com' ||
-    window.sessionStorage.getItem(pwaUpdatePreviewStorageKey)
+    window.localStorage.getItem(pwaUpdatePreviewStorageKey)
   ) {
     return [];
   }
@@ -101,7 +101,7 @@ export const supabaseProductAnnouncementRepository: ProductAnnouncementRepositor
     );
 
     if (persistedAnnouncementIds.length !== announcementIds.length) {
-      window.sessionStorage.setItem(pwaUpdatePreviewStorageKey, 'true');
+      window.localStorage.setItem(pwaUpdatePreviewStorageKey, 'true');
     }
 
     if (!persistedAnnouncementIds.length) return;

@@ -1,7 +1,7 @@
 {
   "id": "pwa-auto-updates",
-  "title": "Un último paso para actualizar Niduna",
-  "description": "Cierra Niduna completamente desde el selector de aplicaciones y vuelve a abrirla una vez. No necesitas cerrar sesión. A partir de entonces, Niduna podrá avisarte y actualizarse desde la propia app.",
+  "title": "Reinstala Niduna una sola vez",
+  "description": "Elimina Niduna de la pantalla de inicio y vuelve a instalarla desde el navegador, igual que la primera vez. Tu cuenta y tus datos seguirán guardados; no necesitas cerrar sesión. Así quedarán activadas las próximas actualizaciones desde la app.",
   "platforms": ["web"],
   "webDisplayMode": "standalone",
   "delivery": "in_app",
