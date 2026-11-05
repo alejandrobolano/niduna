@@ -79,6 +79,7 @@ export type Database = {
           target_route: string | null;
           title: string;
           updated_at: string;
+          web_display_mode: 'standalone' | null;
         },
         {
           action_label?: string | null;
@@ -93,6 +94,7 @@ export type Database = {
           status?: 'draft' | 'published' | 'archived';
           target_route?: string | null;
           title: string;
+          web_display_mode?: 'standalone' | null;
         },
         Record<string, never>
       >;

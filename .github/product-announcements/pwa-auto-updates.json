@@ -1,0 +1,10 @@
+{
+  "id": "pwa-auto-updates",
+  "title": "Un último paso para actualizar Niduna",
+  "description": "Cierra Niduna completamente desde el selector de aplicaciones y vuelve a abrirla una vez. No necesitas cerrar sesión. A partir de entonces, Niduna podrá avisarte y actualizarse desde la propia app.",
+  "platforms": ["web"],
+  "webDisplayMode": "standalone",
+  "delivery": "in_app",
+  "status": "published",
+  "expiresAt": "2027-01-31T23:59:59.999Z"
+}
