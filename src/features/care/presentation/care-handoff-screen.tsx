@@ -1313,7 +1313,7 @@ export function CareHandoffScreen({
           onPress={() => setIsQuickActionPickerOpen(true)}
           style={({ pressed }) => [
             styles.floatingQuickAction,
-            { bottom: bottomNavigationInset + spacing.xl },
+            { bottom: bottomNavigationInset + spacing.md },
             pressed && styles.floatingQuickActionPressed,
           ]}
         >

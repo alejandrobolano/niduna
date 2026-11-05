@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { ChevronRight, History, Settings2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { resolveMemberAvatar, type MemberAvatarVariant } from '@/features/avatars/domain/avatar';
@@ -71,7 +72,7 @@ export function SessionBanner({
             onPress={() => setIsOpen(false)}
             style={styles.backdrop}
           />
-          <View style={styles.panel}>
+          <SafeAreaView edges={['top', 'right', 'bottom']} style={styles.panel}>
             <View style={styles.panelHeading}>
               <Text style={styles.panelEyebrow}>TU CUENTA</Text>
               <Pressable
@@ -167,7 +168,7 @@ export function SessionBanner({
                 Niduna{appVersion ? ` v${appVersion}` : ''}
               </Text>
             </View>
-          </View>
+          </SafeAreaView>
         </View>
       </Modal>
     </>
