@@ -11,15 +11,6 @@ import {
 import { supabase } from '@/shared/infrastructure/supabase/client';
 
 const nativeVersion = Constants.expoConfig?.version ?? '0.0.0';
-const pwaUpdatePreviewId = 'preview-pwa-auto-updates';
-const pwaUpdatePreviewStorageKey = 'niduna.preview.pwa-auto-updates.seen';
-
-const pwaUpdatePreview: ProductAnnouncement = {
-  description:
-    'Elimina Niduna de la pantalla de inicio y vuelve a instalarla desde el navegador, igual que la primera vez. Tu cuenta y tus datos seguirán guardados; no necesitas cerrar sesión. En este entorno de pruebas, el aviso puede reaparecer si eliminas completamente la PWA.',
-  id: pwaUpdatePreviewId,
-  title: 'Reinstala Niduna una sola vez',
-};
 
 function isStandaloneWebApp(): boolean {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
@@ -36,19 +27,6 @@ function isStandaloneWebApp(): boolean {
             (navigator as Navigator & { standalone?: boolean }).standalone,
           ),
   });
-}
-
-function loadDevelopmentPreview(): ProductAnnouncement[] {
-  if (
-    !isStandaloneWebApp() ||
-    typeof window === 'undefined' ||
-    window.location.hostname !== 'dev.niduna.com' ||
-    window.localStorage.getItem(pwaUpdatePreviewStorageKey)
-  ) {
-    return [];
-  }
-
-  return [pwaUpdatePreview];
 }
 
 export const supabaseProductAnnouncementRepository: ProductAnnouncementRepository = {
@@ -72,7 +50,7 @@ export const supabaseProductAnnouncementRepository: ProductAnnouncementRepositor
     if (readsError) throw readsError;
     const seenIds = new Set(reads.map((item) => item.announcement_id));
 
-    const pendingAnnouncements = announcements
+    return announcements
       .filter(
         (item) =>
           !seenIds.has(item.id) &&
@@ -90,24 +68,13 @@ export const supabaseProductAnnouncementRepository: ProductAnnouncementRepositor
         title: item.title,
       }));
 
-    return [...loadDevelopmentPreview(), ...pendingAnnouncements];
   },
 
   async markSeen(announcementIds, userId) {
     if (!announcementIds.length) return;
 
-    const persistedAnnouncementIds = announcementIds.filter(
-      (announcementId) => announcementId !== pwaUpdatePreviewId,
-    );
-
-    if (persistedAnnouncementIds.length !== announcementIds.length) {
-      window.localStorage.setItem(pwaUpdatePreviewStorageKey, 'true');
-    }
-
-    if (!persistedAnnouncementIds.length) return;
-
     const { error } = await supabase.from('product_announcement_reads').upsert(
-      persistedAnnouncementIds.map((announcementId) => ({
+      announcementIds.map((announcementId) => ({
         announcement_id: announcementId,
         seen_at: new Date().toISOString(),
         user_id: userId,

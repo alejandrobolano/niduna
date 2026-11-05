@@ -16,7 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
-* muestra una novedad solo en la PWA instalada para explicar el único cierre completo necesario para activar las actualizaciones automáticas, sin cerrar la sesión
+* usa la versión desplegada como única fuente de actualización web, evita pedir reinstalar una PWA nueva y corrige la reserva inferior y el acceso flotante en iPhone
 * respeta el área segura de iPhone en la PWA instalada, permite actualizarla sin cerrarla, ajusta la posición responsive del acceso flotante y mantiene los recursos familiares en solo lectura para el rol de consulta
 * entrega la configuración privada de Firebase a las builds Android mediante una variable de archivo segura de EAS
 * limita la publicación y notificación de nuevas APK a los cambios de versión y mantiene las builds manuales como pruebas internas por defecto
