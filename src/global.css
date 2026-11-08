@@ -29,6 +29,17 @@ body,
   right: 0;
 }
 
+#niduna-bottom-navigation::after {
+  background-color: var(--bottom-navigation-background);
+  bottom: 0;
+  content: '';
+  height: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+}
+
 #niduna-compact-screen {
   margin-bottom: calc(
     var(--bottom-navigation-content-height) + env(safe-area-inset-bottom, 0px)
