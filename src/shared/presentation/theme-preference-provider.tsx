@@ -62,8 +62,8 @@ export function ThemePreferenceProvider({ children }: PropsWithChildren) {
       '--bottom-navigation-background',
       palette.surface,
     );
-    document.documentElement.style.backgroundColor = background;
-    document.body.style.backgroundColor = background;
+    document.documentElement.style.backgroundColor = palette.surface;
+    document.body.style.backgroundColor = palette.surface;
     document
       .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
       .forEach((meta) => meta.setAttribute('content', background));
