@@ -73,6 +73,10 @@ import type { ContractionRepository } from '@/features/contractions/application/
 import { PrenatalContractionTracker } from '@/features/contractions/presentation/prenatal-contraction-tracker';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
+import {
+  appScreenSafeAreaEdges,
+  floatingActionContentBottomPadding,
+} from '@/shared/presentation/app-screen-layout';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const feedingLabels: Record<FeedingEvent['method'], string> = {
@@ -1186,7 +1190,7 @@ export function CareHandoffScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={170} />
           <Text style={styles.stateTitle}>Preparando el relevo…</Text>
@@ -1200,7 +1204,7 @@ export function CareHandoffScreen({
 
   if (loadError) {
     return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <CloudSun color={colors.lavender} size={56} />
           <Text style={styles.stateTitle}>No pudimos cargar el relevo</Text>
@@ -1224,7 +1228,7 @@ export function CareHandoffScreen({
 
   if (!dashboard) {
     return (
-      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.page}>
           <View style={styles.content}>
             {topContent}
@@ -1260,7 +1264,7 @@ export function CareHandoffScreen({
   }
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.page}
         onLayout={(event: LayoutChangeEvent) => {
@@ -1359,7 +1363,7 @@ const styles = createThemedStyleSheet((colors) => ({
   page: {
     alignItems: 'center',
     padding: spacing.lg,
-    paddingBottom: 72,
+    paddingBottom: floatingActionContentBottomPadding,
   },
   content: {
     gap: spacing.xl,

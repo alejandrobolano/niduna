@@ -12,6 +12,10 @@ import { DatePickerField } from '@/features/baby-profile/presentation/date-picke
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
 import type { FamilyRole } from '@/features/family/domain/family';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
@@ -172,7 +176,7 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
   </>;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
@@ -226,7 +230,7 @@ export function BabyDocumentsScreen({ babyId, babyName, familyRole, onBack, repo
 }
 
 const styles = createThemedStyleSheet((colors) => ({
-  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { paddingBottom: 112 }, content: resourceScreenContentStyle,
+  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { paddingBottom: appScreenContentBottomPadding }, content: resourceScreenContentStyle,
   createArea: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.lg, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between', padding: spacing.xl }, createCopy: { flex: 1, minWidth: 220 }, addButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.lg }, addButtonText: { color: colors.onAccent, fontSize: 13, fontWeight: '900' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 13, marginTop: 3 }, formField: { flex: 1, minWidth: 0 }, fileButton: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, flexDirection: 'row', gap: spacing.sm, minHeight: 54, paddingHorizontal: spacing.lg }, fileButtonText: { color: colors.primaryPressed, flex: 1, fontWeight: '800' }, error: { color: colors.error, fontSize: 13, lineHeight: 19 }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.55 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, minWidth: 0, padding: spacing.xl }, listCardCompact: { padding: spacing.lg }, listHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' }, listHeadingCopy: { flex: 1, minWidth: 0 }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 44, justifyContent: 'center', width: 44 }, filterScroller: { minWidth: 0, width: '100%' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent }, loader: { marginVertical: spacing.xl }, empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xxl }, emptyTitle: { color: colors.text, fontSize: 17, fontWeight: '900' }, emptyText: { color: colors.textMuted, textAlign: 'center' }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, minWidth: 0 }, gridCompact: { flexDirection: 'column' }, documentCard: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radius.lg, borderWidth: 1, flexBasis: 360, flexGrow: 1, gap: spacing.md, minWidth: 280, padding: spacing.lg }, documentCardCompact: { flexBasis: 'auto', minWidth: 0, width: '100%' }, documentHeader: { alignItems: 'center', flexDirection: 'row', gap: spacing.md }, documentIcon: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.md, height: 46, justifyContent: 'center', width: 46 }, documentCopy: { flex: 1, minWidth: 0 }, documentTitle: { color: colors.text, fontSize: 16, fontWeight: '900' }, documentMeta: { color: colors.textMuted, fontSize: 12, lineHeight: 17 }, documentDescription: { color: colors.text, fontSize: 13, lineHeight: 19 }, documentActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, secondaryAction: { alignItems: 'center', borderColor: colors.border, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', gap: spacing.xs, minHeight: 40, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, secondaryActionText: { color: colors.primaryPressed, fontSize: 12, fontWeight: '800' }, dangerActionText: { color: colors.error, fontSize: 12, fontWeight: '800' }, retiredLink: { color: colors.primaryPressed, fontSize: 13, fontWeight: '800', textAlign: 'center' },
 }));

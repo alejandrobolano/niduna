@@ -45,6 +45,10 @@ import { DatePickerField } from '@/features/baby-profile/presentation/date-picke
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
 import type { FamilyRole } from '@/features/family/domain/family';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
@@ -314,7 +318,7 @@ export function BabyExpensesScreen({
   </>;
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <KeyboardAwareScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
@@ -480,7 +484,7 @@ export function BabyExpensesScreen({
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
-  page: { paddingBottom: 120 },
+  page: { paddingBottom: appScreenContentBottomPadding },
   content: resourceScreenContentStyle,
   iconButton: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 },
   errorBanner: { backgroundColor: colors.errorSoft, borderRadius: radius.md, color: colors.error, fontSize: 13, padding: spacing.lg },

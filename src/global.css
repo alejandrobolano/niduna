@@ -1,6 +1,7 @@
 :root {
   color-scheme: light dark;
   --app-background: #fff8e8;
+  --bottom-navigation-background: #fffcf6;
   --bottom-navigation-content-height: 66px;
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
@@ -20,6 +21,7 @@ body,
 }
 
 #niduna-bottom-navigation {
+  background-color: var(--bottom-navigation-background);
   bottom: 0;
   left: 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -36,5 +38,6 @@ body,
 @media (prefers-color-scheme: dark) {
   :root {
     --app-background: #0f1428;
+    --bottom-navigation-background: #171e35;
   }
 }
