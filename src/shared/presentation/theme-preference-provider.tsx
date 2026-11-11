@@ -62,11 +62,15 @@ export function ThemePreferenceProvider({ children }: PropsWithChildren) {
       '--bottom-navigation-background',
       palette.surface,
     );
+    document.documentElement.style.setProperty(
+      '--system-chrome-background',
+      palette.surface,
+    );
     document.documentElement.style.backgroundColor = palette.surface;
     document.body.style.backgroundColor = palette.surface;
     document
       .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-      .forEach((meta) => meta.setAttribute('content', background));
+      .forEach((meta) => meta.setAttribute('content', palette.surface));
   }, [scheme]);
 
   const setPreference = useCallback((nextPreference: ThemePreference) => {
