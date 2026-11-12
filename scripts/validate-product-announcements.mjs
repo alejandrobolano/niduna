@@ -16,6 +16,8 @@ for (const file of files) {
   if (value.targetRoute && !routes.has(value.targetRoute)) throw new Error(`${file}: invalid target route`);
   if (value.minimumNativeVersion && !versionPattern.test(value.minimumNativeVersion)) throw new Error(`${file}: invalid minimum native version`);
   if (!['in_app', 'push_and_in_app'].includes(value.delivery)) throw new Error(`${file}: invalid delivery`);
+  if (value.webDisplayMode && value.webDisplayMode !== 'standalone') throw new Error(`${file}: invalid web display mode`);
+  if (value.webDisplayMode && !value.platforms.includes('web')) throw new Error(`${file}: web display mode requires the web platform`);
   if (!['published', 'archived'].includes(value.status)) throw new Error(`${file}: invalid status`);
   if (Number.isNaN(Date.parse(value.expiresAt))) throw new Error(`${file}: invalid expiry`);
   ids.add(value.id);

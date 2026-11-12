@@ -63,6 +63,10 @@ import {
 import { dateToIso } from '@/shared/presentation/date';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const lifeStageOptions = [
@@ -610,7 +614,7 @@ export function BabyProfileScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={150} />
           <Text style={styles.stateTitle}>Preparando el perfil</Text>
@@ -624,7 +628,7 @@ export function BabyProfileScreen({
 
   if (loadError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={150} />
           <Text style={styles.stateTitle}>No pudimos cargar el perfil</Text>
@@ -652,7 +656,7 @@ export function BabyProfileScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
@@ -1307,7 +1311,7 @@ const styles = createThemedStyleSheet((colors) => ({
     alignSelf: 'center',
     gap: spacing.xl,
     maxWidth: 920,
-    paddingBottom: 64,
+    paddingBottom: appScreenContentBottomPadding,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     width: '100%',

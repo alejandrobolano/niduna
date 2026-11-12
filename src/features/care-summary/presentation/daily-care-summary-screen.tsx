@@ -35,6 +35,10 @@ import {
 import { CareTrendChart } from '@/features/care-summary/presentation/care-trend-chart';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { MeasurementEvolutionChart } from '@/features/care-summary/presentation/measurement-evolution-chart';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
@@ -195,7 +199,7 @@ export function DailyCareSummaryScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
@@ -485,7 +489,11 @@ const styles = createThemedStyleSheet((colors) => ({
   observationRow: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
   observationText: { color: colors.text, flex: 1, fontSize: 13, lineHeight: 19 },
   observations: { gap: spacing.sm },
-  page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 96 },
+  page: {
+    alignItems: 'center',
+    padding: spacing.lg,
+    paddingBottom: appScreenContentBottomPadding,
+  },
   periodButton: { alignItems: 'center', borderRadius: radius.pill, flex: 1, justifyContent: 'center', minHeight: 42, paddingHorizontal: spacing.sm },
   periodButtonSelected: { backgroundColor: colors.primary },
   periodLabel: { color: colors.textMuted, fontSize: 13, fontWeight: '900' },

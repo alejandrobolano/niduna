@@ -28,7 +28,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { canManageBabyContact } from '@/features/baby-contacts/application/baby-contact-permissions';
+import { canCreateBabyContact, canManageBabyContact } from '@/features/baby-contacts/application/baby-contact-permissions';
 import {
   BabyContactError,
   type BabyContactDraft,
@@ -53,6 +53,10 @@ import { BabyContactQrModal } from '@/features/baby-contacts/presentation/baby-c
 import { ProfileField } from '@/features/baby-profile/presentation/profile-field';
 import { SelectField, type SelectOption } from '@/features/baby-profile/presentation/select-field';
 import type { FamilyRole } from '@/features/family/domain/family';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -131,6 +135,7 @@ export function BabyContactsScreen({
   const [copied, setCopied] = useState<string>();
   const [mapAddress, setMapAddress] = useState<string>();
   const [qrContact, setQrContact] = useState<BabyContact>();
+  const canCreate = canCreateBabyContact(familyRole);
 
   useEffect(() => {
     let active = true;
@@ -185,6 +190,10 @@ export function BabyContactsScreen({
   }
 
   async function save() {
+    if ((!editing && !canCreate) || (editing && !canManageBabyContact(editing.authorUserId, userId, familyRole))) {
+      setError('No tienes permiso para realizar este cambio.');
+      return;
+    }
     const errors = validateBabyContact(draft);
     if (errors.length) {
       setValidation(Object.fromEntries(errors.map((item) => [item.field, item.message])));
@@ -280,7 +289,7 @@ export function BabyContactsScreen({
   </>;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         <View style={styles.content}>
           {topContent}
@@ -292,7 +301,7 @@ export function BabyContactsScreen({
             title={`Directorio de ${babyName}`}
           />
 
-          {!retired ? (
+          {!retired && canCreate ? (
             <View style={styles.createArea}>
               <View>
                 <Text style={styles.sectionTitle}>Información compartida</Text>
@@ -339,7 +348,7 @@ export function BabyContactsScreen({
                 ))}
               </View>
             ) : (
-              <View style={styles.empty}><UsersRound color={colors.aqua} size={38} /><Text style={styles.emptyTitle}>No hay contactos aquí</Text><Text style={styles.emptyText}>Prueba otra búsqueda o añade el primer contacto de {babyName}.</Text></View>
+              <View style={styles.empty}><UsersRound color={colors.aqua} size={38} /><Text style={styles.emptyTitle}>No hay contactos aquí</Text><Text style={styles.emptyText}>{canCreate ? `Prueba otra búsqueda o añade el primer contacto de ${babyName}.` : 'Cuando la familia añada uno, aparecerá aquí.'}</Text></View>
             )}
 
             <DataPagination onChangePage={setPage} onChangePageSize={(value) => { setPageSize(value); setPage(1); }} page={page} pageSize={pageSize} total={result?.totalCount ?? 0} totalPages={result?.totalPages ?? 1} />
@@ -433,7 +442,7 @@ function ContactValue({ icon, label, onCopy, onOpen }: { icon: ReactNode; label:
 }
 
 const styles = createThemedStyleSheet((colors) => ({
-  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { flexGrow: 1, paddingBottom: 120 }, content: resourceScreenContentStyle,
+  safeArea: { backgroundColor: colors.background, flex: 1 }, page: { flexGrow: 1, paddingBottom: appScreenContentBottomPadding }, content: resourceScreenContentStyle,
   createArea: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg, justifyContent: 'space-between' }, sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '900' }, sectionHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18, marginTop: 3 }, addButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.pill, flexDirection: 'row', gap: spacing.sm, minHeight: 48, paddingHorizontal: spacing.lg }, addButtonText: { color: colors.onAccent, fontWeight: '900' },
   formRow: { flexDirection: 'row', gap: spacing.lg }, formRowCompact: { flexDirection: 'column' }, formField: { flex: 1, minWidth: 0 }, notesInput: { minHeight: 78, textAlignVertical: 'top' }, featuredRow: { alignItems: 'center', backgroundColor: colors.surfaceMuted, borderRadius: radius.md, flexDirection: 'row', justifyContent: 'space-between', padding: spacing.lg }, featuredTitle: { color: colors.text, fontSize: 15, fontWeight: '900' }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, justifyContent: 'center', minHeight: 54 }, primaryButtonText: { color: colors.onAccent, fontSize: 15, fontWeight: '900' }, disabled: { opacity: 0.45 },
   listCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, minWidth: 0, padding: spacing.xl }, listCardCompact: { padding: spacing.lg }, listHeading: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, justifyContent: 'space-between' }, listHeadingCopy: { flex: 1, minWidth: 0 }, refresh: { alignItems: 'center', backgroundColor: colors.aquaSoft, borderRadius: radius.pill, height: 46, justifyContent: 'center', width: 46 }, searchRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.md }, searchRowCompact: { alignItems: 'stretch', flexDirection: 'column' }, searchButton: { alignItems: 'center', backgroundColor: colors.primaryPressed, borderRadius: radius.md, justifyContent: 'center', minHeight: 52, paddingHorizontal: spacing.xl }, searchButtonText: { color: colors.onAccent, fontWeight: '900' }, filterScroller: { minWidth: 0, width: '100%' }, filters: { gap: spacing.sm }, filter: { backgroundColor: colors.surfaceMuted, borderRadius: radius.pill, minHeight: 44, paddingHorizontal: spacing.lg, justifyContent: 'center' }, filterSelected: { backgroundColor: colors.primaryPressed }, filterText: { color: colors.textMuted, fontWeight: '800' }, filterTextSelected: { color: colors.onAccent },

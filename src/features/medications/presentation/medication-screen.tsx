@@ -46,6 +46,10 @@ import {
 } from '@/features/medications/domain/medication-unit';
 import { MedicationUnitField } from '@/features/medications/presentation/medication-unit-field';
 import type { FamilyRole } from '@/features/family/domain/family';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { dateToIso } from '@/shared/presentation/date';
@@ -252,6 +256,9 @@ export function MedicationScreen({
   }
 
   async function saveMedication(allowIncomplete = false) {
+    if (!canManageMedicationCatalog(familyRole)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     const amount = dose.trim() ? parseDoseAmount(dose) : undefined;
     const doseUnit = resolveMedicationUnit(doseUnitPreset, customDoseUnit);
     if (!name.trim()) {
@@ -301,6 +308,12 @@ export function MedicationScreen({
   }
 
   function prepareAdministration() {
+    if (
+      (!editingAdministration && !canRecordMedicationAdministration(familyRole)) ||
+      (editingAdministration && !canManageMedicationAdministration(editingAdministration, familyRole, userId))
+    ) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     const amount = parseDoseAmount(administeredDose);
     const administeredUnit = resolveMedicationUnit(administeredUnitPreset, customAdministeredUnit);
     const administeredAt = createLocalAdministrationTimestamp(
@@ -330,11 +343,17 @@ export function MedicationScreen({
   }
 
   async function toggleMedication(item: BabyMedication) {
+    if (!canManageMedicationCatalog(familyRole)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     setSaving(true); try { await repository.setMedicationRetired(item.id, !item.retiredAt); setRetiringMedication(undefined); setReload((v) => v + 1); }
     catch (reason) { setError(messageFor(reason)); } finally { setSaving(false); }
   }
 
   async function toggleAdministration(item: MedicationAdministration) {
+    if (!canManageMedicationAdministration(item, familyRole, userId)) {
+      setError('No tienes permiso para realizar este cambio.'); return;
+    }
     setSaving(true); try { await repository.setAdministrationRetired(item.id, !item.retiredAt); setRetiringAdministration(undefined); setReload((v) => v + 1); }
     catch (reason) { setError(messageFor(reason)); } finally { setSaving(false); }
   }
@@ -370,7 +389,7 @@ export function MedicationScreen({
   </>;
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.root}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.root}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content}>
         {topContent}
         <ResourceScreenHero eyebrow="SALUD Y CUIDADOS" icon={<Pill color={colors.primaryPressed} size={28} />} onBack={onBack}
@@ -419,7 +438,10 @@ export function MedicationScreen({
 
 const styles = createThemedStyleSheet((theme) => ({
   root: { backgroundColor: theme.background, flex: 1 },
-  content: { ...resourceScreenContentStyle, paddingBottom: 120 },
+  content: {
+    ...resourceScreenContentStyle,
+    paddingBottom: appScreenContentBottomPadding,
+  },
   warning: { backgroundColor: theme.butterSoft, borderRadius: radius.lg, gap: spacing.xs, padding: spacing.lg },
   warningTitle: { color: theme.text, fontSize: 15, fontWeight: '900' },
   warningText: { color: theme.textMuted, fontSize: 13, lineHeight: 19 },

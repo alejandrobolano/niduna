@@ -34,6 +34,7 @@ for (const file of files) {
       target_route: announcement.targetRoute,
       title: announcement.title,
       updated_at: new Date().toISOString(),
+      web_display_mode: announcement.webDisplayMode,
     }),
   });
   if (!response.ok) throw new Error(`Could not publish product announcement ${announcement.id}`);

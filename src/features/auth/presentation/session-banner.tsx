@@ -1,14 +1,22 @@
 import Constants from 'expo-constants';
 import { ChevronRight, History, Settings2, X } from 'lucide-react-native';
-import { useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
 import { resolveMemberAvatar, type MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 import type { FamilyRelationship } from '@/features/family/domain/family';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
 import { ThemePreferenceControl } from '@/shared/presentation/theme-preference-control';
-import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import { useThemePreference } from '@/shared/presentation/theme-preference-provider';
+import {
+  colors,
+  createThemedStyleSheet,
+  getColors,
+  radius,
+  spacing,
+} from '@/shared/presentation/theme';
 
 interface SessionBannerProps {
   email: string;
@@ -28,10 +36,26 @@ export function SessionBanner({
   onOpenFamilyActivity,
 }: SessionBannerProps) {
   const { signOut } = useAuth();
+  const { scheme } = useThemePreference();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [error, setError] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const appVersion = Constants.expoConfig?.version;
+
+  useEffect(() => {
+    if (!isOpen || Platform.OS !== 'web' || typeof document === 'undefined') {
+      return;
+    }
+
+    const palette = getColors(scheme);
+    document.documentElement.style.backgroundColor = palette.background;
+    document.body.style.backgroundColor = palette.background;
+
+    return () => {
+      document.documentElement.style.backgroundColor = palette.surface;
+      document.body.style.backgroundColor = palette.surface;
+    };
+  }, [isOpen, scheme]);
 
   async function handleSignOut() {
     setError(undefined);
@@ -71,7 +95,7 @@ export function SessionBanner({
             onPress={() => setIsOpen(false)}
             style={styles.backdrop}
           />
-          <View style={styles.panel}>
+          <SafeAreaView edges={['top', 'right', 'bottom']} style={styles.panel}>
             <View style={styles.panelHeading}>
               <Text style={styles.panelEyebrow}>TU CUENTA</Text>
               <Pressable
@@ -167,7 +191,7 @@ export function SessionBanner({
                 Niduna{appVersion ? ` v${appVersion}` : ''}
               </Text>
             </View>
-          </View>
+          </SafeAreaView>
         </View>
       </Modal>
     </>

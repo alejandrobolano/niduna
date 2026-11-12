@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
+import { isPwaStandalone } from '@/features/pwa/application/pwa-installation';
 import type { ProductAnnouncementRepository } from '@/features/product-updates/application/product-announcement-repository';
 import {
   isVersionAtLeast,
@@ -11,11 +12,28 @@ import { supabase } from '@/shared/infrastructure/supabase/client';
 
 const nativeVersion = Constants.expoConfig?.version ?? '0.0.0';
 
+function isStandaloneWebApp(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+
+  return isPwaStandalone(Platform.OS, {
+    matchDisplayMode:
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia.bind(window)
+        : undefined,
+    navigatorStandalone:
+      typeof navigator === 'undefined'
+        ? false
+        : Boolean(
+            (navigator as Navigator & { standalone?: boolean }).standalone,
+          ),
+  });
+}
+
 export const supabaseProductAnnouncementRepository: ProductAnnouncementRepository = {
   async loadPending(userId) {
     const { data: announcements, error } = await supabase
       .from('product_announcements')
-      .select('id,title,description,action_label,target_route,minimum_native_version')
+      .select('id,title,description,action_label,target_route,minimum_native_version,web_display_mode')
       .contains('platforms', [Platform.OS])
       .order('published_at', { ascending: false })
       .limit(10);
@@ -36,6 +54,8 @@ export const supabaseProductAnnouncementRepository: ProductAnnouncementRepositor
       .filter(
         (item) =>
           !seenIds.has(item.id) &&
+          (!item.web_display_mode ||
+            (item.web_display_mode === 'standalone' && isStandaloneWebApp())) &&
           (Platform.OS === 'web' ||
             !item.minimum_native_version ||
             isVersionAtLeast(nativeVersion, item.minimum_native_version)),
@@ -47,6 +67,7 @@ export const supabaseProductAnnouncementRepository: ProductAnnouncementRepositor
         targetRoute: (item.target_route as ProductAnnouncementRoute | null) ?? undefined,
         title: item.title,
       }));
+
   },
 
   async markSeen(announcementIds, userId) {

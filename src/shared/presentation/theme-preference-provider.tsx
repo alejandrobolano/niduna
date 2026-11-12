@@ -54,14 +54,23 @@ export function ThemePreferenceProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    const background = getColors(scheme).background;
+    const palette = getColors(scheme);
+    const background = palette.background;
     document.documentElement.style.colorScheme = scheme;
     document.documentElement.style.setProperty('--app-background', background);
-    document.documentElement.style.backgroundColor = background;
-    document.body.style.backgroundColor = background;
+    document.documentElement.style.setProperty(
+      '--bottom-navigation-background',
+      palette.surface,
+    );
+    document.documentElement.style.setProperty(
+      '--system-chrome-background',
+      palette.surface,
+    );
+    document.documentElement.style.backgroundColor = palette.surface;
+    document.body.style.backgroundColor = palette.surface;
     document
       .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-      .forEach((meta) => meta.setAttribute('content', background));
+      .forEach((meta) => meta.setAttribute('content', palette.surface));
   }, [scheme]);
 
   const setPreference = useCallback((nextPreference: ThemePreference) => {

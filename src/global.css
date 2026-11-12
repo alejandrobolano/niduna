@@ -1,6 +1,9 @@
 :root {
   color-scheme: light dark;
   --app-background: #fff8e8;
+  --bottom-navigation-background: #fffcf6;
+  --system-chrome-background: #fffcf6;
+  --bottom-navigation-content-height: 66px;
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
@@ -11,27 +14,49 @@
 }
 
 html,
-body,
+body {
+  background: var(--bottom-navigation-background);
+  min-height: 100%;
+  min-height: 100dvh;
+}
+
 #root {
   background: var(--app-background);
   min-height: 100%;
   min-height: 100dvh;
 }
 
+body::before {
+  background: var(--system-chrome-background);
+  content: '';
+  height: env(safe-area-inset-top, 0px);
+  left: 0;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 2147483647;
+}
+
 #niduna-bottom-navigation {
+  background-color: var(--bottom-navigation-background);
   bottom: 0;
   left: 0;
-  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   position: fixed;
   right: 0;
 }
 
 #niduna-compact-screen {
-  padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  margin-bottom: calc(
+    var(--bottom-navigation-content-height) + env(safe-area-inset-bottom, 0px)
+  ) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --app-background: #0f1428;
+    --bottom-navigation-background: #171e35;
+    --system-chrome-background: #171e35;
   }
 }

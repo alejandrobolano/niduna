@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#FFF8E8",
-  "theme_color": "#FFF8E8",
+  "theme_color": "#FFFCF6",
   "categories": ["family", "health", "lifestyle"],
   "icons": [
     {
