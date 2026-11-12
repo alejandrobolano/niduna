@@ -41,6 +41,11 @@ The web build reads these public variables:
 - Unsupported browsers keep the complete web application without installation
   or push capabilities.
 
+The manifest theme color, the document theme-color metadata, and the safe-area
+backgrounds use the same navigation surface for each color scheme. Keep these
+values aligned so installed iOS and Android PWAs do not expose mismatched system
+bars during launch or theme changes.
+
 ## Removal
 
 Removing PWA support does not require changing native notifications. Remove the
