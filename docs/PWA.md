@@ -41,10 +41,11 @@ The web build reads these public variables:
 - Unsupported browsers keep the complete web application without installation
   or push capabilities.
 
-The manifest theme color, the document theme-color metadata, and the safe-area
-backgrounds use the same navigation surface for each color scheme. Keep these
-values aligned so installed iOS and Android PWAs do not expose mismatched system
-bars during launch or theme changes.
+The manifest and document theme colors follow the page background so the top
+system area stays visually connected to the current screen. The bottom safe
+area follows the bottom navigation surface instead. Keep both color pairs
+aligned for light and dark schemes so installed iOS and Android PWAs do not
+expose mismatched strips during launch or theme changes.
 
 ## Removal
 

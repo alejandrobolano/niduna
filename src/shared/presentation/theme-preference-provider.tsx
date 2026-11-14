@@ -63,14 +63,14 @@ export function ThemePreferenceProvider({ children }: PropsWithChildren) {
       palette.surface,
     );
     document.documentElement.style.setProperty(
-      '--system-chrome-background',
-      palette.surface,
+      '--top-system-background',
+      background,
     );
     document.documentElement.style.backgroundColor = palette.surface;
     document.body.style.backgroundColor = palette.surface;
     document
       .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-      .forEach((meta) => meta.setAttribute('content', palette.surface));
+      .forEach((meta) => meta.setAttribute('content', background));
   }, [scheme]);
 
   const setPreference = useCallback((nextPreference: ThemePreference) => {
