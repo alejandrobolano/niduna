@@ -18,11 +18,13 @@ interface UseTextSuggestionsInput {
 }
 
 interface TextSuggestionState {
+  requestKey: string | null;
   suggestions: TextSuggestion[];
   status: SuggestionStatus;
 }
 
 const queryDelayMilliseconds = 180;
+const minimumQueryLength = 2;
 
 export function useTextSuggestions({
   babyId,
@@ -32,30 +34,39 @@ export function useTextSuggestions({
   query,
   repository,
 }: UseTextSuggestionsInput): TextSuggestionState {
+  const normalizedQuery = query.trim();
+  const canSearch = enabled && normalizedQuery.length >= minimumQueryLength;
+  const requestKey = JSON.stringify([babyId, kind, limit, normalizedQuery]);
   const [state, setState] = useState<TextSuggestionState>({
+    requestKey: null,
     status: 'idle',
     suggestions: [],
   });
 
   useEffect(() => {
-    if (!enabled) {
+    if (!canSearch) {
       return;
     }
 
     let active = true;
-    setState((current) => ({ ...current, status: 'loading' }));
-
     const timeoutId = setTimeout(() => {
-      void repository
-        .load({ babyId, kind, limit, query })
+      void Promise.resolve()
+        .then(() =>
+          repository.load({
+            babyId,
+            kind,
+            limit,
+            query: normalizedQuery,
+          }),
+        )
         .then((suggestions) => {
           if (active) {
-            setState({ status: 'ready', suggestions });
+            setState({ requestKey, status: 'ready', suggestions });
           }
         })
         .catch(() => {
           if (active) {
-            setState({ status: 'error', suggestions: [] });
+            setState({ requestKey, status: 'error', suggestions: [] });
           }
         });
     }, queryDelayMilliseconds);
@@ -64,7 +75,23 @@ export function useTextSuggestions({
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [babyId, enabled, kind, limit, query, repository]);
+  }, [
+    babyId,
+    canSearch,
+    kind,
+    limit,
+    normalizedQuery,
+    repository,
+    requestKey,
+  ]);
+
+  if (!canSearch) {
+    return { requestKey: null, status: 'idle', suggestions: [] };
+  }
+
+  if (state.requestKey !== requestKey) {
+    return { requestKey, status: 'loading', suggestions: [] };
+  }
 
   return state;
 }

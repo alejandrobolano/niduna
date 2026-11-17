@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Muestra sugerencias de texto solo después de introducir al menos dos caracteres y evita actualizar el estado de carga de forma síncrona desde un efecto.
 - Oculta el panel de sugerencias cuando no hay coincidencias.
 - Añade sugerencias de texto reutilizables para las notas de cuidados y los conceptos de gastos.
 - Añade a las notificaciones de cuidados detalles seguros de alimentación, pañal e inicio del sueño sin exponer notas privadas.
