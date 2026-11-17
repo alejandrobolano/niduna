@@ -47,6 +47,10 @@ import { CareRetireConfirmationModal } from '@/features/care/presentation/care-r
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 interface CareHistoryScreenProps {
@@ -422,7 +426,7 @@ export function CareHistoryScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
@@ -582,7 +586,11 @@ export function CareHistoryScreen({
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
-  page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
+  page: {
+    alignItems: 'center',
+    padding: spacing.lg,
+    paddingBottom: appScreenContentBottomPadding,
+  },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   tableCard: { backgroundColor: colors.surface, borderRadius: radius.lg, gap: spacing.lg, padding: spacing.lg },
   tableHeading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },

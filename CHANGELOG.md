@@ -16,6 +16,12 @@ versión correspondiente.
 
 ### Correcciones
 
+* usa un color de sistema oscuro y estable en el WebAPK para evitar franjas claras incoherentes en la navegación de Android
+* muestra en el panel de desarrollo el identificador corto de la versión web cargada para diagnosticar actualizaciones PWA
+* alinea las superficies nativas de la PWA con los esquemas claro y oscuro y vuelve a comprobar actualizaciones al reanudar la aplicación móvil
+* separa correctamente las superficies del sistema en la PWA: la zona superior sigue el fondo de la pantalla y la inferior prolonga la navegación
+* usa la versión desplegada como única fuente de actualización web, evita pedir reinstalar una PWA nueva y coordina el color de las barras del sistema, la navegación y el panel de cuenta en iPhone y Android
+* respeta el área segura de iPhone en la PWA instalada, permite actualizarla sin cerrarla, ajusta la posición responsive del acceso flotante y mantiene los recursos familiares en solo lectura para el rol de consulta
 * entrega la configuración privada de Firebase a las builds Android mediante una variable de archivo segura de EAS
 * limita la publicación y notificación de nuevas APK a los cambios de versión y mantiene las builds manuales como pruebas internas por defecto
 * corrige el paso de argumentos no interactivos al comando EAS de la build Android preview

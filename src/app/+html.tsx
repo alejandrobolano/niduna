@@ -17,6 +17,7 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <meta content="#fff8e8" media="(prefers-color-scheme: light)" name="theme-color" />
         <meta content="#0f1428" media="(prefers-color-scheme: dark)" name="theme-color" />
+        <meta content="light dark" name="color-scheme" />
         <meta content="yes" name="apple-mobile-web-app-capable" />
         <meta content="Niduna" name="apple-mobile-web-app-title" />
         <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />

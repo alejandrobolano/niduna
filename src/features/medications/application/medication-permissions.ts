@@ -1,12 +1,12 @@
 import type { MedicationAdministration } from '@/features/medications/domain/baby-medication';
-import type { FamilyRole } from '@/features/family/domain/family';
+import { canWriteFamilyResources, type FamilyRole } from '../../family/domain/family';
 
 export function canManageMedicationCatalog(role: FamilyRole): boolean {
   return role === 'owner' || role === 'admin';
 }
 
 export function canRecordMedicationAdministration(role: FamilyRole): boolean {
-  return role !== 'viewer';
+  return canWriteFamilyResources(role);
 }
 
 export function canManageMedicationAdministration(
@@ -14,5 +14,7 @@ export function canManageMedicationAdministration(
   role: FamilyRole,
   userId: string,
 ): boolean {
-  return administration.recordedBy === userId || role === 'owner' || role === 'admin';
+  return canWriteFamilyResources(role) && (
+    administration.recordedBy === userId || role === 'owner' || role === 'admin'
+  );
 }

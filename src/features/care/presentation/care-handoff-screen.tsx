@@ -73,6 +73,10 @@ import type { ContractionRepository } from '@/features/contractions/application/
 import { PrenatalContractionTracker } from '@/features/contractions/presentation/prenatal-contraction-tracker';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
+import {
+  appScreenSafeAreaEdges,
+  floatingActionContentBottomPadding,
+} from '@/shared/presentation/app-screen-layout';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const feedingLabels: Record<FeedingEvent['method'], string> = {
@@ -107,11 +111,11 @@ const measurementSourceLabels: Record<string, string> = {
 
 interface CareHandoffScreenProps {
   babyId?: string;
-  bottomNavigationInset?: number;
   canCreateBaby: boolean;
   contactRepository: BabyContactRepository;
   contractionRepository: ContractionRepository;
   initialAction?: CareAction;
+  floatingActionBottomOffset?: number;
   onExternalActionHandled?: () => void;
   onDashboardLoaded?: (dashboard: CareDashboard | null) => void;
   onOpenBabyProfile: () => void;
@@ -1016,11 +1020,11 @@ function DashboardContent({
 
 export function CareHandoffScreen({
   babyId: selectedBabyId,
-  bottomNavigationInset = 0,
   canCreateBaby,
   contactRepository,
   contractionRepository,
   initialAction,
+  floatingActionBottomOffset = spacing.xl,
   onExternalActionHandled,
   onDashboardLoaded,
   onOpenBabyProfile,
@@ -1158,7 +1162,7 @@ export function CareHandoffScreen({
     }
 
     const shouldShow = shouldShowQuickActionAccess(layout, {
-      bottomInset: bottomNavigationInset + spacing.sm,
+      bottomInset: floatingActionBottomOffset + spacing.sm,
       height: viewportHeight,
       scrollOffset,
       topInset: spacing.sm,
@@ -1186,7 +1190,7 @@ export function CareHandoffScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={170} />
           <Text style={styles.stateTitle}>Preparando el relevo…</Text>
@@ -1200,7 +1204,7 @@ export function CareHandoffScreen({
 
   if (loadError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <CloudSun color={colors.lavender} size={56} />
           <Text style={styles.stateTitle}>No pudimos cargar el relevo</Text>
@@ -1224,7 +1228,7 @@ export function CareHandoffScreen({
 
   if (!dashboard) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.page}>
           <View style={styles.content}>
             {topContent}
@@ -1260,7 +1264,7 @@ export function CareHandoffScreen({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.page}
         onLayout={(event: LayoutChangeEvent) => {
@@ -1313,7 +1317,7 @@ export function CareHandoffScreen({
           onPress={() => setIsQuickActionPickerOpen(true)}
           style={({ pressed }) => [
             styles.floatingQuickAction,
-            { bottom: bottomNavigationInset + spacing.xl },
+            { bottom: floatingActionBottomOffset },
             pressed && styles.floatingQuickActionPressed,
           ]}
         >
@@ -1359,7 +1363,7 @@ const styles = createThemedStyleSheet((colors) => ({
   page: {
     alignItems: 'center',
     padding: spacing.lg,
-    paddingBottom: 72,
+    paddingBottom: floatingActionContentBottomPadding,
   },
   content: {
     gap: spacing.xl,

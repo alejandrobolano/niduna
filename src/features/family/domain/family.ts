@@ -2,6 +2,10 @@ import type { MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 
 export type FamilyRole = 'owner' | 'admin' | 'caregiver' | 'viewer';
 
+export function canWriteFamilyResources(role: FamilyRole): boolean {
+  return role !== 'viewer';
+}
+
 export type InvitableFamilyRole = Exclude<FamilyRole, 'owner'>;
 
 export type FamilyRelationship =

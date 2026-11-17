@@ -107,6 +107,7 @@ import { ProductAnnouncementModal } from '@/features/product-updates/presentatio
 import {
   createThemedStyleSheet,
   getColors,
+  spacing,
   type AppColorScheme,
 } from '@/shared/presentation/theme';
 import { useThemePreference } from '@/shared/presentation/theme-preference-provider';
@@ -547,10 +548,10 @@ function AuthenticatedApp({
         }
         style={[
           styles.appScreen,
-          compactNavigation && {
+          compactNavigation && Platform.OS !== 'web' && {
             marginBottom:
               bottomNavigationContentHeight +
-              (Platform.OS === 'web' ? 0 : insets.bottom),
+              insets.bottom,
           },
         ]}
       >
@@ -611,9 +612,7 @@ function AuthenticatedApp({
     return renderAppScreen(
       <CareHandoffScreen
         babyId={context.activeBaby?.id}
-        bottomNavigationInset={
-          compactNavigation ? bottomNavigationContentHeight + insets.bottom : 0
-        }
+        floatingActionBottomOffset={compactNavigation ? spacing.md : spacing.xl}
         canCreateBaby={canManageBabies}
         contactRepository={supabaseBabyContactRepository}
         contractionRepository={supabaseContractionRepository}

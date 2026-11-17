@@ -54,6 +54,10 @@ import { FamilyBabyManagement } from '@/features/family/presentation/family-baby
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 
 const invitationRoleOptions = [
@@ -557,7 +561,7 @@ export function FamilyScreen({
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={150} />
           <Text style={styles.stateTitle}>Reuniendo a la familia</Text>
@@ -571,7 +575,7 @@ export function FamilyScreen({
 
   if (loadError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
         <View style={styles.stateScreen}>
           <NuniMascot size={150} />
           <Text style={styles.stateTitle}>No pudimos cargar tu familia</Text>
@@ -655,7 +659,7 @@ export function FamilyScreen({
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.flex}
@@ -1221,7 +1225,7 @@ const styles = createThemedStyleSheet((colors) => ({
     alignSelf: 'center',
     gap: spacing.xl,
     maxWidth: 920,
-    paddingBottom: 64,
+    paddingBottom: appScreenContentBottomPadding,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     width: '100%',

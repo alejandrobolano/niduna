@@ -16,6 +16,10 @@ import type {
   FamilyAuditRepository,
 } from '@/features/family-activity/application/family-audit-repository';
 import { DataPagination } from '@/shared/presentation/data-pagination';
+import {
+  appScreenContentBottomPadding,
+  appScreenSafeAreaEdges,
+} from '@/shared/presentation/app-screen-layout';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { resolveMemberAvatar } from '@/features/avatars/domain/avatar';
@@ -78,7 +82,7 @@ export function FamilyActivityScreen({
   }, [familyId, loadVersion, page, pageSize, repository]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={appScreenSafeAreaEdges} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.page}>
         <View style={styles.content}>
           {topContent}
@@ -199,7 +203,11 @@ export function FamilyActivityScreen({
 
 const styles = createThemedStyleSheet((colors) => ({
   safeArea: { backgroundColor: colors.background, flex: 1 },
-  page: { alignItems: 'center', padding: spacing.lg, paddingBottom: 72 },
+  page: {
+    alignItems: 'center',
+    padding: spacing.lg,
+    paddingBottom: appScreenContentBottomPadding,
+  },
   content: { gap: spacing.xl, maxWidth: 920, width: '100%' },
   heroIcon: { alignItems: 'center', backgroundColor: colors.surface, borderRadius: radius.md, height: 64, justifyContent: 'center', width: 64 },
   heroIconCompact: { height: 48, width: 48 },
