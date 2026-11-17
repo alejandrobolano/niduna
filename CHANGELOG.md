@@ -68,6 +68,21 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.19.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.18.0...niduna-v1.19.0) (2026-11-17)
+
+
+### Nuevas funciones
+
+* add reusable text suggestions for care notes and expense concepts ([5cbb638](https://github.com/alejandrobolano/niduna/commit/5cbb638a9a1cafa502622f2caba21a4198859cb1))
+* enhance text suggestions logic to require minimum input length and improve loading state management ([499f9bf](https://github.com/alejandrobolano/niduna/commit/499f9bf18c75281bb34f5cbb78ef17a1b041ea06))
+* implement autocomplete suggestions for care notes and expense c… ([d86bc6d](https://github.com/alejandrobolano/niduna/commit/d86bc6d180b94c18d1affd7b02cc88513e0861b3))
+* implement autocomplete suggestions for care notes and expense concepts ([2c1f28a](https://github.com/alejandrobolano/niduna/commit/2c1f28a5ada8648115251d19bcdc119c36093065))
+
+
+### Correcciones
+
+* update autocomplete suggestions handling and improve type definitions ([c7639c4](https://github.com/alejandrobolano/niduna/commit/c7639c41766a87c4b6d319c8c8a55f87e1f0b60b))
+
 ## [1.18.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.2...niduna-v1.18.0) (2026-11-17)
 
 
