@@ -5,6 +5,19 @@ export interface NotificationCopy {
 
 export type CareNotificationType = 'diaper' | 'feeding' | 'sleep';
 
+type BreastSide = 'both' | 'left' | 'right';
+type DiaperCondition = 'both' | 'dirty' | 'wet';
+type FeedingMethod = 'breast' | 'expressed_milk' | 'formula' | 'mixed';
+
+export interface CareNotificationDetails {
+  amountMilliliters?: number | null;
+  breastSide?: BreastSide | null;
+  diaperCondition?: DiaperCondition | null;
+  endedAt?: string | null;
+  eventType: CareNotificationType;
+  feedingMethod?: FeedingMethod | null;
+}
+
 const careNotificationCopyByType = {
   diaper: {
     body: 'Se ha registrado un cambio de pa\u00f1al.',
@@ -21,9 +34,62 @@ const careNotificationCopyByType = {
 } satisfies Record<CareNotificationType, NotificationCopy>;
 
 export function getCareNotificationCopy(
-  eventType: CareNotificationType,
+  details: CareNotificationDetails,
 ): NotificationCopy {
-  return careNotificationCopyByType[eventType];
+  if (details.eventType === 'feeding') {
+    const method = details.feedingMethod
+      ? {
+          breast: 'pecho',
+          expressed_milk: 'leche extra\u00edda',
+          formula: 'f\u00f3rmula',
+          mixed: 'pecho y f\u00f3rmula',
+        }[details.feedingMethod]
+      : undefined;
+    const amount = typeof details.amountMilliliters === 'number' &&
+        Number.isFinite(details.amountMilliliters) &&
+        details.amountMilliliters > 0
+      ? `${details.amountMilliliters} ml`
+      : undefined;
+    const side = details.breastSide
+      ? {
+          both: 'ambos pechos',
+          left: 'pecho izquierdo',
+          right: 'pecho derecho',
+        }[details.breastSide]
+      : undefined;
+    const summary = [method, amount, side].filter(Boolean).join(' \u00b7 ');
+
+    return {
+      body: summary ? `Toma: ${summary}.` : careNotificationCopyByType.feeding.body,
+      title: careNotificationCopyByType.feeding.title,
+    };
+  }
+
+  if (details.eventType === 'diaper') {
+    const condition = details.diaperCondition
+      ? {
+          both: 'pip\u00ed y caca',
+          dirty: 'caca',
+          wet: 'pip\u00ed',
+        }[details.diaperCondition]
+      : undefined;
+
+    return {
+      body: condition
+        ? `Pa\u00f1al: ${condition}.`
+        : careNotificationCopyByType.diaper.body,
+      title: careNotificationCopyByType.diaper.title,
+    };
+  }
+
+  if (!details.endedAt) {
+    return {
+      body: 'Se ha registrado el inicio del sue\u00f1o.',
+      title: 'El beb\u00e9 empez\u00f3 a dormir',
+    };
+  }
+
+  return careNotificationCopyByType.sleep;
 }
 
 export const activityNotificationCopy = {

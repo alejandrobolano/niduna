@@ -7,11 +7,12 @@ registrations and delivery functions separate.
 ## Privacy model
 
 - Permission is requested only after the user selects **Activar en este dispositivo**.
-- Expo receives the device push token and a generic title and body. The payload
-  does not contain baby names, family names, notes, medical observations, event
-  identifiers, or family identifiers.
-- Firebase receives only a Firebase Installation ID and the same generic title
-  and body for web delivery.
+- Expo receives the device push token and a title and body limited to safe care
+  details: feeding method, amount, breast side, diaper condition, or the start
+  of sleep. The payload does not contain baby names, family names, free-form
+  notes, medical observations, event identifiers, or family identifiers.
+- Firebase receives only a Firebase Installation ID and the same safe title and
+  body for web delivery.
 - Push tokens are stored in Supabase and are never exposed to another family
   member.
 - Row Level Security lets each user read only their own devices and preferences.
@@ -25,7 +26,8 @@ registrations and delivery functions separate.
 1. A signed-in user records feeding, diaper, or sleep information.
 2. The client invokes the authenticated `dispatch-care-notification` Edge
    Function with the new event identifier.
-3. The function verifies that the caller created the event.
+3. The function verifies that the caller created the event and loads only the
+   structured fields needed to generate the notification copy.
 4. Supabase calculates active followers, category preferences, temporary pauses,
    and registered devices.
 5. A unique `(care_event_id, push_device_id)` constraint prevents duplicates.

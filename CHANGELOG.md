@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Añade a las notificaciones de cuidados detalles seguros de alimentación, pañal e inicio del sueño sin exponer notas privadas.
 - Actualiza la aplicación a Expo SDK 58 y alinea sus dependencias nativas con React Native 0.88.
 - Automatiza la creación de una preview Android en EAS después de integrar una pull request en `master`.
 - Limita el filtro de administraciones a medicamentos y vacunas con registros en el periodo seleccionado y corrige su terminología.

@@ -4,10 +4,11 @@ import {
   type SupabaseClient,
 } from 'npm:@supabase/supabase-js@2.110.8';
 
-import { getCareNotificationCopy } from '../_shared/notification-copy.ts';
+import {
+  type CareNotificationType,
+  getCareNotificationCopy,
+} from '../_shared/notification-copy.ts';
 import { selectEligibleCareDevices } from '../_shared/notification-rules.ts';
-
-type CareEventType = 'diaper' | 'feeding' | 'sleep';
 
 interface DispatchRequest {
   eventId: string;
@@ -176,7 +177,9 @@ const authenticatedHandler = withSupabase(
 
     const { data: event, error: eventError } = await userClient
       .from('care_events')
-      .select('id, baby_id, event_type, recorded_by')
+      .select(
+        'id, baby_id, event_type, recorded_by, feeding_method, amount_milliliters, breast_side, diaper_condition, ended_at',
+      )
       .eq('id', input.eventId)
       .maybeSingle();
 
@@ -235,7 +238,7 @@ const authenticatedHandler = withSupabase(
     const eligibleDevices = selectEligibleCareDevices({
       actorUserId: userId,
       devices: devicesResult.data ?? [],
-      eventType: event.event_type as CareEventType,
+      eventType: event.event_type as CareNotificationType,
       now: new Date(),
       preferencesByUser,
     });
@@ -266,7 +269,14 @@ const authenticatedHandler = withSupabase(
       eligibleDevices.map((device) => [device.id, device]),
     );
     const notificationCopy = getCareNotificationCopy(
-      event.event_type as CareEventType,
+      {
+        amountMilliliters: event.amount_milliliters,
+        breastSide: event.breast_side,
+        diaperCondition: event.diaper_condition,
+        endedAt: event.ended_at,
+        eventType: event.event_type as CareNotificationType,
+        feedingMethod: event.feeding_method,
+      },
     );
     const messages = insertedDeliveries.map((delivery) => ({
       body: notificationCopy.body,
