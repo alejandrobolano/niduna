@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback } from 'react';
 
 import { AuthLoadingScreen } from '@/features/auth/presentation/auth-loading-screen';
@@ -9,6 +9,7 @@ import { requestGuidedOnboardingReplay } from '@/features/onboarding/infrastruct
 
 export default function HelpRoute() {
   const { session, status } = useAuth();
+  const { guide } = useLocalSearchParams<{ guide?: string }>();
   const router = useRouter();
   const goBack = useCallback(() => {
     if (router.canGoBack()) {
@@ -29,6 +30,7 @@ export default function HelpRoute() {
 
   return (
     <HelpCenterScreen
+      initialGuideId={guide}
       onBack={goBack}
       onReplayOnboarding={() => {
         requestGuidedOnboardingReplay(session.user.id);

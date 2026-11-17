@@ -117,10 +117,15 @@ export function NotificationOptInModal({
         userId,
       });
 
-      if (result === 'denied') {
+      if (result === 'blocked') {
         setMessage(
           'El permiso está bloqueado. Actívalo desde los ajustes del navegador o del dispositivo.',
         );
+        return;
+      }
+
+      if (result === 'denied') {
+        setMessage('No se concedió el permiso. Puedes volver a intentarlo más tarde.');
         return;
       }
 

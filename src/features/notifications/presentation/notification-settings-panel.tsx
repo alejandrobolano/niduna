@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
 import type {
   NotificationRepository,
@@ -25,6 +25,7 @@ const categoryLabels: Record<NotificationCategory, string> = {
 interface NotificationSettingsPanelProps {
   familyId: string;
   familyName: string;
+  onOpenNotificationHelp: () => void;
   permissionService: PushPermissionService;
   repository: NotificationRepository;
   userId: string;
@@ -97,6 +98,7 @@ function categoryIsEnabled(
 export function NotificationSettingsPanel({
   familyId,
   familyName,
+  onOpenNotificationHelp,
   permissionService,
   repository,
   userId,
@@ -108,6 +110,9 @@ export function NotificationSettingsPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [message, setMessage] = useState<string>();
+  const [recoveryAction, setRecoveryAction] = useState<
+    'device-settings' | 'help'
+  >();
 
   useEffect(() => {
     let active = true;
@@ -144,6 +149,7 @@ export function NotificationSettingsPanel({
     setPreferences(next);
     setIsWorking(true);
     setMessage(undefined);
+    setRecoveryAction(undefined);
 
     try {
       await repository.savePreferences(familyId, userId, next);
@@ -158,6 +164,7 @@ export function NotificationSettingsPanel({
   async function enableNotifications() {
     setIsWorking(true);
     setMessage(undefined);
+    setRecoveryAction(undefined);
 
     try {
       const result = await activateFamilyNotifications({
@@ -168,15 +175,30 @@ export function NotificationSettingsPanel({
         userId,
       });
 
-      if (result === 'denied') {
+      if (result === 'blocked') {
         setMessage(
-          'El permiso está desactivado. Puedes habilitarlo desde los ajustes del navegador o dispositivo.',
+          Platform.OS === 'web'
+            ? 'Este navegador ya tiene bloqueados los avisos de Niduna. Debes permitirlos en los ajustes del sitio y volver a intentarlo.'
+            : 'Los avisos están bloqueados para Niduna. Permítelos en los ajustes del dispositivo y vuelve a intentarlo.',
         );
+        setRecoveryAction(Platform.OS === 'web' ? 'help' : 'device-settings');
+        return;
+      }
+
+      if (result === 'denied') {
+        setMessage('No se concedió el permiso. Puedes volver a intentarlo cuando quieras.');
         return;
       }
 
       if (result === 'unavailable') {
-        setMessage('No pudimos preparar las notificaciones en este dispositivo.');
+        setMessage(
+          Platform.OS === 'web'
+            ? 'Este navegador o modo de uso no admite los avisos. Consulta los pasos para usar una opción compatible.'
+            : 'No pudimos preparar las notificaciones en este dispositivo.',
+        );
+        if (Platform.OS === 'web') {
+          setRecoveryAction('help');
+        }
         return;
       }
 
@@ -296,9 +318,34 @@ export function NotificationSettingsPanel({
       )}
 
       {message ? (
-        <Text accessibilityLiveRegion="polite" style={styles.message}>
-          {message}
-        </Text>
+        <View style={styles.feedback}>
+          <Text accessibilityLiveRegion="polite" style={styles.message}>
+            {message}
+          </Text>
+          {recoveryAction ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                if (recoveryAction === 'device-settings') {
+                  void Linking.openSettings();
+                  return;
+                }
+
+                onOpenNotificationHelp();
+              }}
+              style={({ pressed }) => [
+                styles.recoveryButton,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.recoveryButtonText}>
+                {recoveryAction === 'device-settings'
+                  ? 'Abrir ajustes del dispositivo'
+                  : 'Ver cómo activarlas'}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -365,6 +412,20 @@ const styles = createThemedStyleSheet((colors) => ({
     textDecorationLine: 'underline',
   },
   message: { color: colors.textMuted, fontSize: 11, lineHeight: 16 },
+  feedback: { alignItems: 'flex-start', gap: spacing.sm },
+  recoveryButton: {
+    borderColor: colors.primaryPressed,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 42,
+    paddingHorizontal: spacing.md,
+  },
+  recoveryButtonText: {
+    color: colors.primaryPressed,
+    fontSize: 12,
+    fontWeight: '900',
+  },
   buttonDisabled: { opacity: 0.5 },
   buttonPressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
 }));

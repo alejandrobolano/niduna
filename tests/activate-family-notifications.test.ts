@@ -43,7 +43,7 @@ describe('family notification activation', () => {
     );
   });
 
-  it.each(['denied', 'unavailable'] as const)(
+  it.each(['blocked', 'denied', 'unavailable'] as const)(
     'does not register anything when permission is %s',
     async (status) => {
       const repository = createRepository();

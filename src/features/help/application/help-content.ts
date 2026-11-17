@@ -1,6 +1,12 @@
+export interface HelpGuideSection {
+  steps: string[];
+  title: string;
+}
+
 export interface HelpGuide {
   description: string;
   id: string;
+  sections?: HelpGuideSection[];
   steps: string[];
   title: string;
 }
@@ -88,9 +94,89 @@ export const helpGuides: HelpGuide[] = [
     title: 'Activar y revisar las notificaciones',
     description: 'Recibe avisos en cada dispositivo donde quieras estar al día.',
     steps: [
-      'En Mi cuenta y ajustes, abre Notificaciones y permite los avisos del dispositivo.',
-      'Elige qué actividades quieres recibir. La configuración se aplica a ese dispositivo.',
-      'Si cambias de móvil o instalas la web como PWA, activa los avisos también allí.',
+      'En cada dispositivo, abre Mi cuenta y ajustes > Notificaciones y toca Activar en este dispositivo.',
+      'Acepta el permiso cuando lo solicite el navegador o el sistema. Después podrás elegir qué actividades quieres recibir.',
+      'Si no aparece la pregunta, revisa el apartado correspondiente a tu navegador o aplicación y vuelve a tocar Activar.',
+    ],
+    sections: [
+      {
+        title: 'Chrome',
+        steps: [
+          'En Android o en el ordenador, abre Niduna, toca el icono de información del sitio junto a la dirección y entra en Permisos > Notificaciones > Permitir.',
+          'Si usas la PWA en Android, revisa también Ajustes del teléfono > Aplicaciones > Niduna > Notificaciones.',
+          'Chrome no entrega notificaciones mientras navegas en modo incógnito.',
+        ],
+      },
+      {
+        title: 'Microsoft Edge',
+        steps: [
+          'Abre Niduna, selecciona el icono de información situado a la izquierda de la dirección y entra en Permisos para este sitio.',
+          'Cambia Notificaciones a Permitir. Si Niduna está instalada, también puedes revisar sus permisos desde edge://apps.',
+        ],
+      },
+      {
+        title: 'Opera',
+        steps: [
+          'Abre Configuración > Privacidad y seguridad > Configuración de sitios > Notificaciones.',
+          'Comprueba que Niduna no esté bloqueada y añádela a los sitios permitidos. En Android, revisa además los permisos de notificaciones de Opera o Niduna en los ajustes del teléfono.',
+        ],
+      },
+      {
+        title: 'Safari y PWA en iPhone o iPad',
+        steps: [
+          'En iPhone o iPad, los avisos web requieren iOS o iPadOS 16.4 o posterior y Niduna instalada en la pantalla de inicio. No se activan desde una pestaña normal de Safari.',
+          'Abre Niduna desde su icono instalado, entra en Mi cuenta y ajustes > Notificaciones y toca Activar en este dispositivo.',
+          'Si ya los bloqueaste, abre Ajustes > Notificaciones > Niduna, activa Permitir notificaciones y vuelve a Niduna.',
+          'En Mac, revisa Safari > Ajustes > Sitios web > Notificaciones y establece Niduna en Permitir.',
+        ],
+      },
+      {
+        title: 'Aplicación nativa',
+        steps: [
+          'Dentro de Niduna, toca Activar en este dispositivo y acepta el aviso del sistema.',
+          'Si el permiso se bloqueó, usa Abrir ajustes del dispositivo o entra manualmente en Ajustes > Aplicaciones > Niduna > Notificaciones y actívalas.',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'install-pwa',
+    title: 'Instalar Niduna como aplicación web',
+    description: 'Añade la PWA a la pantalla de inicio o al escritorio.',
+    steps: [
+      'Abre Niduna en el navegador donde quieras instalarla e inicia sesión.',
+      'Sigue los pasos de tu navegador y abre Niduna desde el nuevo icono.',
+      'Activa las notificaciones dentro de la aplicación instalada; el permiso no siempre se comparte con la pestaña del navegador.',
+    ],
+    sections: [
+      {
+        title: 'Chrome',
+        steps: [
+          'Android: abre el menú de tres puntos, toca Instalar aplicación o Añadir a pantalla de inicio y confirma Instalar.',
+          'Ordenador: usa el icono Instalar de la barra de direcciones; si no aparece, abre el menú de Chrome y busca Instalar página como aplicación.',
+        ],
+      },
+      {
+        title: 'Microsoft Edge',
+        steps: [
+          'Abre Configuración y más > Más herramientas > Aplicaciones > Instalar este sitio como una aplicación.',
+          'Después puedes administrarla y revisar sus permisos desde edge://apps.',
+        ],
+      },
+      {
+        title: 'Opera',
+        steps: [
+          'Android: abre el menú situado junto a la barra de direcciones, toca Añadir a y elige Pantalla de inicio.',
+          'Ordenador: si aparece el icono de instalación en la barra de direcciones, selecciónalo y confirma. La disponibilidad puede variar según la versión de Opera.',
+        ],
+      },
+      {
+        title: 'Safari',
+        steps: [
+          'iPhone o iPad: toca Compartir > Añadir a pantalla de inicio, activa Abrir como app web y confirma Añadir.',
+          'Mac con macOS Sonoma 14 o posterior: abre Archivo > Añadir al Dock y confirma.',
+        ],
+      },
     ],
   },
   {

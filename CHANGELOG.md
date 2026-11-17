@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Añade a las notificaciones de cuidados detalles seguros de alimentación, pañal e inicio del sueño sin exponer notas privadas.
 - Actualiza la aplicación a Expo SDK 58 y alinea sus dependencias nativas con React Native 0.88.
 - Automatiza la creación de una preview Android en EAS después de integrar una pull request en `master`.
 - Limita el filtro de administraciones a medicamentos y vacunas con registros en el periodo seleccionado y corrige su terminología.
@@ -16,6 +17,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* distingue los permisos de notificaciones rechazados y bloqueados, ofrece una recuperación accionable y documenta su activación e instalación PWA por navegador
 * entrega la configuración privada de Firebase a las builds Android mediante una variable de archivo segura de EAS
 * limita la publicación y notificación de nuevas APK a los cambios de versión y mantiene las builds manuales como pruebas internas por defecto
 * corrige el paso de argumentos no interactivos al comando EAS de la build Android preview

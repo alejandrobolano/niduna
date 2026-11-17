@@ -9,6 +9,7 @@ import {
   ClipboardList,
   HeartHandshake,
   Images,
+  MonitorDown,
   ShieldCheck,
   UserRoundCog,
   Users,
@@ -38,6 +39,7 @@ import {
 } from '@/shared/presentation/theme';
 
 interface HelpCenterScreenProps {
+  initialGuideId?: string;
   onBack: () => void;
   onReplayOnboarding: () => void;
 }
@@ -48,14 +50,23 @@ const guideIcons: Record<string, ComponentType<{ color: string; size: number }>>
   context: HeartHandshake,
   family: Users,
   handoff: BookOpenCheck,
+  'install-pwa': MonitorDown,
   notifications: Bell,
   records: ClipboardList,
   stories: Images,
   summary: ChartNoAxesCombined,
 };
 
-function GuideItem({ guide }: { guide: HelpGuide }) {
-  const [expanded, setExpanded] = useState(false);
+function GuideItem({
+  compact,
+  guide,
+  initiallyExpanded,
+}: {
+  compact: boolean;
+  guide: HelpGuide;
+  initiallyExpanded: boolean;
+}) {
+  const [expanded, setExpanded] = useState(initiallyExpanded);
   const Icon = guideIcons[guide.id] ?? CircleHelp;
 
   return (
@@ -82,13 +93,26 @@ function GuideItem({ guide }: { guide: HelpGuide }) {
       </Pressable>
 
       {expanded ? (
-        <View style={styles.steps}>
+        <View style={[styles.steps, compact && styles.compactSteps]}>
           {guide.steps.map((step, index) => (
             <View key={step} style={styles.step}>
               <View style={styles.stepNumber}>
                 <Text style={styles.stepNumberText}>{index + 1}</Text>
               </View>
               <Text style={styles.stepText}>{step}</Text>
+            </View>
+          ))}
+          {guide.sections?.map((section) => (
+            <View key={section.title} style={styles.stepSection}>
+              <Text style={styles.stepSectionTitle}>{section.title}</Text>
+              <View style={styles.sectionSteps}>
+                {section.steps.map((step) => (
+                  <View key={`${section.title}-${step}`} style={styles.sectionStep}>
+                    <View style={styles.stepDot} />
+                    <Text style={styles.stepText}>{step}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           ))}
         </View>
@@ -98,11 +122,18 @@ function GuideItem({ guide }: { guide: HelpGuide }) {
 }
 
 export function HelpCenterScreen({
+  initialGuideId,
   onBack,
   onReplayOnboarding,
 }: HelpCenterScreenProps) {
   const { width } = useWindowDimensions();
   const compact = width < 620;
+  const visibleGuides = initialGuideId
+    ? [
+        ...helpGuides.filter((guide) => guide.id === initialGuideId),
+        ...helpGuides.filter((guide) => guide.id !== initialGuideId),
+      ]
+    : helpGuides;
 
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -151,8 +182,13 @@ export function HelpCenterScreen({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Guías paso a paso</Text>
             <View style={styles.guideList}>
-              {helpGuides.map((guide) => (
-                <GuideItem guide={guide} key={guide.id} />
+              {visibleGuides.map((guide) => (
+                <GuideItem
+                  compact={compact}
+                  guide={guide}
+                  initiallyExpanded={guide.id === initialGuideId}
+                  key={guide.id}
+                />
               ))}
             </View>
           </View>
@@ -291,6 +327,7 @@ const styles = createThemedStyleSheet((colors) => ({
   guideTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
   guideDescription: { color: colors.textMuted, fontSize: 12, lineHeight: 17 },
   steps: { gap: spacing.md, paddingBottom: spacing.md, paddingLeft: 56 },
+  compactSteps: { paddingLeft: 0 },
   step: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.md },
   stepNumber: {
     alignItems: 'center',
@@ -302,6 +339,17 @@ const styles = createThemedStyleSheet((colors) => ({
   },
   stepNumberText: { color: colors.onAccent, fontSize: 11, fontWeight: '900' },
   stepText: { color: colors.textMuted, flex: 1, fontSize: 13, lineHeight: 19 },
+  stepSection: { gap: spacing.sm, paddingTop: spacing.xs },
+  stepSectionTitle: { color: colors.text, fontSize: 13, fontWeight: '900' },
+  sectionSteps: { gap: spacing.sm },
+  sectionStep: { alignItems: 'flex-start', flexDirection: 'row', gap: spacing.sm },
+  stepDot: {
+    backgroundColor: colors.primaryPressed,
+    borderRadius: radius.pill,
+    height: 6,
+    marginTop: 7,
+    width: 6,
+  },
   questions: { gap: spacing.lg },
   question: { gap: spacing.xs },
   questionTitle: { color: colors.text, fontSize: 14, fontWeight: '900' },
