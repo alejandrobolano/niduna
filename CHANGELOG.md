@@ -7,6 +7,7 @@ versión correspondiente.
 
 ## Unreleased
 
+- Oculta el panel de sugerencias cuando no hay coincidencias.
 - Añade sugerencias de texto reutilizables para las notas de cuidados y los conceptos de gastos.
 - Añade a las notificaciones de cuidados detalles seguros de alimentación, pañal e inicio del sueño sin exponer notas privadas.
 - Actualiza la aplicación a Expo SDK 58 y alinea sus dependencias nativas con React Native 0.88.

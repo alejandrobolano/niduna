@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   Text,
-  type TextInputKeyPressEventData,
-  type NativeSyntheticEvent,
+  type TextInputKeyPressEvent,
   View,
 } from 'react-native';
 
@@ -50,7 +49,7 @@ export function AutocompleteTextField({
   const [focused, setFocused] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const blurTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const blurTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const expanded = focused && !dismissed;
   const { status, suggestions } = useTextSuggestions({
     babyId,
@@ -76,7 +75,7 @@ export function AutocompleteTextField({
   }
 
   function handleKeyPress(
-    event: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    event: TextInputKeyPressEvent,
   ) {
     if (!expanded || !suggestions.length) {
       return;
@@ -137,19 +136,14 @@ export function AutocompleteTextField({
         value={value}
       />
 
-      {expanded ? (
+      {expanded &&
+      (status === 'loading' || status === 'error' || suggestions.length > 0) ? (
         <View accessibilityLiveRegion="polite" style={styles.suggestions}>
           {status === 'loading' ? (
             <Text style={styles.status}>Buscando sugerencias…</Text>
           ) : status === 'error' ? (
             <Text accessibilityRole="alert" style={styles.error}>
               No pudimos cargar las sugerencias. Puedes seguir escribiendo.
-            </Text>
-          ) : status === 'ready' && !suggestions.length ? (
-            <Text style={styles.status}>
-              {value.trim()
-                ? 'No hay coincidencias. Puedes guardar este texto.'
-                : 'Todavía no hay sugerencias para este bebé.'}
             </Text>
           ) : status === 'ready' ? (
             <View accessibilityLabel={`Sugerencias para ${label}`}>
