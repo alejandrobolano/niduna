@@ -17,6 +17,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* distingue los permisos de notificaciones rechazados y bloqueados, ofrece una recuperación accionable y documenta su activación e instalación PWA por navegador
 * entrega la configuración privada de Firebase a las builds Android mediante una variable de archivo segura de EAS
 * limita la publicación y notificación de nuevas APK a los cambios de versión y mantiene las builds manuales como pruebas internas por defecto
 * corrige el paso de argumentos no interactivos al comando EAS de la build Android preview

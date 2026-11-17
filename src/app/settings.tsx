@@ -53,6 +53,9 @@ export default function SettingsRoute() {
       email={session.user.email}
       onBack={goBack}
       onOpenHelp={() => router.push('/help')}
+      onOpenNotificationHelp={() =>
+        router.push({ pathname: '/help', params: { guide: 'notifications' } })
+      }
       onReplayOnboarding={() => {
         requestGuidedOnboardingReplay(session.user.id);
         router.replace('/');
@@ -66,12 +69,14 @@ function AuthenticatedSettings({
   email,
   onBack,
   onOpenHelp,
+  onOpenNotificationHelp,
   onReplayOnboarding,
   userId,
 }: {
   email: string;
   onBack: () => void;
   onOpenHelp: () => void;
+  onOpenNotificationHelp: () => void;
   onReplayOnboarding: () => void;
   userId: string;
 }) {
@@ -147,6 +152,7 @@ function AuthenticatedSettings({
           <NotificationSettingsPanel
             familyId={activeFamily.id}
             familyName={activeFamily.name}
+            onOpenNotificationHelp={onOpenNotificationHelp}
             permissionService={pushPermissionService}
             repository={supabaseNotificationRepository}
             userId={userId}

@@ -59,7 +59,7 @@ export const expoPushPermissionService: PushPermissionService = {
         : await Notifications.requestPermissionsAsync();
 
     if (!requested.granted) {
-      return { status: 'denied' };
+      return { status: requested.canAskAgain ? 'denied' : 'blocked' };
     }
 
     const registration = await getRegistration();

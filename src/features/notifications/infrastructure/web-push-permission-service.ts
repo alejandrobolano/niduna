@@ -184,6 +184,10 @@ export const webPushPermissionService: PushPermissionService = {
       return { status: 'unavailable' };
     }
 
+    if (Notification.permission === 'denied') {
+      return { status: 'blocked' };
+    }
+
     const permission = Notification.permission === 'granted'
       ? Notification.permission
       : await Notification.requestPermission();

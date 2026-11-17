@@ -28,6 +28,7 @@ export interface NotificationRepository {
 
 export type PushPermissionResult =
   | { status: 'granted'; registration: PushDeviceRegistration }
+  | { status: 'blocked' }
   | { status: 'denied' }
   | { status: 'unavailable' };
 
