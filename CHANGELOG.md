@@ -65,6 +65,18 @@ versión correspondiente.
 * abre los accesos del widget en el bebé correcto y evita cargas duplicadas en Relevo
 * distribuye las tres tarjetas del widget de forma homogénea en todo el ancho disponible
 
+## [1.18.0](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.2...niduna-v1.18.0) (2026-11-17)
+
+
+### Nuevas funciones
+
+* add care details to notifications ([9902159](https://github.com/alejandrobolano/niduna/commit/9902159870b08f22f6f33947b5dfbdf4ad069a9b))
+
+
+### Correcciones
+
+* recover notification permissions ([35fee0f](https://github.com/alejandrobolano/niduna/commit/35fee0fd9fd1e4e075ebe2cdf72ddaf0b6dc6b90))
+
 ## [1.17.2](https://github.com/alejandrobolano/niduna/compare/niduna-v1.17.1...niduna-v1.17.2) (2026-10-31)
 
 
