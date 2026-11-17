@@ -104,6 +104,7 @@ import {
 import { GuidedOnboardingOverlay } from '@/features/onboarding/presentation/guided-onboarding-overlay';
 import { supabaseProductAnnouncementRepository } from '@/features/product-updates/infrastructure/supabase-product-announcement-repository';
 import { ProductAnnouncementModal } from '@/features/product-updates/presentation/product-announcement-modal';
+import { supabaseTextSuggestionRepository } from '@/features/text-suggestions/infrastructure/supabase-text-suggestion-repository';
 import {
   createThemedStyleSheet,
   getColors,
@@ -627,6 +628,7 @@ function AuthenticatedApp({
         onOpenMedications={() => changeSection('medications')}
         repository={supabaseCareRepository}
         summaryRepository={supabaseCareSummaryRepository}
+        suggestionRepository={supabaseTextSuggestionRepository}
         storiesContent={
           context.activeBaby ? (
             <FamilyStoriesStrip
@@ -658,6 +660,7 @@ function AuthenticatedApp({
         key={context.activeBaby?.id ?? `${activeFamily.id}:history-empty`}
         onOpenSummary={() => changeSection('summary')}
         repository={supabaseCareRepository}
+        suggestionRepository={supabaseTextSuggestionRepository}
         topContent={topContent}
         userId={user.id}
       />,
@@ -728,6 +731,7 @@ function AuthenticatedApp({
         familyRole={activeFamily.role}
         onBack={() => changeSection('baby')}
         repository={supabaseBabyExpenseRepository}
+        suggestionRepository={supabaseTextSuggestionRepository}
         topContent={topContent}
         userId={user.id}
       />,

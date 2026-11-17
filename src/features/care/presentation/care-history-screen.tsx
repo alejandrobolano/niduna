@@ -45,6 +45,7 @@ import {
 } from '@/features/care/presentation/care-report-modal';
 import { CareRetireConfirmationModal } from '@/features/care/presentation/care-retire-confirmation-modal';
 import { CareRecordViewTabs } from '@/features/care-summary/presentation/care-record-view-tabs';
+import type { TextSuggestionRepository } from '@/features/text-suggestions/application/text-suggestion-repository';
 import { DataPagination } from '@/shared/presentation/data-pagination';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -60,6 +61,7 @@ interface CareHistoryScreenProps {
   familyName: string;
   onOpenSummary: () => void;
   repository: CareRepository;
+  suggestionRepository: TextSuggestionRepository;
   topContent?: ReactNode;
   userId: string;
 }
@@ -115,6 +117,7 @@ export function CareHistoryScreen({
   familyName,
   onOpenSummary,
   repository,
+  suggestionRepository,
   topContent,
   userId,
 }: CareHistoryScreenProps) {
@@ -547,7 +550,7 @@ export function CareHistoryScreen({
                 />
               </View>
               {editingEvent ? (
-                <CareEditSheet key={getCareRecordKey(editingEvent)} event={editingEvent} onClose={() => setEditingEvent(undefined)} onSaved={() => setLoadVersion((value) => value + 1)} repository={repository} />
+                <CareEditSheet key={getCareRecordKey(editingEvent)} event={editingEvent} onClose={() => setEditingEvent(undefined)} onSaved={() => setLoadVersion((value) => value + 1)} repository={repository} suggestionRepository={suggestionRepository} />
               ) : null}
               {reportVisible ? (
                 <CareReportModal

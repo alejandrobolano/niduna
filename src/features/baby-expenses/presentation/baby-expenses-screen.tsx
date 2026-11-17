@@ -53,6 +53,8 @@ import { ResourceScreenHero } from '@/shared/presentation/resource-screen-hero';
 import { resourceScreenContentStyle } from '@/shared/presentation/resource-screen-layout';
 import { ResourceFormModal } from '@/shared/presentation/resource-form';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
+import type { TextSuggestionRepository } from '@/features/text-suggestions/application/text-suggestion-repository';
+import { AutocompleteTextField } from '@/features/text-suggestions/presentation/autocomplete-text-field';
 
 const categoryOptions = [
   { label: 'Alimentación', value: 'feeding' },
@@ -78,6 +80,7 @@ interface BabyExpensesScreenProps {
   familyRole: FamilyRole;
   onBack: () => void;
   repository: BabyExpenseRepository;
+  suggestionRepository: TextSuggestionRepository;
   topContent?: ReactNode;
   userId: string;
 }
@@ -105,6 +108,7 @@ export function BabyExpensesScreen({
   familyRole,
   onBack,
   repository,
+  suggestionRepository,
   topContent,
   userId,
 }: BabyExpensesScreenProps) {
@@ -295,7 +299,18 @@ export function BabyExpensesScreen({
 
   const expenseFormFields = <>
     <View style={[styles.formGrid, compact && styles.formGridCompact]}>
-      <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.concept} label="Concepto" maxLength={120} onChangeText={setConcept} value={concept} /></View>
+      <View style={[styles.formField, compact && styles.formFieldCompact]}>
+        <AutocompleteTextField
+          babyId={babyId}
+          error={validation.concept}
+          kind="expense_concept"
+          label="Concepto"
+          maxLength={120}
+          onChangeText={setConcept}
+          repository={suggestionRepository}
+          value={concept}
+        />
+      </View>
       <View style={[styles.formField, compact && styles.formFieldCompact]}><ProfileField error={validation.amount} keyboardType="decimal-pad" label={`Importe (${currency})`} onChangeText={setAmount} value={amount} /></View>
       <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField label="Categoría" onChange={setDraftCategory} options={categoryOptions} placeholder="Categoría" title="Categoría del gasto" value={draftCategory} /></View>
       <View style={[styles.formField, compact && styles.formFieldCompact]}><SelectField error={validation.payer} label="Pagado por" onChange={setDraftPayerId} options={payerOptions} placeholder="Persona" title="¿Quién pagó?" value={draftPayerId} /></View>

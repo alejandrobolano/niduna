@@ -42,6 +42,8 @@ import { formatGramsAsKilogramsInput } from '@/shared/domain/weight';
 import { dateToIso } from '@/shared/presentation/date';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
+import type { TextSuggestionRepository } from '@/features/text-suggestions/application/text-suggestion-repository';
+import { AutocompleteTextField } from '@/features/text-suggestions/presentation/autocomplete-text-field';
 
 const feedingOptions = [
   { label: 'Pecho', value: 'breast' },
@@ -74,6 +76,7 @@ interface CareEditSheetProps {
   onClose: () => void;
   onSaved: () => void;
   repository: CareRepository;
+  suggestionRepository: TextSuggestionRepository;
 }
 
 function decimalValue(value: number | undefined, divisor = 1): string {
@@ -85,6 +88,7 @@ export function CareEditSheet({
   onClose,
   onSaved,
   repository,
+  suggestionRepository,
 }: CareEditSheetProps) {
   const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const initialOccurrence = new Date(event.occurredAt);
@@ -275,14 +279,27 @@ export function CareEditSheet({
                 {invalidMeasurement && !invalidWeight && !invalidLength && !invalidHeadCircumference ? <Text style={styles.error}>Introduce al menos una medida válida.</Text> : null}
               </>
             ) : null}
-            <ProfileField
-              error={invalidNote ? 'La nota no puede quedar vacía.' : undefined}
-              label={event.type === 'note' ? 'Nota para la familia' : 'Nota, opcional'}
-              maxLength={1000}
-              multiline
-              onChangeText={setNotes}
-              value={notes}
-            />
+            {event.type === 'note' ? (
+              <AutocompleteTextField
+                babyId={event.babyId}
+                error={invalidNote ? 'La nota no puede quedar vacía.' : undefined}
+                kind="care_note"
+                label="Nota para la familia"
+                maxLength={1000}
+                multiline
+                onChangeText={setNotes}
+                repository={suggestionRepository}
+                value={notes}
+              />
+            ) : (
+              <ProfileField
+                label="Nota, opcional"
+                maxLength={1000}
+                multiline
+                onChangeText={setNotes}
+                value={notes}
+              />
+            )}
             {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
             <Pressable disabled={isSaving || invalidAmount || invalidMeasurement || invalidNote || invalidSleepInterval} onPress={() => void save()} style={[styles.saveButton, (isSaving || invalidAmount || invalidMeasurement || invalidNote || invalidSleepInterval) && styles.disabled]}>
               <Text style={styles.saveText}>{isSaving ? 'Guardando…' : 'Guardar cambios'}</Text>

@@ -47,6 +47,8 @@ import { useFeedingVolumePreference } from '@/features/care/presentation/feeding
 import { RecentValueChips } from '@/features/care/presentation/recent-value-chips';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
 import { KeyboardAwareScrollView } from '@/shared/presentation/keyboard-aware-scroll-view';
+import type { TextSuggestionRepository } from '@/features/text-suggestions/application/text-suggestion-repository';
+import { AutocompleteTextField } from '@/features/text-suggestions/presentation/autocomplete-text-field';
 
 export type CareAction =
   | 'diaper'
@@ -88,6 +90,7 @@ interface CareActionSheetProps {
   onSaved: () => void;
   openSleep?: SleepEvent;
   repository: CareRepository;
+  suggestionRepository: TextSuggestionRepository;
 }
 
 function getOperationMessage(error: unknown): string {
@@ -121,6 +124,7 @@ export function CareActionSheet({
   onSaved,
   openSleep,
   repository,
+  suggestionRepository,
 }: CareActionSheetProps) {
   const { unit: feedingVolumeUnit } = useFeedingVolumePreference();
   const [feedingMethod, setFeedingMethod] =
@@ -509,13 +513,16 @@ export function CareActionSheet({
                 </View>
               </View>
             ) : action === 'note' ? (
-              <ProfileField
+              <AutocompleteTextField
+                babyId={babyId}
                 error={noteIsInvalid ? 'Escribe la nota antes de guardar.' : undefined}
+                kind="care_note"
                 label="Nota para la familia"
                 maxLength={1000}
                 multiline
                 onChangeText={setNotes}
                 placeholder="Algo importante para el siguiente relevo"
+                repository={suggestionRepository}
                 value={notes}
               />
             ) : (

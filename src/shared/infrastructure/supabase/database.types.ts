@@ -966,6 +966,19 @@ export type Database = {
         };
         Returns: number;
       };
+      list_baby_text_suggestions: {
+        Args: {
+          max_results?: number;
+          target_baby_id: string;
+          target_kind: 'care_note' | 'expense_concept';
+          target_query?: string;
+        };
+        Returns: {
+          last_used_at: string;
+          occurrence_count: number;
+          value: string;
+        }[];
+      };
       rename_family: {
         Args: {
           target_family_id: string;
