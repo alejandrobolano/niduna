@@ -7,6 +7,9 @@ versión correspondiente.
 
 ## Unreleased
 
+- Muestra sugerencias de texto solo después de introducir al menos dos caracteres y evita actualizar el estado de carga de forma síncrona desde un efecto.
+- Oculta el panel de sugerencias cuando no hay coincidencias.
+- Añade sugerencias de texto reutilizables para las notas de cuidados y los conceptos de gastos.
 - Añade a las notificaciones de cuidados detalles seguros de alimentación, pañal e inicio del sueño sin exponer notas privadas.
 - Actualiza la aplicación a Expo SDK 58 y alinea sus dependencias nativas con React Native 0.88.
 - Automatiza la creación de una preview Android en EAS después de integrar una pull request en `master`.

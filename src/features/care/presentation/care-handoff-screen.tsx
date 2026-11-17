@@ -71,6 +71,7 @@ import { FeedingRhythmInfo } from '@/features/care/presentation/feeding-rhythm-i
 import { shouldShowQuickActionAccess } from '@/features/care/presentation/quick-action-visibility';
 import type { ContractionRepository } from '@/features/contractions/application/contraction-repository';
 import { PrenatalContractionTracker } from '@/features/contractions/presentation/prenatal-contraction-tracker';
+import type { TextSuggestionRepository } from '@/features/text-suggestions/application/text-suggestion-repository';
 import { NuniMascot } from '@/shared/presentation/nuni-mascot';
 import { ScreenHero } from '@/shared/presentation/screen-hero';
 import { colors, createThemedStyleSheet, radius, spacing } from '@/shared/presentation/theme';
@@ -120,6 +121,7 @@ interface CareHandoffScreenProps {
   onOpenMedications: () => void;
   repository: CareRepository;
   summaryRepository: CareSummaryRepository;
+  suggestionRepository: TextSuggestionRepository;
   storiesContent?: ReactNode;
   topContent?: ReactNode;
   userId: string;
@@ -1029,6 +1031,7 @@ export function CareHandoffScreen({
   onOpenMedications,
   repository,
   summaryRepository,
+  suggestionRepository,
   storiesContent,
   topContent,
   userId,
@@ -1340,6 +1343,7 @@ export function CareHandoffScreen({
         onSaved={handleCareSaved}
         openSleep={snapshot?.openSleep}
         repository={repository}
+        suggestionRepository={suggestionRepository}
       />
       {editingEvent ? (
         <CareEditSheet
@@ -1348,6 +1352,7 @@ export function CareHandoffScreen({
           onClose={() => setEditingEvent(undefined)}
           onSaved={handleCareSaved}
           repository={repository}
+          suggestionRepository={suggestionRepository}
         />
       ) : null}
     </SafeAreaView>
