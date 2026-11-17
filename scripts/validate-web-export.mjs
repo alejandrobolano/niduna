@@ -27,7 +27,7 @@ if (!headers.includes('/app-version.json\n  Cache-Control: no-store')) {
 }
 
 if (
-  manifest.theme_color !== '#FFF8E8' ||
+  manifest.theme_color !== '#0F1428' ||
   manifest.background_color !== '#FFFCF6' ||
   manifest.color_scheme_dark?.theme_color !== '#0F1428' ||
   manifest.color_scheme_dark?.background_color !== '#171E35'
