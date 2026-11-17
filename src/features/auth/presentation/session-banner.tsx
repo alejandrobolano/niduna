@@ -5,6 +5,7 @@ import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/features/auth/presentation/auth-provider';
+import { webAppReleaseDiagnostic } from '@/features/app-updates/infrastructure/web-app-build';
 import { resolveMemberAvatar, type MemberAvatarVariant } from '@/features/avatars/domain/avatar';
 import type { FamilyRelationship } from '@/features/family/domain/family';
 import { AnimalAvatar } from '@/features/avatars/presentation/animal-avatar';
@@ -187,9 +188,14 @@ export function SessionBanner({
                   {isSigningOut ? 'Saliendo…' : 'Cerrar sesión'}
                 </Text>
               </Pressable>
-              <Text style={styles.version}>
-                Niduna{appVersion ? ` v${appVersion}` : ''}
-              </Text>
+              <View style={styles.versionDetails}>
+                <Text style={styles.version}>
+                  Niduna{appVersion ? ` v${appVersion}` : ''}
+                </Text>
+                {webAppReleaseDiagnostic ? (
+                  <Text style={styles.version}>{webAppReleaseDiagnostic}</Text>
+                ) : null}
+              </View>
             </View>
           </SafeAreaView>
         </View>
@@ -336,4 +342,5 @@ const styles = createThemedStyleSheet((colors) => ({
     textDecorationLine: 'underline',
   },
   version: { color: colors.textMuted, fontSize: 9, fontWeight: '700' },
+  versionDetails: { alignItems: 'flex-end', gap: 2 },
 }));

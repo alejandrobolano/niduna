@@ -45,6 +45,7 @@ jobs:
           EXPO_PUBLIC_FIREBASE_PROJECT_ID: ${{ vars.EXPO_PUBLIC_FIREBASE_PROJECT_ID }}
           EXPO_PUBLIC_FIREBASE_VAPID_KEY: ${{ vars.EXPO_PUBLIC_FIREBASE_VAPID_KEY }}
           EXPO_PUBLIC_WEB_RELEASE_ID: ${{ github.sha }}
+          EXPO_PUBLIC_WEB_ENV: ${{ github.event_name == 'pull_request' && 'development' || 'production' }}
       - if: github.event_name == 'pull_request'
         run: pnpm exec wrangler deploy --env development
         env:

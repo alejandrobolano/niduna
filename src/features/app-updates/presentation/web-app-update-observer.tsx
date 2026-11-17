@@ -1,15 +1,13 @@
-import Constants from 'expo-constants';
 import { RefreshCw } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { isNewWebAppRelease } from '@/features/app-updates/domain/web-app-release';
+import { currentWebAppReleaseId } from '@/features/app-updates/infrastructure/web-app-build';
 import { loadAvailableWebAppRelease } from '@/features/app-updates/infrastructure/web-app-release-service';
 import { ConfirmationModal } from '@/shared/presentation/confirmation-modal';
 import { colors } from '@/shared/presentation/theme';
 
-const currentReleaseId =
-  process.env.EXPO_PUBLIC_WEB_RELEASE_ID ?? Constants.expoConfig?.version;
 const updateCheckIntervalMilliseconds = 5 * 60 * 1000;
 
 export function WebAppUpdateObserver() {
@@ -20,14 +18,14 @@ export function WebAppUpdateObserver() {
   useEffect(() => {
     if (
       Platform.OS !== 'web' ||
-      !currentReleaseId ||
+      !currentWebAppReleaseId ||
       typeof document === 'undefined' ||
       typeof window === 'undefined'
     ) {
       return;
     }
 
-    const activeReleaseId = currentReleaseId;
+    const activeReleaseId = currentWebAppReleaseId;
     let active = true;
 
     async function checkForUpdate() {
