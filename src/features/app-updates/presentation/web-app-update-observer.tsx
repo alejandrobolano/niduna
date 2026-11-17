@@ -10,6 +10,7 @@ import { colors } from '@/shared/presentation/theme';
 
 const currentReleaseId =
   process.env.EXPO_PUBLIC_WEB_RELEASE_ID ?? Constants.expoConfig?.version;
+const updateCheckIntervalMilliseconds = 5 * 60 * 1000;
 
 export function WebAppUpdateObserver() {
   const [availableReleaseId, setAvailableReleaseId] = useState<string>();
@@ -20,7 +21,8 @@ export function WebAppUpdateObserver() {
     if (
       Platform.OS !== 'web' ||
       !currentReleaseId ||
-      typeof document === 'undefined'
+      typeof document === 'undefined' ||
+      typeof window === 'undefined'
     ) {
       return;
     }
@@ -53,18 +55,29 @@ export function WebAppUpdateObserver() {
       }
     }
 
-    function handleVisibilityChange() {
+    function checkWhenVisible() {
       if (document.visibilityState === 'visible') {
         void checkForUpdate();
       }
     }
 
     void checkForUpdate();
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', checkWhenVisible);
+    window.addEventListener('focus', checkWhenVisible);
+    window.addEventListener('online', checkWhenVisible);
+    window.addEventListener('pageshow', checkWhenVisible);
+    const intervalId = window.setInterval(
+      checkWhenVisible,
+      updateCheckIntervalMilliseconds,
+    );
 
     return () => {
       active = false;
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', checkWhenVisible);
+      window.removeEventListener('focus', checkWhenVisible);
+      window.removeEventListener('online', checkWhenVisible);
+      window.removeEventListener('pageshow', checkWhenVisible);
+      window.clearInterval(intervalId);
     };
   }, []);
 

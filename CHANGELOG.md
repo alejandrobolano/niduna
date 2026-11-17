@@ -16,6 +16,7 @@ versión correspondiente.
 
 ### Correcciones
 
+* alinea las superficies nativas de la PWA con los esquemas claro y oscuro y vuelve a comprobar actualizaciones al reanudar la aplicación móvil
 * separa correctamente las superficies del sistema en la PWA: la zona superior sigue el fondo de la pantalla y la inferior prolonga la navegación
 * usa la versión desplegada como única fuente de actualización web, evita pedir reinstalar una PWA nueva y coordina el color de las barras del sistema, la navegación y el panel de cuenta en iPhone y Android
 * respeta el área segura de iPhone en la PWA instalada, permite actualizarla sin cerrarla, ajusta la posición responsive del acceso flotante y mantiene los recursos familiares en solo lectura para el rol de consulta

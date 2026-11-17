@@ -47,6 +47,13 @@ area follows the bottom navigation surface instead. Keep both color pairs
 aligned for light and dark schemes so installed iOS and Android PWAs do not
 expose mismatched strips during launch or theme changes.
 
+The manifest uses `color_scheme_dark` as a progressive enhancement for system
+surfaces that are created before the application CSS loads. The page-level
+`theme-color` metadata remains the runtime source for browsers that support
+dynamic theme changes. Some Chromium versions retain the installation color
+for an installed PWA; validate changes on real Android hardware and account for
+a one-time reinstall when testing those browser versions.
+
 ## Removal
 
 Removing PWA support does not require changing native notifications. Remove the

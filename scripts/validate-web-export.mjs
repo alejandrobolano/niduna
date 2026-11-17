@@ -3,6 +3,9 @@ import { resolve } from 'node:path';
 
 const html = await readFile(resolve('dist/index.html'), 'utf8');
 const headers = await readFile(resolve('dist/_headers'), 'utf8');
+const manifest = JSON.parse(
+  await readFile(resolve('dist/manifest.webmanifest'), 'utf8'),
+);
 const release = JSON.parse(
   await readFile(resolve('dist/app-version.json'), 'utf8'),
 );
@@ -21,6 +24,15 @@ if (typeof release.releaseId !== 'string' || !release.releaseId) {
 
 if (!headers.includes('/app-version.json\n  Cache-Control: no-store')) {
   throw new Error('Web release manifest is not protected from intermediary caches');
+}
+
+if (
+  manifest.theme_color !== '#FFF8E8' ||
+  manifest.background_color !== '#FFFCF6' ||
+  manifest.color_scheme_dark?.theme_color !== '#0F1428' ||
+  manifest.color_scheme_dark?.background_color !== '#171E35'
+) {
+  throw new Error('PWA manifest colors are not aligned with the app shell');
 }
 
 console.log('Validated web export assets');
